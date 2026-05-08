@@ -1,0 +1,9 @@
+"use client";
+import { motion } from "framer-motion";
+import { Heartbeat, MapPin } from "@phosphor-icons/react";
+import type { LocationClassification, LocationState } from "@/types";
+import { SPRINGS } from "@/lib/constants/motion";
+export default function LocationDetector({ state, classification }: { state: LocationState; classification: LocationClassification | null }) {
+  if (state !== "DETECTED") return <motion.div key="detecting" layoutId="locPill" className="flex items-center gap-3 px-6 py-3 rounded-full bg-white/5 border border-white/10 backdrop-blur-md"><motion.div animate={{ scale: [1, 1.2, 1] }} transition={{ repeat: Infinity, duration: 1.5, ...SPRINGS.GENTLE }} className="relative"><MapPin weight="regular" size={16} className="text-[var(--gold)] relative z-10" /><motion.div animate={{ scale: [1, 2.5], opacity: [0.6, 0] }} transition={{ repeat: Infinity, duration: 2 }} className="absolute inset-0 bg-[var(--gold)] rounded-full -z-10" /></motion.div><span className="font-sans text-sm text-[var(--text-3)] font-medium">Detecting your environment...</span></motion.div>;
+  return <motion.div key="detected" layoutId="locPill" className="flex flex-col items-center gap-4"><div className="flex items-center gap-3 px-6 py-3 rounded-full bg-white/5 border border-white/10 backdrop-blur-md"><Heartbeat weight="regular" size={20} className="text-[var(--jade)]" /><span className="font-sans font-semibold text-sm text-[var(--parchment)]">{classification?.label ?? "You are at a hospital"}</span></div><motion.div initial={{ scale: 0.6, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={SPRINGS.DEFAULT} className="bg-[var(--jade)]/15 border border-[var(--jade)]/30 rounded-full px-4 py-1.5"><span className="text-xs font-sans text-[var(--jade)] font-medium">{classification?.contextTag ?? "Showing verses on: healing & patience"}</span></motion.div></motion.div>;
+}
