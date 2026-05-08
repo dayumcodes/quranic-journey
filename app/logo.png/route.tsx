@@ -1,8 +1,6 @@
 import { ImageResponse } from "next/og";
 
 export const runtime = "edge";
-export const size = { width: 512, height: 512 };
-export const contentType = "image/png";
 
 export function GET() {
   return new ImageResponse(
@@ -23,6 +21,6 @@ export function GET() {
         Al-Rihla
       </div>
     ),
-    size
+    { width: 512, height: 512 }
   );
 }

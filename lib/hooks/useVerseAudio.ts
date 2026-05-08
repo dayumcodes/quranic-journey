@@ -23,7 +23,9 @@ export function useVerseAudio(audioUrl: string | null) {
       onend: () => setIsPlaying(false)
     });
     howlRef.current = howl;
-    return () => howl.unload();
+    return () => {
+      howl.unload();
+    };
   }, [audioUrl]);
 
   const tick = useCallback(() => {
