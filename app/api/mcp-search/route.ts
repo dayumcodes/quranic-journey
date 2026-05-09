@@ -1,5 +1,9 @@
 export const dynamic = "force-dynamic";
 
+import { mcpSearchQuranViaHttp } from "@/lib/server/quranMcpClient";
+
+type BodyShape = { query?: unknown; limit?: unknown };
+
 export async function POST(req: Request) {
   let body: unknown;
   try {
@@ -8,24 +12,19 @@ export async function POST(req: Request) {
     return Response.json({ message: "Invalid JSON body" }, { status: 400 });
   }
 
-  const upstreamRes = await fetch("https://mcp.quran.ai/", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Accept: "application/json, text/event-stream, */*"
-    },
-    body: typeof body === "object" && body !== null ? JSON.stringify(body) : "{}",
-    cache: "no-store"
-  });
+  const b = body as BodyShape;
+  const query = typeof b.query === "string" ? b.query.trim() : "";
+  if (!query) {
+    return Response.json({ message: "Missing or empty query" }, { status: 400 });
+  }
 
-  const text = await upstreamRes.text();
-  return new Response(text, {
-    status: upstreamRes.status,
-    headers: {
-      "Content-Type": upstreamRes.headers.get("content-type") ?? "application/json",
-      ...(upstreamRes.headers.get("mcp-session-id")
-        ? { "mcp-session-id": upstreamRes.headers.get("mcp-session-id")! }
-        : {})
-    }
-  });
+  const limitRaw = b.limit;
+  const limit = typeof limitRaw === "number" && Number.isFinite(limitRaw) ? Math.min(20, Math.max(1, Math.floor(limitRaw))) : 5;
+
+  try {
+    const results = await mcpSearchQuranViaHttp(query, limit);
+    return Response.json(results);
+  } catch {
+    return Response.json([], { status: 200 });
+  }
 }
