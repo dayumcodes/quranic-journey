@@ -25,7 +25,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     sessionStorage.setItem("pkce_verifier", verifier);
     const challenge = await generateCodeChallenge(verifier);
     const oauthBase = process.env.NEXT_PUBLIC_OAUTH_BASE_URL ?? "https://auth.quran.foundation";
-    const authUrl = new URL(`${oauthBase.replace(/\/+$/, "")}/oauth2/authorize`);
+    const authUrl = new URL(`${oauthBase.replace(/\/+$/, "")}/oauth2/auth`);
     authUrl.searchParams.set("client_id", process.env.NEXT_PUBLIC_OAUTH_CLIENT_ID ?? "");
     authUrl.searchParams.set("redirect_uri", process.env.NEXT_PUBLIC_OAUTH_REDIRECT_URI ?? "");
     authUrl.searchParams.set("response_type", "code");
