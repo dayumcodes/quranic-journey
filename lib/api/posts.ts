@@ -1,7 +1,8 @@
 import { apiFetch } from "@/lib/api/client";
+import { getUserApiBase } from "@/lib/api/userApiBase";
 import type { Post } from "@/types";
 
-const USER_BASE = (process.env.NEXT_PUBLIC_USER_API_BASE_URL ?? "/api/qf-user").replace(/\/+$/, "");
+const USER_BASE = getUserApiBase();
 
 export const createPost = (payload: Partial<Post>) =>
   apiFetch<Post>(`${USER_BASE}/posts`, {

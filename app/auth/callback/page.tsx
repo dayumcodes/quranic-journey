@@ -75,6 +75,7 @@ function AuthCallbackContent() {
       const id = info?.sub || email || "me";
       setTokens(tokenData.access_token, {
         id,
+        sub: info?.sub,
         name: displayName,
         email,
         avatar_initials: initialsFromName(displayName)
@@ -89,6 +90,7 @@ function AuthCallbackContent() {
           });
         }
         sessionStorage.removeItem("access_token");
+        sessionStorage.removeItem("al_rihla_user");
       })
       .finally(() => router.push("/"));
   }, [params, router, setTokens]);

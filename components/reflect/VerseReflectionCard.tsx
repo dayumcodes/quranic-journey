@@ -2,18 +2,20 @@
 
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { CaretDown, ShareNetwork } from "@phosphor-icons/react";
+import { CaretDown, Copy, Pause, Play, ShareNetwork, ChatCircle } from "@phosphor-icons/react";
 import AnimatedTextRTL from "@/components/shared/AnimatedTextRTL";
 import SaveButton from "@/components/reflect/SaveButton";
-import { getTafsirByAyah, getVerseByKey } from "@/lib/api/quran";
+import { getRecitationByAyah, getTafsirByAyah, getVerseByKey } from "@/lib/api/quran";
 import { getCollections, postCollection } from "@/lib/api/user";
 import { verseArabicDisplay, verseTranslationDisplay } from "@/lib/utils/quranVerse";
+import { normalizeRecitationAudioUrl } from "@/lib/utils/audioUrl";
+import { addLocalBookmark, hasLocalBookmark } from "@/lib/utils/reflectBookmarks";
+import { useVerseAudio } from "@/lib/hooks/useVerseAudio";
 import { useAuthStore } from "@/lib/store/authStore";
 import type { MCPSearchResult } from "@/types";
 
 interface Props {
   verseKey: string;
-  /** Enriched label when MCP provided names */
   meta?: Pick<MCPSearchResult, "surah_name" | "ayah_number" | "text_arabic" | "translation"> | null;
 }
 
@@ -25,16 +27,25 @@ function formatHeaderLabel(key: string, meta?: Props["meta"]): string {
   return `Surah ${parts[0] ?? "?"}, Ayah ${ay}`;
 }
 
+function shareBody(headerLabel: string, translation: string, verseKey: string): string {
+  const origin = typeof window !== "undefined" ? window.location.origin : "https://quranicjourney.vercel.app";
+  return `${headerLabel}\n${translation}\n\n${verseKey}\n${origin}/reflect`;
+}
+
 export default function VerseReflectionCard({ verseKey, meta }: Props) {
   const { isAuthenticated, login } = useAuthStore();
   const [tafsirOpen, setTafsirOpen] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const [arabic, setArabic] = useState(meta?.text_arabic ?? "");
   const [translation, setTranslation] = useState(meta?.translation ?? "");
   const [tafsirText, setTafsirText] = useState("");
   const [loading, setLoading] = useState(true);
+  const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const headerLabel = formatHeaderLabel(verseKey, meta ?? undefined);
-  const shareText = `${headerLabel}\n${translation}\n\nhttps://quranicjourney.vercel.app/reflect`;
+  const shareText = shareBody(headerLabel, translation, verseKey);
+
+  const { isPlaying, play, pause } = useVerseAudio(audioUrl);
 
   useEffect(() => {
     let cancelled = false;
@@ -42,11 +53,14 @@ export default function VerseReflectionCard({ verseKey, meta }: Props) {
       setLoading(true);
       setTafsirOpen(false);
       setTafsirText("");
+      setAudioUrl(null);
+      setSaveError(null);
       try {
-        const verse = await getVerseByKey(verseKey);
+        const [verse, rec] = await Promise.all([getVerseByKey(verseKey), getRecitationByAyah(verseKey)]);
         if (cancelled) return;
         setArabic(verseArabicDisplay(verse) || (meta?.text_arabic ?? ""));
         setTranslation(verseTranslationDisplay(verse, meta?.translation ?? ""));
+        setAudioUrl(normalizeRecitationAudioUrl(rec.url));
         try {
           const tf = await getTafsirByAyah(verseKey);
           if (!cancelled) setTafsirText(tf?.text ?? "");
@@ -70,16 +84,51 @@ export default function VerseReflectionCard({ verseKey, meta }: Props) {
 
   useEffect(() => {
     if (!isAuthenticated) {
-      setIsSaved(false);
+      setIsSaved(hasLocalBookmark(verseKey));
       return;
     }
     getCollections()
       .then((collections) => {
-        const exists = collections.some((c) => (c.items ?? []).some((i) => i.verse_key === verseKey));
-        setIsSaved(exists);
+        const apiSaved = collections.some((c) => (c.items ?? []).some((i) => i.verse_key === verseKey));
+        setIsSaved(apiSaved || hasLocalBookmark(verseKey));
       })
-      .catch(() => setIsSaved(false));
+      .catch(() => {
+        setIsSaved(hasLocalBookmark(verseKey));
+      });
   }, [isAuthenticated, verseKey]);
+
+  const handleShare = async () => {
+    const url = typeof window !== "undefined" ? window.location.href : "";
+    const full = `${shareText}\n${url}`.trim();
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: headerLabel, text: full });
+        return;
+      } catch {
+        /* user cancelled or share failed */
+      }
+    }
+    try {
+      await navigator.clipboard.writeText(full);
+    } catch {
+      /* ignore */
+    }
+    window.open(`https://wa.me/?text=${encodeURIComponent(full)}`, "_blank", "noopener,noreferrer");
+  };
+
+  const openSms = () => {
+    const full = `${shareText}\n${typeof window !== "undefined" ? window.location.href : ""}`.trim();
+    window.location.href = `sms:?&body=${encodeURIComponent(full)}`;
+  };
+
+  const copyShare = async () => {
+    const full = `${shareText}\n${typeof window !== "undefined" ? window.location.href : ""}`.trim();
+    try {
+      await navigator.clipboard.writeText(full);
+    } catch {
+      /* ignore */
+    }
+  };
 
   if (loading) {
     return (
@@ -100,7 +149,27 @@ export default function VerseReflectionCard({ verseKey, meta }: Props) {
       whileHover={{ y: -4 }}
       className="w-full max-w-[680px] mt-16 bg-white/[0.03] backdrop-blur-[24px] border border-white/10 rounded-[2.5rem] p-8 md:p-14 shadow-[inset_0_1px_0_rgba(255,255,255,0.06),_0_32px_64px_-16px_rgba(0,0,0,0.5)] transition-shadow duration-500 hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.06),_0_32px_80px_-12px_rgba(0,0,0,0.6)]"
     >
-      <span className="font-sans text-[11px] tracking-[0.18em] uppercase text-[var(--text-3)] block mb-10">{headerLabel}</span>
+      <div className="flex flex-wrap items-center gap-4 justify-between mb-6">
+        <span className="font-sans text-[11px] tracking-[0.18em] uppercase text-[var(--text-3)]">{headerLabel}</span>
+        <div className="flex items-center gap-2 shrink-0">
+          <motion.button
+            type="button"
+            whileTap={{ scale: 0.95 }}
+            disabled={!audioUrl}
+            title={audioUrl ? (isPlaying ? "Pause audio" : "Listen to this ayah") : "Audio unavailable"}
+            onClick={() => {
+              if (!audioUrl) return;
+              if (isPlaying) pause();
+              else play();
+            }}
+            className="flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-2 text-[12px] font-medium text-white/90 hover:bg-white/10 disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            {isPlaying ? <Pause weight="fill" size={16} /> : <Play weight="fill" size={16} />}
+            Listen
+          </motion.button>
+        </div>
+      </div>
+
       {arabic ? <AnimatedTextRTL text={arabic} delay={0.5} /> : null}
       <hr className="border-white/5 my-8" />
       <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.5, duration: 1 }} className="font-sans text-base text-[var(--text-3)] italic text-right max-w-[52ch] ml-auto leading-relaxed">
@@ -125,37 +194,49 @@ export default function VerseReflectionCard({ verseKey, meta }: Props) {
           )}
         </AnimatePresence>
       </div>
-      <div className="flex justify-between items-center mt-12 pt-6 border-t border-white/5">
-        <button
-          type="button"
-          onClick={() => {
-            if (navigator.share) {
-              void navigator.share({ title: headerLabel, text: shareText });
-              return;
-            }
-            const wa = `https://wa.me/?text=${encodeURIComponent(shareText)}`;
-            window.open(wa, "_blank", "noopener,noreferrer");
-          }}
-          className="flex items-center gap-2 px-4 py-2 text-sm text-[var(--text-3)] hover:text-white transition-colors rounded-full hover:bg-white/5"
-        >
-          <ShareNetwork weight="regular" size={16} /> Share Reflection
-        </button>
-        <SaveButton
-          isSaved={isSaved}
-          onSave={() => {
-            if (isSaved) return;
-            if (!isAuthenticated) {
-              void login();
-              return;
-            }
-            postCollection({
-              name: "Saved Reflections",
-              items: [{ verse_key: verseKey }]
-            })
-              .then(() => setIsSaved(true))
-              .catch(() => setIsSaved(false));
-          }}
-        />
+
+      <div className="flex flex-col gap-4 mt-12 pt-6 border-t border-white/5">
+        <div className="flex flex-wrap gap-2 items-center">
+          <button type="button" onClick={handleShare} className="flex items-center gap-2 px-4 py-2 text-sm text-[var(--text-3)] hover:text-white transition-colors rounded-full hover:bg-white/5">
+            <ShareNetwork weight="regular" size={16} /> Share reflection
+          </button>
+          <button type="button" onClick={() => window.open(`https://wa.me/?text=${encodeURIComponent(`${shareText}\n${typeof window !== "undefined" ? window.location.href : ""}`)}`, "_blank", "noopener,noreferrer")} title="WhatsApp" className="flex items-center gap-1 px-3 py-2 text-sm rounded-full border border-emerald-500/30 text-emerald-200/90 hover:bg-emerald-500/10">
+            WhatsApp
+          </button>
+          <button type="button" onClick={openSms} title="Messages / SMS" className="flex items-center gap-1 px-3 py-2 text-sm rounded-full border border-white/15 text-white/80 hover:bg-white/5">
+            <ChatCircle weight="regular" size={16} /> Message
+          </button>
+          <button type="button" onClick={copyShare} title="Copy to clipboard" className="flex items-center gap-1 px-3 py-2 text-sm rounded-full border border-white/15 text-white/80 hover:bg-white/5">
+            <Copy weight="regular" size={16} /> Copy
+          </button>
+        </div>
+        {saveError ? <p className="text-xs text-amber-200/90">{saveError}</p> : null}
+        <div className="flex justify-end">
+          <SaveButton
+            isSaved={isSaved}
+            onSave={() => {
+              if (isSaved) return;
+              setSaveError(null);
+              if (!isAuthenticated) {
+                void login();
+                return;
+              }
+              postCollection({
+                name: "Saved Reflections",
+                items: [{ verse_key: verseKey }]
+              })
+                .then(() => {
+                  addLocalBookmark(verseKey);
+                  setIsSaved(true);
+                })
+                .catch(() => {
+                  addLocalBookmark(verseKey);
+                  setIsSaved(true);
+                  setSaveError("Saved on this device. Sync to Quran Foundation will work when collections scope is enabled.");
+                });
+            }}
+          />
+        </div>
       </div>
     </motion.div>
   );

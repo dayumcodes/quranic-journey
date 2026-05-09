@@ -9,7 +9,10 @@ const jetbrainsMono = JetBrains_Mono({ subsets: ["latin"], variable: "--font-jet
 
 export const metadata: Metadata = {
   title: "Al-Rihla",
-  description: "Quranic journey experience"
+  description: "Quranic journey experience",
+  icons: {
+    icon: [{ url: "/favicon.svg", type: "image/svg+xml" }]
+  }
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

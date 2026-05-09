@@ -8,7 +8,7 @@ import { SPRINGS } from "@/lib/constants/motion";
 import { useAuthStore } from "@/lib/store/authStore";
 
 interface Props {
-  currentPage: "home" | "journey" | "reflect" | "pal";
+  currentPage: "home" | "journey" | "reflect" | "pal" | "profile";
 }
 
 export default function GlobalNav({ currentPage }: Props) {
@@ -28,6 +28,7 @@ export default function GlobalNav({ currentPage }: Props) {
     }
   }, [currentPage]);
   const isDark = currentPage === "reflect";
+  const inactiveTabTone = currentPage === "profile" ? "text-[var(--text-2)] hover:text-black" : isDark ? "text-[var(--text-3)] hover:text-white" : "text-[var(--text-2)] hover:text-black";
   const navBg = isDark ? "bg-[#080A0E]/80" : "bg-[#F4EFE6]/80";
   const navBorder = isDark ? "border-[rgba(255,255,255,0.04)]" : "border-[rgba(13,15,18,0.06)]";
 
@@ -55,7 +56,7 @@ export default function GlobalNav({ currentPage }: Props) {
               {["journey", "reflect", "pal"].map((tab) => {
                 const isActive = currentPage === tab;
                 return (
-                  <Link key={tab} href={`/${tab === "journey" ? "journey" : tab}`} className={`relative px-5 py-1.5 text-sm font-sans font-medium rounded-full transition-colors z-10 ${isActive ? "text-[var(--ink)]" : isDark ? "text-[var(--text-3)] hover:text-white" : "text-[var(--text-2)] hover:text-black"}`}>
+                  <Link key={tab} href={`/${tab === "journey" ? "journey" : tab}`} className={`relative px-5 py-1.5 text-sm font-sans font-medium rounded-full transition-colors z-10 ${isActive ? "text-[var(--ink)]" : inactiveTabTone}`}>
                     {isActive && <motion.div layoutId="activePill" transition={{ type: "spring", stiffness: 300, damping: 26 }} className="absolute inset-0 bg-[var(--gold)] rounded-full -z-10 shadow-[0_2px_8px_rgba(184,148,63,0.3)]" />}
                     <span className="capitalize relative z-20">{tab}</span>
                   </Link>
@@ -89,11 +90,15 @@ export default function GlobalNav({ currentPage }: Props) {
             )}
           </motion.button>
           {isAuthenticated && menuOpen ? (
-            <div className="absolute right-0 mt-3 min-w-[180px] rounded-xl border border-white/10 bg-black/80 text-white backdrop-blur-md p-2 z-50">
-              <div className="px-3 py-2 text-xs text-white/70">Signed in as {user?.name ?? "User"}</div>
-              <button onClick={() => setMenuOpen(false)} className="w-full text-left px-3 py-2 rounded-lg hover:bg-white/10 text-sm">
+            <div className="absolute right-0 mt-3 min-w-[180px] rounded-xl border border-white/10 bg-black/80 text-white backdrop-blur-md p-2 z-50 shadow-xl">
+              <div className="px-3 py-2 text-xs text-white/70 truncate">Signed in as {user?.name ?? "User"}</div>
+              <Link
+                href="/profile"
+                onClick={() => setMenuOpen(false)}
+                className="block w-full text-left px-3 py-2 rounded-lg hover:bg-white/10 text-sm"
+              >
                 Profile
-              </button>
+              </Link>
               <button
                 onClick={() => {
                   setMenuOpen(false);

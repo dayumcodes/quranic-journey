@@ -4,9 +4,13 @@ const nextConfig = {
   images: {
     remotePatterns: [
       { protocol: "https", hostname: "api.quran.foundation" },
+      { protocol: "https", hostname: "apis.quran.foundation" },
       { protocol: "https", hostname: "mcp.quran.ai" },
       { protocol: "https", hostname: "auth.quran.foundation" }
     ]
+  },
+  async rewrites() {
+    return [{ source: "/favicon.ico", destination: "/favicon.svg" }];
   }
 };
 

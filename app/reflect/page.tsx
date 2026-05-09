@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import GlobalNav from "@/components/nav/GlobalNav";
 import ReflectCanvasMesh from "@/components/reflect/ReflectCanvasMesh";
@@ -73,7 +74,11 @@ function fallbackForKeywords(keywords: string): MCPSearchResult[] {
   return [...bucket.slice(offset), ...bucket.slice(0, offset)];
 }
 
-export default function ReflectPage() {
+function ReflectPageInner() {
+  const searchParams = useSearchParams();
+  const deepVerseRaw = searchParams.get("verse");
+  const deepLinkValid = !!(deepVerseRaw && /^\d+:\d+$/.test(deepVerseRaw));
+
   const { state, classification } = useLocation();
   const [mcpLoading, setMcpLoading] = useState(false);
   const [results, setResults] = useState<MCPSearchResult[]>([]);
@@ -94,6 +99,27 @@ export default function ReflectPage() {
   }, [classification?.keywords, state]);
 
   useEffect(() => {
+    if (deepLinkValid && deepVerseRaw) {
+      const parts = deepVerseRaw.split(":");
+      const surahNum = Number(parts[0]);
+      const ayNum = Number(parts[1]);
+      setResults([
+        {
+          verse_key: deepVerseRaw,
+          text_arabic: "",
+          translation: "",
+          surah_name: Number.isFinite(surahNum) ? `Surah ${surahNum}` : "",
+          ayah_number: Number.isFinite(ayNum) ? ayNum : 0,
+          relevance_score: 0
+        }
+      ]);
+      setVerseIndex(0);
+      setMcpLoading(false);
+    }
+  }, [deepLinkValid, deepVerseRaw]);
+
+  useEffect(() => {
+    if (deepLinkValid) return;
     if (state === "DETECTED" && classification?.keywords) {
       loadVersesForContext();
     } else if (state !== "DETECTED") {
@@ -101,12 +127,17 @@ export default function ReflectPage() {
       setVerseIndex(0);
       setMcpLoading(false);
     }
-  }, [state, classification?.keywords, loadVersesForContext]);
+  }, [deepLinkValid, state, classification?.keywords, loadVersesForContext]);
 
   const current = results[verseIndex];
 
   const goPrev = () => setVerseIndex((i) => Math.max(0, i - 1));
   const goNext = () => setVerseIndex((i) => Math.min(results.length - 1, i + 1));
+
+  const showVerseBlock = useMemo(() => {
+    if (deepLinkValid) return results.length > 0;
+    return state === "DETECTED";
+  }, [deepLinkValid, results.length, state]);
 
   return (
     <>
@@ -117,8 +148,8 @@ export default function ReflectPage() {
         <div className="relative z-10 max-w-[1320px] mx-auto flex flex-col items-center">
           <LocationDetector state={state} classification={classification} />
           <p className="mt-4 text-[13px] text-[var(--text-3)] underline cursor-pointer hover:text-white transition-colors">Enter context manually →</p>
-          {state === "DETECTED" ? (
-            mcpLoading ? (
+          {showVerseBlock ? (
+            mcpLoading && !deepLinkValid ? (
               <ReflectVerseSkeleton />
             ) : (
               <>
@@ -131,5 +162,13 @@ export default function ReflectPage() {
         <SavedDrawer />
       </motion.div>
     </>
+  );
+}
+
+export default function ReflectPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-[var(--void)] text-white pt-32 flex justify-center">Loading reflect…</div>}>
+      <ReflectPageInner />
+    </Suspense>
   );
 }

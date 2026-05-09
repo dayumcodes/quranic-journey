@@ -4,6 +4,19 @@ import { create } from "zustand";
 import { generateCodeChallenge, generateCodeVerifier } from "@/lib/auth/pkce";
 import type { User } from "@/types";
 
+const USER_STORAGE_KEY = "al_rihla_user";
+
+function loadStoredUser(): User | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = sessionStorage.getItem(USER_STORAGE_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw) as User;
+  } catch {
+    return null;
+  }
+}
+
 interface AuthState {
   user: User | null;
   accessToken: string | null;
@@ -23,7 +36,7 @@ function randomState(bytes = 16): string {
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
-  user: null,
+  user: loadStoredUser(),
   accessToken: typeof window !== "undefined" ? sessionStorage.getItem("access_token") : null,
   isAuthenticated: typeof window !== "undefined" ? !!sessionStorage.getItem("access_token") : false,
   login: async () => {
@@ -57,11 +70,13 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
   logout: () => {
     sessionStorage.removeItem("access_token");
+    sessionStorage.removeItem(USER_STORAGE_KEY);
     sessionStorage.removeItem("pkce_verifier");
     set({ user: null, accessToken: null, isAuthenticated: false });
   },
   setTokens: (access, user) => {
     sessionStorage.setItem("access_token", access);
+    sessionStorage.setItem(USER_STORAGE_KEY, JSON.stringify(user));
     set({ accessToken: access, user, isAuthenticated: true });
   }
 }));

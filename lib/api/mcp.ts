@@ -1,17 +1,18 @@
 import type { MCPSearchResult } from "@/types";
 
 export async function semanticSearch(query: string, limit = 5): Promise<MCPSearchResult[]> {
-  const response = await fetch("https://mcp.quran.ai/", {
+  const response = await fetch(typeof window !== "undefined" ? "/api/mcp-search" : "https://mcp.quran.ai/", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Accept: "application/json"
+      Accept: "application/json, text/event-stream, */*"
     },
     body: JSON.stringify({ query, limit })
   });
   if (!response.ok) return [];
   try {
-    const data: unknown = await response.json();
+    const raw = await response.text();
+    const data: unknown = JSON.parse(raw) as unknown;
     if (Array.isArray(data)) return data as MCPSearchResult[];
     if (typeof data === "object" && data !== null) {
       const obj = data as Record<string, unknown>;

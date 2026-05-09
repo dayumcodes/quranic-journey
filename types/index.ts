@@ -73,7 +73,14 @@ export interface Post {
   verse_reference?: string;
   created_at: string;
 }
-export interface User { id: string; name: string; email: string; avatar_initials: string; }
+export interface User {
+  id: string;
+  name: string;
+  email: string;
+  avatar_initials: string;
+  /** Quran Foundation OIDC subject when available */
+  sub?: string;
+}
 export interface PartnerProfile {
   user: User;
   streak: StreakData;
@@ -106,4 +113,4 @@ export interface NominatimResult {
 export interface ApiError { status: number; message: string; }
 export type LocationState = "IDLE" | "DETECTING" | "DETECTED" | "DENIED" | "ERROR";
 export type PanelState = "PLAYER" | "QUIZ" | "BADGE";
-export type NavPage = "home" | "journey" | "reflect" | "pal";
+export type NavPage = "home" | "journey" | "reflect" | "pal" | "profile";

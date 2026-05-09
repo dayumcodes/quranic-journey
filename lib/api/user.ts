@@ -1,7 +1,8 @@
 import { apiFetch } from "@/lib/api/client";
+import { getUserApiBase } from "@/lib/api/userApiBase";
 import type { ActivitySession, Collection, Goal, Post, StreakData } from "@/types";
 
-const USER_BASE = (process.env.NEXT_PUBLIC_USER_API_BASE_URL ?? "/api/qf-user").replace(/\/+$/, "");
+const USER_BASE = getUserApiBase();
 
 export const getStreaks = () => apiFetch<StreakData>(`${USER_BASE}/streaks`);
 export const postActivitySession = (payload: Partial<ActivitySession>) =>
