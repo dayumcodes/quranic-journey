@@ -46,7 +46,7 @@ function AuthCallbackContent() {
       client_id: process.env.NEXT_PUBLIC_OAUTH_CLIENT_ID ?? "",
       code_verifier: verifier
     });
-    const oauthBase = (process.env.NEXT_PUBLIC_OAUTH_BASE_URL ?? "https://auth.quran.foundation").replace(/\/+$/, "");
+    const oauthBase = (process.env.NEXT_PUBLIC_OAUTH_BASE_URL ?? "https://oauth2.quran.foundation").replace(/\/+$/, "");
 
     const run = async () => {
       const tokenRes = await fetch(`${oauthBase}/oauth2/token`, {
@@ -55,6 +55,15 @@ function AuthCallbackContent() {
         body
       });
       const tokenData = (await tokenRes.json()) as OAuthTokenResponse;
+      if (process.env.NODE_ENV !== "production") {
+        console.info("[auth/callback] token exchange response", {
+          oauthBase,
+          status: tokenRes.status,
+          ok: tokenRes.ok,
+          error: tokenData.error,
+          error_description: tokenData.error_description
+        });
+      }
       if (!tokenRes.ok || !tokenData.access_token) {
         throw new Error(tokenData.error_description || tokenData.error || "Token exchange failed");
       }
@@ -87,7 +96,13 @@ function AuthCallbackContent() {
     };
 
     run()
-      .catch(() => {
+      .catch((err) => {
+        if (process.env.NODE_ENV !== "production") {
+          console.error("[auth/callback] login flow failed", {
+            oauthBase,
+            message: err instanceof Error ? err.message : String(err)
+          });
+        }
         sessionStorage.removeItem("access_token");
       })
       .finally(() => router.push("/"));
