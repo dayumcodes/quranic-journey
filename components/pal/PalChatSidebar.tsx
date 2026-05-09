@@ -10,6 +10,7 @@ export default function PalChatSidebar({
   onSelect,
   onAddClick,
   onRemovePal,
+  onClose,
   myReadingLine
 }: {
   threads: PalThread[];
@@ -17,14 +18,28 @@ export default function PalChatSidebar({
   onSelect: (partnerId: string) => void;
   onAddClick: () => void;
   onRemovePal?: (partnerId: string) => void;
+  onClose?: () => void;
   /** Same reading focus across all threads (your global goal / journey) */
   myReadingLine?: string;
 }) {
   return (
     <aside className="w-full md:w-[300px] lg:w-[320px] shrink-0 flex flex-col rounded-2xl border border-[rgba(13,15,18,0.08)] bg-white/80 backdrop-blur-sm overflow-hidden shadow-card-resting min-h-[420px] max-h-[calc(100vh-8rem)] md:sticky md:top-28">
-      <div className="p-4 border-b border-[rgba(13,15,18,0.06)]">
-        <h2 className="font-display font-semibold text-lg text-[var(--ink)]">Pals</h2>
-        {myReadingLine ? <p className="text-[11px] text-[var(--text-3)] mt-1 leading-snug">{myReadingLine}</p> : null}
+      <div className="p-4 border-b border-[rgba(13,15,18,0.06)] flex items-start gap-3 justify-between">
+        <div className="min-w-0 flex-1">
+          <h2 className="font-display font-semibold text-lg text-[var(--ink)]">Pals</h2>
+          {myReadingLine ? <p className="text-[11px] text-[var(--text-3)] mt-1 leading-snug">{myReadingLine}</p> : null}
+        </div>
+        {onClose ? (
+          <button
+            type="button"
+            title="Hide pals list"
+            aria-label="Hide pals list"
+            onClick={onClose}
+            className="shrink-0 p-2 rounded-full text-[var(--text-3)] hover:bg-black/[0.06] hover:text-[var(--ink)] transition-colors -mr-1 -mt-1"
+          >
+            <X weight="bold" size={18} />
+          </button>
+        ) : null}
       </div>
       <div className="flex-1 overflow-y-auto">
         {threads.length === 0 ? (

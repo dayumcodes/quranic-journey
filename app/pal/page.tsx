@@ -2,7 +2,7 @@
 
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Fire } from "@phosphor-icons/react";
+import { Fire, Plus } from "@phosphor-icons/react";
 import { motion } from "framer-motion";
 import GlobalNav from "@/components/nav/GlobalNav";
 import PartnerHeader from "@/components/pal/PartnerHeader";
@@ -60,6 +60,7 @@ function PalPageInner() {
   const [threads, setThreads] = useState<PalThread[]>([]);
   const [selectedPartnerId, setSelectedPartnerId] = useState<string | null>(null);
   const [showAddPalPanel, setShowAddPalPanel] = useState(false);
+  const [palSidebarOpen, setPalSidebarOpen] = useState(true);
   const [inviteNick, setInviteNick] = useState("");
   const [postsError, setPostsError] = useState<string | null>(null);
   const [goalBusy, setGoalBusy] = useState(false);
@@ -365,7 +366,7 @@ function PalPageInner() {
       .finally(() => setGoalBusy(false));
   };
 
-  if (!isAuthenticated) {
+  if (!isAuthenticated || !user) {
     return (
       <>
         <GlobalNav currentPage="pal" />
@@ -395,14 +396,28 @@ function PalPageInner() {
       <GlobalNav currentPage="pal" />
       <motion.div className="min-h-screen bg-[var(--parchment)] pt-24 pb-32 px-4 md:px-8 lg:px-12" variants={pageVariants} initial="initial" animate="animate" exit="exit">
         <div className="max-w-[1400px] mx-auto flex flex-col md:flex-row gap-8 items-start">
-          <PalChatSidebar
-            threads={threads}
-            activePartnerId={selectedPartnerId}
-            onSelect={(pid) => selectThread(pid)}
-            onAddClick={() => setShowAddPalPanel(true)}
-            onRemovePal={removePal}
-            myReadingLine={globalReadingLine}
-          />
+          {palSidebarOpen ? (
+            <PalChatSidebar
+              threads={threads}
+              activePartnerId={selectedPartnerId}
+              onSelect={(pid) => selectThread(pid)}
+              onAddClick={() => setShowAddPalPanel(true)}
+              onRemovePal={removePal}
+              onClose={() => setPalSidebarOpen(false)}
+              myReadingLine={globalReadingLine}
+            />
+          ) : (
+            <button
+              type="button"
+              title="Open pals"
+              aria-label="Open pals"
+              onClick={() => setPalSidebarOpen(true)}
+              className="shrink-0 w-full md:w-[52px] lg:w-14 min-h-[3rem] md:min-h-[min(420px,calc(100vh-8rem))] rounded-2xl border border-[rgba(13,15,18,0.08)] bg-white/80 backdrop-blur-sm shadow-card-resting flex flex-row md:flex-col items-center justify-center gap-2 py-3 md:py-6 hover:bg-black/[0.03] hover:border-[var(--gold)]/35 transition-colors md:sticky md:top-28"
+            >
+              <Plus weight="bold" size={22} className="text-[var(--gold)] shrink-0" />
+              <span className="text-sm font-medium text-[var(--text-2)] md:hidden">Open pals</span>
+            </button>
+          )}
 
           <div className="flex-1 min-w-0 w-full">
             {pendingInvitePartnerId ? (
@@ -430,7 +445,7 @@ function PalPageInner() {
 
             {showAddPalPanel || threads.length === 0 ? (
               <PalPartnerOnboarding
-                myUserId={user!.id}
+                myUserId={user.id}
                 onSavePartnerId={(id, nick) => addPartnerHandlers(id, nick)}
                 onDismiss={threads.length > 0 ? () => setShowAddPalPanel(false) : undefined}
               />
