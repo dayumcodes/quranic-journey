@@ -64,7 +64,8 @@ Requires approved scopes and working token storage after `/auth/callback`.
 
 | Today | Needed |
 | ----- | ------ |
-| Hardcoded streaks/progress/posts | **`usePartner`/real IDs**, `getPosts` / `createPost`, `postActivitySession` |
+| ~~Hardcoded streaks/progress/posts~~ → **wired** (`/pal`) | ✅ **`usePalPartner`** — partner from shared **`goal.partner_id`**, **`localStorage`** (`palPartnerStorage`), or **`/pal?partner=`** invite (confirm strips query). **`getPosts(user, partner)`** + **`recipient_id`** on **`createPost`**. Partner weekly verses try **`GET /activity?…&user_ids=`** fall back to **`—`** + copy if API forbids cross-user reads. Partner streak **`—`** until QF exposes it. **`PalPartnerOnboarding`** (copy invite + paste UUID + nickname). **`PalSharedGoalStarter`** → **`POST /goals`** shared goal. **`PartnerHeader`** is prop-driven + comparison badge from weekly delta when API works. |
+
 
 ### Journey
 

@@ -13,6 +13,9 @@ export const postGoal = (payload: Partial<Goal>) =>
 export const getCollections = () => apiFetch<Collection[]>(`${USER_BASE}/collections`);
 export const postCollection = (payload: Record<string, unknown>) =>
   apiFetch<Collection>(`${USER_BASE}/collections`, { method: "POST", body: JSON.stringify(payload) });
-export const getActivity = (from: string, to: string) => apiFetch<ActivitySession[]>(`${USER_BASE}/activity?from=${from}&to=${to}`);
+export const getActivity = (from: string, to: string, userIds?: string) =>
+  apiFetch<ActivitySession[]>(
+    `${USER_BASE}/activity?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}${userIds ? `&user_ids=${encodeURIComponent(userIds)}` : ""}`
+  );
 export const getPosts = (id1: string, id2: string) =>
   apiFetch<Post[]>(`${USER_BASE}/posts?user_ids=${id1},${id2}&type=reflection,encouragement`);
