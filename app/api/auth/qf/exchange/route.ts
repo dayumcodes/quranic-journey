@@ -109,6 +109,17 @@ export async function POST(req: Request) {
     }
   }
 
+  const idPayload = decodeJwtPayload(tokenData.id_token);
+  const atPayload = decodeJwtPayload(tokenData.access_token);
+  const subFromJwt =
+    (typeof idPayload?.sub === "string" ? idPayload.sub : undefined) ??
+    (typeof atPayload?.sub === "string" ? atPayload.sub : undefined);
+
+  if (subFromJwt?.trim()) {
+    if (!user) user = { sub: subFromJwt.trim() };
+    else if (!user.sub?.trim()) user = { ...user, sub: subFromJwt.trim() };
+  }
+
   return Response.json({
     access_token: tokenData.access_token,
     user

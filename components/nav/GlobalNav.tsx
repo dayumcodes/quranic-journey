@@ -6,6 +6,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { User } from "@phosphor-icons/react";
 import { SPRINGS } from "@/lib/constants/motion";
 import { useAuthStore } from "@/lib/store/authStore";
+import { usePalEncouragementToastStore } from "@/lib/store/palEncouragementToastStore";
 
 interface Props {
   currentPage: "home" | "journey" | "reflect" | "pal" | "profile";
@@ -14,19 +15,25 @@ interface Props {
 export default function GlobalNav({ currentPage }: Props) {
   const { isAuthenticated, user, login, logout } = useAuthStore();
   const [scrolled, setScrolled] = useState(false);
-  const [nudgeActive, setNudgeActive] = useState(false);
+  const encouragementPeek = usePalEncouragementToastStore((s) => s.peek);
+  const setEncouragementPeek = usePalEncouragementToastStore((s) => s.setEncouragementPeek);
   const [menuOpen, setMenuOpen] = useState(false);
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 60);
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+  /** Pal page pushes real encouragement payloads; auto-clear toast */
   useEffect(() => {
-    if (currentPage === "pal") {
-      setTimeout(() => setNudgeActive(true), 2000);
-      setTimeout(() => setNudgeActive(false), 6000);
-    }
-  }, [currentPage]);
+    if (currentPage !== "pal" || !encouragementPeek) return;
+    const t = window.setTimeout(() => setEncouragementPeek(null), 6200);
+    return () => window.clearTimeout(t);
+  }, [currentPage, encouragementPeek, setEncouragementPeek]);
+
+  /** Leaving Pal clears dangling peek */
+  useEffect(() => {
+    if (currentPage !== "pal") setEncouragementPeek(null);
+  }, [currentPage, setEncouragementPeek]);
   const isDark = currentPage === "reflect";
   const inactiveTabTone = currentPage === "profile" ? "text-[var(--text-2)] hover:text-black" : isDark ? "text-[var(--text-3)] hover:text-white" : "text-[var(--text-2)] hover:text-black";
   const navBg = isDark ? "bg-[#080A0E]/80" : "bg-[#F4EFE6]/80";
@@ -44,26 +51,38 @@ export default function GlobalNav({ currentPage }: Props) {
         </svg>
         <span className="font-display font-bold text-lg text-[var(--gold)]">Al-Rihla</span>
       </Link>
-      <div className="flex-none relative">
+      <div className="flex-none relative flex flex-col items-center pt-1">
+        <motion.div layoutId="dynamicIslandTabs" className={`flex p-1 rounded-full border ${isDark ? "bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.06)]" : "bg-[rgba(13,15,18,0.05)] border-[rgba(13,15,18,0.06)]"}`}>
+          {["journey", "reflect", "pal"].map((tab) => {
+            const isActive = currentPage === tab;
+            return (
+              <Link key={tab} href={`/${tab === "journey" ? "journey" : tab}`} className={`relative px-5 py-1.5 text-sm font-sans font-medium rounded-full transition-colors z-10 ${isActive ? "text-[var(--ink)]" : inactiveTabTone}`}>
+                {isActive && (
+                  <motion.div layoutId="activePill" transition={{ type: "spring", stiffness: 300, damping: 26 }} className="absolute inset-0 bg-[var(--gold)] rounded-full -z-10 shadow-[0_2px_8px_rgba(184,148,63,0.3)]" />
+                )}
+                <span className="capitalize relative z-20">{tab}</span>
+              </Link>
+            );
+          })}
+        </motion.div>
         <AnimatePresence>
-          {nudgeActive ? (
-            <motion.div layoutId="dynamicIsland" initial={{ opacity: 0, y: -20, scale: 0.9 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} transition={SPRINGS.SNAPPY} className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 whitespace-nowrap flex items-center gap-3 px-4 py-2 rounded-full ${isDark ? "bg-white/10 text-white" : "bg-black/5 text-black"} backdrop-blur-xl border border-[rgba(13,15,18,0.1)]`}>
-              <div className="w-6 h-6 rounded-full bg-[var(--jade)]/20 border border-[var(--jade)] flex items-center justify-center text-[10px] font-arabic text-[var(--jade)]">A</div>
-              <span className="font-sans text-sm font-medium">Amara sent you encouragement</span>
+          {currentPage === "pal" && encouragementPeek ? (
+            <motion.div
+              key={encouragementPeek.sourceKey}
+              initial={{ opacity: 0, y: -8, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -6, scale: 0.95 }}
+              transition={SPRINGS.SNAPPY}
+              className={`pointer-events-none absolute top-full mt-3 left-1/2 -translate-x-1/2 z-50 whitespace-nowrap flex items-center gap-3 px-4 py-2 rounded-full shadow-lg ${isDark ? "bg-white/10 text-white border border-white/10" : "bg-white text-black border border-[rgba(13,15,18,0.12)]"} backdrop-blur-xl max-w-[min(92vw,480px)]`}
+            >
+              <div className="w-6 h-6 rounded-full bg-[var(--jade)]/20 border border-[var(--jade)] flex items-center justify-center text-[10px] font-semibold text-[var(--jade)]">
+                {encouragementPeek.senderInitials.slice(0, 2)}
+              </div>
+              <span className="font-sans text-sm font-medium truncate">
+                {encouragementPeek.senderName} sent you encouragement
+              </span>
             </motion.div>
-          ) : (
-            <motion.div layoutId="dynamicIsland" className={`flex p-1 rounded-full border ${isDark ? "bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.06)]" : "bg-[rgba(13,15,18,0.05)] border-[rgba(13,15,18,0.06)]"}`}>
-              {["journey", "reflect", "pal"].map((tab) => {
-                const isActive = currentPage === tab;
-                return (
-                  <Link key={tab} href={`/${tab === "journey" ? "journey" : tab}`} className={`relative px-5 py-1.5 text-sm font-sans font-medium rounded-full transition-colors z-10 ${isActive ? "text-[var(--ink)]" : inactiveTabTone}`}>
-                    {isActive && <motion.div layoutId="activePill" transition={{ type: "spring", stiffness: 300, damping: 26 }} className="absolute inset-0 bg-[var(--gold)] rounded-full -z-10 shadow-[0_2px_8px_rgba(184,148,63,0.3)]" />}
-                    <span className="capitalize relative z-20">{tab}</span>
-                  </Link>
-                );
-              })}
-            </motion.div>
-          )}
+          ) : null}
         </AnimatePresence>
       </div>
       <div className="flex-1 flex justify-end">

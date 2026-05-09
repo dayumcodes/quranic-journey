@@ -4,8 +4,12 @@ const PREFIX_NAME = "al_rihla_pal_partner_name:";
 export const PAL_PARTNER_UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
+/** UUID or Quran Foundation OAuth-style opaque subjects (often used as `sub` / invite token). */
 export function isLikelyPartnerUserId(raw: string): boolean {
-  return PAL_PARTNER_UUID_RE.test(raw.trim());
+  const t = raw.trim();
+  if (!t || t === "me") return false;
+  if (PAL_PARTNER_UUID_RE.test(t)) return true;
+  return /^[a-zA-Z0-9_.:@-]+$/.test(t) && t.length >= 8 && t.length <= 128;
 }
 
 export function loadStoredPartnerId(userId: string): string | null {

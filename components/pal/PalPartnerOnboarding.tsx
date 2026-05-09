@@ -8,11 +8,14 @@ import { isLikelyPartnerUserId } from "@/lib/utils/palPartnerStorage";
 export default function PalPartnerOnboarding({
   myUserId,
   onSavePartnerId,
-  onCopied
+  onCopied,
+  onDismiss
 }: {
   myUserId: string;
   onSavePartnerId: (uuid: string, nickname?: string) => boolean;
   onCopied?: () => void;
+  /** When user already has threads and opened “Add pal” */
+  onDismiss?: () => void;
 }) {
   const [pasteId, setPasteId] = useState("");
   const [nickname, setNickname] = useState("");
@@ -38,10 +41,17 @@ export default function PalPartnerOnboarding({
   };
 
   return (
-    <div className="rounded-[1.5rem] border border-[rgba(13,15,18,0.1)] bg-white/90 backdrop-blur-sm p-8 mb-12 shadow-card-resting max-w-2xl mx-auto">
-      <div className="flex items-center gap-3 mb-2">
-        <UserCircle weight="regular" size={28} className="text-[var(--gold)]" />
-        <h3 className="font-display font-semibold text-xl text-[var(--ink)]">Link your accountability partner</h3>
+    <div className="rounded-[1.5rem] border border-[rgba(13,15,18,0.1)] bg-white/90 backdrop-blur-sm p-8 mb-8 shadow-card-resting max-w-2xl mx-auto md:mx-0">
+      <div className="flex items-center justify-between gap-3 mb-2">
+        <div className="flex items-center gap-3">
+          <UserCircle weight="regular" size={28} className="text-[var(--gold)]" />
+          <h3 className="font-display font-semibold text-xl text-[var(--ink)]">Add a pal</h3>
+        </div>
+        {onDismiss ? (
+          <button type="button" onClick={onDismiss} className="text-[12px] text-[var(--text-3)] hover:text-[var(--ink)] underline">
+            Close
+          </button>
+        ) : null}
       </div>
       <p className="font-sans text-sm text-[var(--text-3)] mb-6 leading-relaxed">
         Pal compares progress and merges reflections between two Quran Foundation accounts. Share your invite link so your partner can connect, or paste their account ID once they send it to you.

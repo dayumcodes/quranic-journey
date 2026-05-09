@@ -71,13 +71,19 @@ function AuthCallbackContent() {
       const info = tokenData.user ?? null;
 
       const displayName = info?.name || info?.preferred_username || [info?.given_name, info?.family_name].filter(Boolean).join(" ") || "You";
-      const email = info?.email || "unknown@quran.foundation";
-      const id = info?.sub || email || "me";
+      const emailRaw = info?.email?.trim();
+      const sub = info?.sub?.trim();
+      const id = (sub || emailRaw || "").trim();
+      if (!id) {
+        throw new Error(
+          "Quran Foundation login returned no user id (sub) or email. Confirm openid scope and userinfo access for your OAuth app."
+        );
+      }
       setTokens(tokenData.access_token, {
         id,
-        sub: info?.sub,
+        sub: sub || undefined,
         name: displayName,
-        email,
+        email: emailRaw || "(email not shared — add email scope on OAuth app if needed)",
         avatar_initials: initialsFromName(displayName)
       });
     };
