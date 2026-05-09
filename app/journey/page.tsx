@@ -224,6 +224,13 @@ export default function JourneyPage() {
     });
   }, [versesInSurah]);
 
+  const onAyahAudioEnded = useCallback(() => {
+    setAyahNumber((a) => {
+      if (versesInSurah <= 0) return a;
+      return a < versesInSurah ? a + 1 : a;
+    });
+  }, [versesInSurah]);
+
   const onRetryVerse = useCallback(() => {
     const chapterId = activeNode?.chapterId;
     if (chapterId) {
@@ -269,7 +276,7 @@ export default function JourneyPage() {
             <AnimatePresence mode="wait">
               {panelState === "PLAYER" && (
                 <JourneyPlayer
-                  key={`player-${activeNode?.chapterId ?? ""}:${ayahNumber}`}
+                  key={`player-${activeNode?.chapterId ?? ""}`}
                   nodeName={activeNode?.name ?? "—"}
                   ayahNumber={ayahNumber}
                   ayahCount={versesInSurah}
@@ -279,6 +286,7 @@ export default function JourneyPage() {
                   loading={playerLoading}
                   playerError={playerError && !playerLoading ? playerError : null}
                   onRetryPlayer={onRetryVerse}
+                  onAudioEnded={onAyahAudioEnded}
                   onPreviousAyah={onPreviousAyah}
                   onNextAyah={onNextAyah}
                   disablePreviousAyah={ayahNumber <= 1 || versesInSurah <= 0}

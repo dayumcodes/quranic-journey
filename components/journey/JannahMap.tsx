@@ -42,11 +42,7 @@ export default function JannahMap({ nodes, onSelect, loading, mapError, onRetryM
   const vbHeight = nodes.length ? Math.max(100, nodes[nodes.length - 1]!.y + 36) : 100;
   const pathD =
     nodes.length >= 2
-      ? `M ${nodes[0]!.x} ${nodes[0]!.y}` +
-        nodes
-          .slice(1)
-          .map((n) => ` L ${n.x} ${n.y}`)
-          .join("")
+      ? candyCrushCurvedPath(nodes)
       : "M 20 15 C 40 15, 60 10, 60 25 C 60 40, 90 30, 80 45 C 70 60, 30 50, 50 60 C 70 70, 10 65, 25 75";
 
   const pathAnimated = nodes.length <= 24;
@@ -127,14 +123,32 @@ export default function JannahMap({ nodes, onSelect, loading, mapError, onRetryM
 
 function layoutNodePosition(index: number, total: number): { x: number; y: number } {
   const isProd = process.env.NODE_ENV === "production";
-  const step = isProd
-    ? Math.max(6.8, Math.min(10.8, 760 / Math.max(total, 10)))
-    : Math.max(4.8, Math.min(7.8, 480 / Math.max(total, 12)));
-  const y = isProd ? 8 + index * step : 4 + index * step;
-  const x = isProd
-    ? 24 + Math.sin(index * 0.26 + 0.2) * 24 + ((index % 6) / 5) * 26
-    : 26 + Math.sin(index * 0.19 + 0.4) * 20 + ((index % 5) / 4) * 22;
+  const step = isProd ? Math.max(7.2, Math.min(11.2, 820 / Math.max(total, 10))) : Math.max(5.2, Math.min(8.6, 560 / Math.max(total, 12)));
+  const y = (isProd ? 8 : 6) + index * step;
+
+  // Candy Crush-style zigzag: alternate right/left lanes as we go down.
+  const rightLane = isProd ? 78 : 73;
+  const leftLane = isProd ? 22 : 27;
+  const laneX = index % 2 === 0 ? rightLane : leftLane;
+  // Tiny jitter keeps the map organic while preserving readable zigzag.
+  const jitter = Math.sin(index * 0.85) * (isProd ? 1.8 : 1.2);
+  const x = laneX + jitter;
   return { x: Math.min(92, Math.max(8, x)), y };
+}
+
+/** Smooth S-curves between alternating zigzag nodes (Candy Crush-like track). */
+function candyCrushCurvedPath(nodes: MapNode[]): string {
+  let d = `M ${nodes[0]!.x} ${nodes[0]!.y}`;
+  for (let i = 1; i < nodes.length; i++) {
+    const prev = nodes[i - 1]!;
+    const curr = nodes[i]!;
+    const dx = curr.x - prev.x;
+    const dy = curr.y - prev.y;
+    const midY = prev.y + dy * 0.52;
+    const curveX = prev.x + dx * 0.5;
+    d += ` C ${curveX} ${midY - dy * 0.28}, ${curveX} ${midY + dy * 0.28}, ${curr.x} ${curr.y}`;
+  }
+  return d;
 }
 
 export function chaptersToNodes(chapters: Chapter[]): MapNode[] {

@@ -16,6 +16,8 @@ interface Props {
   loading: boolean;
   playerError?: string | null;
   onRetryPlayer?: () => void;
+  /** Fired when current ayah audio completes naturally */
+  onAudioEnded?: () => void;
   /** Ayah stepping */
   onPreviousAyah?: () => void;
   onNextAyah?: () => void;
@@ -42,6 +44,7 @@ export default function JourneyPlayer({
   loading,
   playerError,
   onRetryPlayer,
+  onAudioEnded,
   onPreviousAyah,
   onNextAyah,
   disablePreviousAyah,
@@ -52,7 +55,7 @@ export default function JourneyPlayer({
   disableNextSurah,
   onComplete
 }: Props) {
-  const { isPlaying, play, pause, progress, waveBars } = useVerseAudio(audioUrl);
+  const { isPlaying, play, pause, progress, waveBars } = useVerseAudio(audioUrl, { onEnded: onAudioEnded });
 
   const ayahLabel =
     ayahCount > 0 ? (
