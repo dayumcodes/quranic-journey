@@ -19,15 +19,16 @@ import { createPost } from "@/lib/api/posts";
 import { usePalInvitePrompt } from "@/lib/hooks/usePalInvitePrompt";
 import { useAuthStore } from "@/lib/store/authStore";
 import { usePalEncouragementToastStore } from "@/lib/store/palEncouragementToastStore";
-import { getActivity, getGoals, getPosts, getStreaks, postActivitySession, postGoal } from "@/lib/api/user";
+import { fetchPartnerDisplayName, getActivity, getGoals, getPosts, getStreaks, postActivitySession, postGoal } from "@/lib/api/user";
 import { isLikelyPartnerUserId } from "@/lib/utils/palPartnerStorage";
 import {
+  establishMutualPalLink,
   loadActiveThreadId,
   migrateLegacyPartnerIntoThreads,
-  removePalThread,
+  removeMirroredPalLink,
+  renamePalThread,
   saveActiveThreadId,
   syncThreadsFromGoals,
-  upsertPalThread,
   type PalThread
 } from "@/lib/utils/palThreadsStorage";
 import type { Goal, Post, StreakData } from "@/types";
@@ -111,6 +112,37 @@ function PalPageInner() {
       saveActiveThreadId(user.id, first);
     } else setSelectedPartnerId(null);
   }, [user?.id, threads]);
+
+  const genericPalIdsKey = useMemo(() => {
+    const ids = threads
+      .filter((t) => {
+        const n = t.displayName.trim();
+        return n === "Partner" || n === "Pal";
+      })
+      .map((t) => t.partnerId);
+    return [...new Set(ids)].sort().join("|");
+  }, [threads]);
+
+  useEffect(() => {
+    const uid = user?.id;
+    if (!uid || !genericPalIdsKey.length) return;
+    let cancelled = false;
+    const pids = genericPalIdsKey.split("|").filter(Boolean);
+    for (const pid of pids) {
+      void fetchPartnerDisplayName(pid).then((label) => {
+        if (!label || cancelled) return;
+        setThreads((prev) => {
+          const row = prev.find((x) => x.partnerId === pid);
+          const n = row?.displayName.trim() ?? "";
+          if (!row || (n !== "Partner" && n !== "Pal")) return prev;
+          return renamePalThread(uid, pid, label);
+        });
+      });
+    }
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.id, genericPalIdsKey]);
 
   useEffect(() => {
     setNudgeSent(false);
@@ -308,7 +340,7 @@ function PalPageInner() {
   const removePal = useCallback(
     (pid: string) => {
       if (!user?.id) return;
-      const next = removePalThread(user.id, pid);
+      const next = removeMirroredPalLink(user.id, pid);
       setThreads(next);
       if (selectedPartnerId === pid) {
         const nxt = next[0]?.partnerId ?? null;
@@ -320,17 +352,27 @@ function PalPageInner() {
   );
 
   const addPartnerHandlers = useCallback(
-    (rawId: string, nickname?: string) => {
+    async (rawId: string, nickname?: string) => {
       if (!user?.id) return false;
       const pid = rawId.trim();
       if (!isLikelyPartnerUserId(pid) || pid === user.id) return false;
-      const next = upsertPalThread(user.id, pid, nickname);
+      const nick = nickname?.trim();
+      const fromApi = nick ? null : await fetchPartnerDisplayName(pid).catch(() => null);
+      const partnerDisplayName = nick || fromApi || "Partner";
+      const myDisplayNameForPartner =
+        user.name?.trim() || (typeof user.email === "string" ? user.email.split("@")[0]?.trim() : "") || "Pal";
+      const next = establishMutualPalLink({
+        myUserId: user.id,
+        partnerId: pid,
+        partnerDisplayName,
+        myDisplayNameForPartner
+      });
       setThreads(next);
       selectThread(pid);
       setShowAddPalPanel(false);
       return true;
     },
-    [user?.id, selectThread]
+    [user, selectThread]
   );
 
   const clearQuery = () => {
@@ -339,10 +381,12 @@ function PalPageInner() {
 
   const handleInviteConfirm = () => {
     if (!pendingInvitePartnerId) return;
-    addPartnerHandlers(pendingInvitePartnerId, inviteNick.trim() || undefined);
-    dismissPendingInvite();
-    setInviteNick("");
-    clearQuery();
+    void addPartnerHandlers(pendingInvitePartnerId, inviteNick.trim() || undefined).then((ok) => {
+      if (!ok) return;
+      dismissPendingInvite();
+      setInviteNick("");
+      clearQuery();
+    });
   };
 
   const handleInviteDismiss = () => {

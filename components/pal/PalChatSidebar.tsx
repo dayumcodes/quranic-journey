@@ -82,14 +82,17 @@ export default function PalChatSidebar({
           })
         )}
       </div>
-      <button
-        type="button"
-        onClick={onAddClick}
-        className="m-3 flex items-center justify-center gap-2 rounded-xl border border-dashed border-[rgba(13,15,18,0.15)] py-3 text-sm font-medium text-[var(--text-2)] hover:bg-black/[0.03] hover:border-[var(--gold)]/40"
-      >
-        <Plus weight="bold" size={18} className="text-[var(--gold)]" />
-        Add pal
-      </button>
+      <div className="flex justify-center px-4 pt-2 pb-1">
+        <button
+          type="button"
+          title="Add pal"
+          aria-label="Add pal"
+          onClick={onAddClick}
+          className="w-11 h-11 rounded-full border border-dashed border-[rgba(13,15,18,0.18)] flex items-center justify-center text-[var(--text-2)] hover:bg-black/[0.04] hover:border-[var(--gold)]/45 transition-colors shadow-sm"
+        >
+          <Plus weight="bold" size={22} className="text-[var(--gold)]" />
+        </button>
+      </div>
       <div className="px-4 pb-3 flex items-center gap-2 text-[10px] text-[var(--text-3)]">
         <User weight="regular" size={14} />
         Your surah focus is the same in every chat — pick a pal to compare stats.

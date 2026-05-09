@@ -87,6 +87,33 @@ export function removePalThread(userId: string, partnerId: string): PalThread[] 
   return next;
 }
 
+/**
+ * Link two Quran Foundation IDs in local pal lists when one person adds the other,
+ * plus mirror so the partner’s bucket on this browser already lists you under your account name.
+ * Cross-browser sync still requires both people to accept an invite once.
+ */
+export function establishMutualPalLink(params: {
+  myUserId: string;
+  partnerId: string;
+  partnerDisplayName: string;
+  myDisplayNameForPartner: string;
+}): PalThread[] {
+  const { myUserId, partnerId, partnerDisplayName, myDisplayNameForPartner } = params;
+  const trimmedPartner = partnerId.trim();
+  if (!isValidPalParticipantId(trimmedPartner) || trimmedPartner === myUserId.trim()) return loadPalThreads(myUserId);
+
+  upsertPalThread(trimmedPartner, myUserId.trim(), myDisplayNameForPartner.trim() || "Pal");
+  return upsertPalThread(myUserId.trim(), trimmedPartner, partnerDisplayName.trim() || "Pal");
+}
+
+/** Removes the link from both local pal lists (same-browser mirror). */
+export function removeMirroredPalLink(myUserId: string, partnerId: string): PalThread[] {
+  const pid = partnerId.trim();
+  const mid = myUserId.trim();
+  removePalThread(pid, mid);
+  return removePalThread(mid, pid);
+}
+
 export function renamePalThread(userId: string, partnerId: string, displayName: string): PalThread[] {
   const next = loadPalThreads(userId).map((t) =>
     t.partnerId === partnerId.trim() ? { ...t, displayName: displayName.trim() || t.displayName, updatedAt: Date.now() } : t

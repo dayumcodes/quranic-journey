@@ -12,7 +12,7 @@ export default function PalPartnerOnboarding({
   onDismiss
 }: {
   myUserId: string;
-  onSavePartnerId: (uuid: string, nickname?: string) => boolean;
+  onSavePartnerId: (uuid: string, nickname?: string) => boolean | Promise<boolean>;
   onCopied?: () => void;
   /** When user already has threads and opened “Add pal” */
   onDismiss?: () => void;
@@ -21,6 +21,7 @@ export default function PalPartnerOnboarding({
   const [nickname, setNickname] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [inviteCopied, setInviteCopied] = useState(false);
+  const [saveBusy, setSaveBusy] = useState(false);
 
   const inviteLink =
     typeof window !== "undefined" ? `${window.location.origin}/pal?partner=${encodeURIComponent(myUserId)}` : "";
@@ -36,8 +37,17 @@ export default function PalPartnerOnboarding({
 
   const submitPartner = () => {
     setError(null);
-    const ok = onSavePartnerId(pasteId.trim(), nickname.trim() || undefined);
-    if (!ok) setError("Enter a valid partner user ID (UUID). It cannot be your own.");
+    if (!isLikelyPartnerUserId(pasteId)) {
+      setError("Enter a valid partner user ID (UUID). It cannot be your own.");
+      return;
+    }
+    setSaveBusy(true);
+    void Promise.resolve(onSavePartnerId(pasteId.trim(), nickname.trim() || undefined))
+      .then((ok) => {
+        if (!ok) setError("Enter a valid partner user ID (UUID). It cannot be your own.");
+      })
+      .catch(() => setError("Could not save partner. Try again."))
+      .finally(() => setSaveBusy(false));
   };
 
   return (
@@ -92,10 +102,10 @@ export default function PalPartnerOnboarding({
         <button
           type="button"
           onClick={submitPartner}
-          disabled={!isLikelyPartnerUserId(pasteId)}
+          disabled={!isLikelyPartnerUserId(pasteId) || saveBusy}
           className="px-5 py-2.5 rounded-full bg-[var(--gold)] text-[var(--ink)] text-sm font-medium disabled:opacity-40 disabled:cursor-not-allowed"
         >
-          Save partner
+          {saveBusy ? "Saving…" : "Save partner"}
         </button>
       </div>
     </div>
