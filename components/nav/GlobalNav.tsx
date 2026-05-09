@@ -15,6 +15,7 @@ export default function GlobalNav({ currentPage }: Props) {
   const { isAuthenticated, user, login, logout } = useAuthStore();
   const [scrolled, setScrolled] = useState(false);
   const [nudgeActive, setNudgeActive] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 60);
     window.addEventListener("scroll", handleScroll);
@@ -65,24 +66,46 @@ export default function GlobalNav({ currentPage }: Props) {
         </AnimatePresence>
       </div>
       <div className="flex-1 flex justify-end">
-        <motion.button
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          onClick={() => {
-            if (isAuthenticated) logout();
-            else void login();
-          }}
-          title={isAuthenticated ? "Logout" : "Login"}
-          className="w-9 h-9 rounded-full ring-1 ring-[var(--gold)]/60 overflow-hidden relative group bg-[var(--parchment)]"
-        >
-          {isAuthenticated ? (
-            <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[11px] font-bold text-[var(--ink)]">
-              {user?.avatar_initials ?? "U"}
-            </span>
-          ) : (
-            <User weight="regular" size={20} className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[var(--ink)] opacity-50" />
-          )}
-        </motion.button>
+        <div className="relative">
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => {
+              if (!isAuthenticated) {
+                void login();
+                return;
+              }
+              setMenuOpen((v) => !v);
+            }}
+            title={isAuthenticated ? "Profile menu" : "Login"}
+            className="w-9 h-9 rounded-full ring-1 ring-[var(--gold)]/60 overflow-hidden relative group bg-[var(--parchment)]"
+          >
+            {isAuthenticated ? (
+              <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[11px] font-bold text-[var(--ink)]">
+                {user?.avatar_initials ?? "U"}
+              </span>
+            ) : (
+              <User weight="regular" size={20} className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[var(--ink)] opacity-50" />
+            )}
+          </motion.button>
+          {isAuthenticated && menuOpen ? (
+            <div className="absolute right-0 mt-3 min-w-[180px] rounded-xl border border-white/10 bg-black/80 text-white backdrop-blur-md p-2 z-50">
+              <div className="px-3 py-2 text-xs text-white/70">Signed in as {user?.name ?? "User"}</div>
+              <button onClick={() => setMenuOpen(false)} className="w-full text-left px-3 py-2 rounded-lg hover:bg-white/10 text-sm">
+                Profile
+              </button>
+              <button
+                onClick={() => {
+                  setMenuOpen(false);
+                  logout();
+                }}
+                className="w-full text-left px-3 py-2 rounded-lg hover:bg-white/10 text-sm"
+              >
+                Logout
+              </button>
+            </div>
+          ) : null}
+        </div>
       </div>
     </motion.nav>
   );

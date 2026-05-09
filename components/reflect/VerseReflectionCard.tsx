@@ -34,6 +34,7 @@ export default function VerseReflectionCard({ verseKey, meta }: Props) {
   const [tafsirText, setTafsirText] = useState("");
   const [loading, setLoading] = useState(true);
   const headerLabel = formatHeaderLabel(verseKey, meta ?? undefined);
+  const shareText = `${headerLabel}\n${translation}\n\nhttps://quranicjourney.vercel.app/reflect`;
 
   useEffect(() => {
     let cancelled = false;
@@ -112,16 +113,31 @@ export default function VerseReflectionCard({ verseKey, meta }: Props) {
         <AnimatePresence>
           {tafsirOpen && (
             <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
-              <p className="font-sans text-[13px] text-[var(--text-3)] leading-[1.9] pt-4">
-                {tafsirText ||
-                  "This verse captures the profound patience of Prophet Ayyub (Job) during extreme physical illness and loss. Rather than complaining, his supplication is characterized by profound courtesy to Allah—he simply states his condition and acknowledges Allah's ultimate mercy."}
-              </p>
+              <div
+                className="font-sans text-[13px] text-[var(--text-3)] leading-[1.9] pt-4 space-y-3 [&_h1]:text-base [&_h1]:font-semibold [&_h2]:text-sm [&_h2]:font-semibold [&_p]:mb-2 [&_ul]:list-disc [&_ul]:pl-5"
+                dangerouslySetInnerHTML={{
+                  __html:
+                    tafsirText ||
+                    "<p>This verse captures the profound patience of Prophet Ayyub (Job) during extreme physical illness and loss. Rather than complaining, his supplication is characterized by profound courtesy to Allah.</p>"
+                }}
+              />
             </motion.div>
           )}
         </AnimatePresence>
       </div>
       <div className="flex justify-between items-center mt-12 pt-6 border-t border-white/5">
-        <button type="button" className="flex items-center gap-2 px-4 py-2 text-sm text-[var(--text-3)] hover:text-white transition-colors rounded-full hover:bg-white/5">
+        <button
+          type="button"
+          onClick={() => {
+            if (navigator.share) {
+              void navigator.share({ title: headerLabel, text: shareText });
+              return;
+            }
+            const wa = `https://wa.me/?text=${encodeURIComponent(shareText)}`;
+            window.open(wa, "_blank", "noopener,noreferrer");
+          }}
+          className="flex items-center gap-2 px-4 py-2 text-sm text-[var(--text-3)] hover:text-white transition-colors rounded-full hover:bg-white/5"
+        >
           <ShareNetwork weight="regular" size={16} /> Share Reflection
         </button>
         <SaveButton
