@@ -4,15 +4,24 @@ export interface Verse {
   verse_key: string;
   hizb_number: number;
   juz_number: number;
-  text_uthmani: string;
-  translations: Translation[];
+  /** May be omitted when `words=true` strips verse-level scripts (prefer merged fetch). */
+  text_uthmani?: string;
+  text_uthmani_simple?: string;
+  text_imlaei?: string;
+  text_imlaei_simple?: string;
+  /** May be omitted on some environments despite `translations=` query params. */
+  translations?: Translation[];
   tafsirs: Tafsir[];
   words: Word[];
 }
 export interface Word {
   id: number;
   position: number;
-  text_uthmani: string;
+  /** Legacy / optional; newer responses often expose `text` glyph per word. */
+  text_uthmani?: string;
+  text?: string;
+  /** Mushaf glyph string from some Content API payloads */
+  code_v1?: string;
   translation: { text: string; language_name: string };
 }
 export interface Translation { id: number; resource_id: number; text: string; }

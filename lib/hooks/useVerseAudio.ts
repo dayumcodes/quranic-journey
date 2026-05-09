@@ -17,7 +17,11 @@ export function useVerseAudio(audioUrl: string | null) {
     const howl = new Howl({
       src: [audioUrl],
       html5: true,
+      preload: true,
+      volume: 1,
       onload: () => setDuration(howl.duration()),
+      onloaderror: () => {},
+      onplayerror: () => {},
       onplay: () => setIsPlaying(true),
       onpause: () => setIsPlaying(false),
       onend: () => setIsPlaying(false)
