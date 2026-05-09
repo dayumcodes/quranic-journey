@@ -126,9 +126,14 @@ export default function JannahMap({ nodes, onSelect, loading, mapError, onRetryM
 }
 
 function layoutNodePosition(index: number, total: number): { x: number; y: number } {
-  const step = Math.max(4.8, Math.min(7.8, 480 / Math.max(total, 12)));
-  const y = 4 + index * step;
-  const x = 26 + Math.sin(index * 0.19 + 0.4) * 20 + ((index % 5) / 4) * 22;
+  const isProd = process.env.NODE_ENV === "production";
+  const step = isProd
+    ? Math.max(6.8, Math.min(10.8, 760 / Math.max(total, 10)))
+    : Math.max(4.8, Math.min(7.8, 480 / Math.max(total, 12)));
+  const y = isProd ? 8 + index * step : 4 + index * step;
+  const x = isProd
+    ? 24 + Math.sin(index * 0.26 + 0.2) * 24 + ((index % 6) / 5) * 26
+    : 26 + Math.sin(index * 0.19 + 0.4) * 20 + ((index % 5) / 4) * 22;
   return { x: Math.min(92, Math.max(8, x)), y };
 }
 

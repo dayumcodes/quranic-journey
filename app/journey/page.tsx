@@ -47,6 +47,7 @@ export default function JourneyPage() {
   const gateCycleIndex = useJourneyProgressStore((s) => s.gateCycleIndex);
   const hydrateFromCookie = useJourneyProgressStore((s) => s.hydrateFromCookie);
   const advanceGateAfterQuizPass = useJourneyProgressStore((s) => s.advanceGateAfterQuizPass);
+  const streakDays = gatesLitThisCycle === 0 ? GATES_TOTAL : gatesLitThisCycle;
 
   useEffect(() => {
     let cancelled = false;
@@ -309,17 +310,19 @@ export default function JourneyPage() {
                 />
               ) : null}
               {panelState === "BADGE" && (
-                <JourneyBadge key="badge" onContinue={() => setPanelState("PLAYER")} />
+                <JourneyBadge key="badge" streakDays={streakDays} onContinue={() => setPanelState("PLAYER")} />
               )}
             </AnimatePresence>
           </div>
         </div>
         <div className="mt-32">
           <h3 className="font-display font-semibold text-2xl text-[var(--ink)] mb-1">Your Collection</h3>
-          <p className="font-sans text-sm text-[var(--text-2)] mb-3 max-w-2xl">
-            Thirty gates persist in an httpOnly cookie via <span className="font-mono text-xs px-1">/api/journey/gates</span>.
-            Completing thirty quizzes rotates a new gate cycle—question seeds change so quizzes stay varied for the active surah mix.
-          </p>
+          {process.env.NODE_ENV !== "production" ? (
+            <p className="font-sans text-sm text-[var(--text-2)] mb-3 max-w-2xl">
+              Thirty gates persist in an httpOnly cookie via <span className="font-mono text-xs px-1">/api/journey/gates</span>.
+              Completing thirty quizzes rotates a new gate cycle—question seeds change so quizzes stay varied for the active surah mix.
+            </p>
+          ) : null}
           <p className="font-sans text-sm text-[var(--text-3)] mb-8">
             {gatesLitThisCycle} gates lit · {GATES_TOTAL} per cycle · round {gateCycleIndex + 1}
           </p>
