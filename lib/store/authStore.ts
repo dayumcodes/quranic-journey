@@ -16,6 +16,12 @@ interface AuthState {
 const SCOPE =
   "openid profile email read:collections write:collections read:goals write:goals read:activity write:activity read:posts write:posts read:streaks";
 
+function randomState(bytes = 16): string {
+  const arr = new Uint8Array(bytes);
+  crypto.getRandomValues(arr);
+  return Array.from(arr, (b) => b.toString(16).padStart(2, "0")).join("");
+}
+
 export const useAuthStore = create<AuthState>((set) => ({
   user: null,
   accessToken: typeof window !== "undefined" ? sessionStorage.getItem("access_token") : null,
@@ -27,10 +33,14 @@ export const useAuthStore = create<AuthState>((set) => ({
     const oauthBase = process.env.NEXT_PUBLIC_OAUTH_BASE_URL ?? "https://oauth2.quran.foundation";
     const authorizePath = process.env.NEXT_PUBLIC_OAUTH_AUTHORIZE_PATH ?? "/oauth2/auth";
     const authUrl = new URL(`${oauthBase.replace(/\/+$/, "")}${authorizePath.startsWith("/") ? authorizePath : `/${authorizePath}`}`);
+    const state = randomState(16);
+    sessionStorage.setItem("oauth_state", state);
+    const scope = process.env.NEXT_PUBLIC_OAUTH_SCOPE ?? SCOPE;
     authUrl.searchParams.set("client_id", process.env.NEXT_PUBLIC_OAUTH_CLIENT_ID ?? "");
     authUrl.searchParams.set("redirect_uri", process.env.NEXT_PUBLIC_OAUTH_REDIRECT_URI ?? "");
     authUrl.searchParams.set("response_type", "code");
-    authUrl.searchParams.set("scope", SCOPE);
+    authUrl.searchParams.set("scope", scope);
+    authUrl.searchParams.set("state", state);
     authUrl.searchParams.set("code_challenge", challenge);
     authUrl.searchParams.set("code_challenge_method", "S256");
     if (process.env.NODE_ENV !== "production") {

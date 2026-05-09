@@ -34,11 +34,14 @@ function AuthCallbackContent() {
 
   useEffect(() => {
     const code = params.get("code");
+    const returnedState = params.get("state");
+    const expectedState = sessionStorage.getItem("oauth_state");
     const verifier = sessionStorage.getItem("pkce_verifier");
-    if (!code || !verifier) {
+    if (!code || !verifier || !returnedState || !expectedState || returnedState !== expectedState) {
       router.push("/");
       return;
     }
+    sessionStorage.removeItem("oauth_state");
     const body = new URLSearchParams({
       grant_type: "authorization_code",
       code,
