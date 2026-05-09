@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import GlobalNav from "@/components/nav/GlobalNav";
@@ -83,6 +83,12 @@ function ReflectPageInner() {
   const [mcpLoading, setMcpLoading] = useState(false);
   const [results, setResults] = useState<MCPSearchResult[]>([]);
   const [verseIndex, setVerseIndex] = useState(0);
+  const [manualPanelOpen, setManualPanelOpen] = useState(false);
+  const [manualQuery, setManualQuery] = useState("");
+  const [manualSearching, setManualSearching] = useState(false);
+  const [manualContextActive, setManualContextActive] = useState(false);
+  /** After a manual search while geolocation is DETECTED, skip overwriting with location-based verses. */
+  const preferManualVersesRef = useRef(false);
 
   const loadVersesForContext = useCallback(async () => {
     if (!classification?.keywords || state !== "DETECTED") return;
@@ -98,8 +104,27 @@ function ReflectPageInner() {
     }
   }, [classification?.keywords, state]);
 
+  const runManualSearch = useCallback(async () => {
+    const q = manualQuery.trim();
+    if (!q) return;
+    setManualSearching(true);
+    try {
+      const found = await semanticSearch(q, 5);
+      const valid = found.filter((r) => typeof r.verse_key === "string" && /^\d+:\d+$/.test(r.verse_key));
+      const list = valid.length > 0 ? valid.slice(0, 5) : fallbackForKeywords(q);
+      preferManualVersesRef.current = true;
+      setResults(list);
+      setVerseIndex(0);
+      setManualContextActive(true);
+      setManualPanelOpen(false);
+    } finally {
+      setManualSearching(false);
+    }
+  }, [manualQuery]);
+
   useEffect(() => {
     if (deepLinkValid && deepVerseRaw) {
+      preferManualVersesRef.current = false;
       const parts = deepVerseRaw.split(":");
       const surahNum = Number(parts[0]);
       const ayNum = Number(parts[1]);
@@ -121,13 +146,17 @@ function ReflectPageInner() {
   useEffect(() => {
     if (deepLinkValid) return;
     if (state === "DETECTED" && classification?.keywords) {
-      loadVersesForContext();
-    } else if (state !== "DETECTED") {
+      if (!preferManualVersesRef.current) {
+        setManualContextActive(false);
+        loadVersesForContext();
+      }
+    } else if (state !== "DETECTED" && !manualContextActive) {
+      preferManualVersesRef.current = false;
       setResults([]);
       setVerseIndex(0);
       setMcpLoading(false);
     }
-  }, [deepLinkValid, state, classification?.keywords, loadVersesForContext]);
+  }, [deepLinkValid, state, classification?.keywords, loadVersesForContext, manualContextActive]);
 
   const current = results[verseIndex];
 
@@ -136,8 +165,9 @@ function ReflectPageInner() {
 
   const showVerseBlock = useMemo(() => {
     if (deepLinkValid) return results.length > 0;
+    if (manualContextActive && results.length > 0) return true;
     return state === "DETECTED";
-  }, [deepLinkValid, results.length, state]);
+  }, [deepLinkValid, manualContextActive, results.length, state]);
 
   return (
     <>
@@ -147,7 +177,49 @@ function ReflectPageInner() {
         <div className="absolute inset-0 grain-overlay" />
         <div className="relative z-10 max-w-[1320px] mx-auto flex flex-col items-center">
           <LocationDetector state={state} classification={classification} />
-          <p className="mt-4 text-[13px] text-[var(--text-3)] underline cursor-pointer hover:text-white transition-colors">Enter context manually →</p>
+          <button
+            type="button"
+            aria-expanded={manualPanelOpen}
+            onClick={() => setManualPanelOpen((o) => !o)}
+            className="mt-4 text-[13px] text-[var(--text-3)] underline cursor-pointer hover:text-white transition-colors text-center"
+          >
+            Enter context manually →
+          </button>
+          {manualPanelOpen ? (
+            <div className="mt-5 w-full max-w-lg mx-auto rounded-2xl border border-white/12 bg-white/[0.04] backdrop-blur-md p-5 space-y-3">
+              <label htmlFor="reflect-manual-context" className="block text-left text-[12px] font-medium text-white/80">
+                Describe your mood, situation, or what you are seeking reflection on
+              </label>
+              <textarea
+                id="reflect-manual-context"
+                value={manualQuery}
+                onChange={(e) => setManualQuery(e.target.value)}
+                rows={4}
+                placeholder="e.g. patience during difficulty, gratitude, family..."
+                className="w-full rounded-xl border border-white/15 bg-black/30 px-3 py-3 text-sm text-white placeholder:text-white/35 resize-y min-h-[100px] focus:outline-none focus:ring-1 focus:ring-[var(--gold)]/40"
+              />
+              <div className="flex flex-wrap gap-2 justify-end">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setManualPanelOpen(false);
+                    setManualQuery("");
+                  }}
+                  className="px-4 py-2 text-[13px] rounded-full border border-white/15 text-white/70 hover:bg-white/5"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  disabled={manualSearching || !manualQuery.trim()}
+                  onClick={() => void runManualSearch()}
+                  className="px-5 py-2 text-[13px] rounded-full bg-[var(--gold)] text-[var(--ink)] font-medium hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  {manualSearching ? "Searching…" : "Find verses"}
+                </button>
+              </div>
+            </div>
+          ) : null}
           {showVerseBlock ? (
             mcpLoading && !deepLinkValid ? (
               <ReflectVerseSkeleton />

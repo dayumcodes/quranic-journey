@@ -10,6 +10,8 @@ import { getCollections, postCollection } from "@/lib/api/user";
 import { verseArabicDisplay, verseTranslationDisplay } from "@/lib/utils/quranVerse";
 import { normalizeRecitationAudioUrl } from "@/lib/utils/audioUrl";
 import { addLocalBookmark, hasLocalBookmark } from "@/lib/utils/reflectBookmarks";
+import { copyTextToClipboard } from "@/lib/utils/copyToClipboard";
+import { buildWhatsAppShareUrl } from "@/lib/utils/whatsappShare";
 import { useVerseAudio } from "@/lib/hooks/useVerseAudio";
 import { useAuthStore } from "@/lib/store/authStore";
 import type { MCPSearchResult } from "@/types";
@@ -27,9 +29,15 @@ function formatHeaderLabel(key: string, meta?: Props["meta"]): string {
   return `Surah ${parts[0] ?? "?"}, Ayah ${ay}`;
 }
 
-function shareBody(headerLabel: string, translation: string, verseKey: string): string {
-  const origin = typeof window !== "undefined" ? window.location.origin : "https://quranicjourney.vercel.app";
-  return `${headerLabel}\n${translation}\n\n${verseKey}\n${origin}/reflect`;
+/** Plain reflection text for copy / share — Arabic + English, no URLs. */
+function formatReflectionShareText(headerLabel: string, arabic: string, translation: string, verseKey: string): string {
+  const lines: string[] = [headerLabel.trim()];
+  const ar = arabic.trim();
+  if (ar) lines.push("", ar);
+  const tr = translation.trim();
+  if (tr) lines.push("", tr);
+  lines.push("", verseKey.trim());
+  return lines.join("\n").trim();
 }
 
 export default function VerseReflectionCard({ verseKey, meta }: Props) {
@@ -37,13 +45,26 @@ export default function VerseReflectionCard({ verseKey, meta }: Props) {
   const [tafsirOpen, setTafsirOpen] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [shareHint, setShareHint] = useState<string | null>(null);
+  const [whatsAppHref, setWhatsAppHref] = useState<string | null>(null);
   const [arabic, setArabic] = useState(meta?.text_arabic ?? "");
   const [translation, setTranslation] = useState(meta?.translation ?? "");
   const [tafsirText, setTafsirText] = useState("");
   const [loading, setLoading] = useState(true);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const headerLabel = formatHeaderLabel(verseKey, meta ?? undefined);
-  const shareText = shareBody(headerLabel, translation, verseKey);
+  const sharePlainText = formatReflectionShareText(headerLabel, arabic, translation, verseKey);
+
+  useEffect(() => {
+    if (!shareHint) return;
+    const t = window.setTimeout(() => setShareHint(null), 3500);
+    return () => window.clearTimeout(t);
+  }, [shareHint]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    setWhatsAppHref(buildWhatsAppShareUrl(sharePlainText));
+  }, [sharePlainText]);
 
   const { isPlaying, play, pause } = useVerseAudio(audioUrl);
 
@@ -98,36 +119,25 @@ export default function VerseReflectionCard({ verseKey, meta }: Props) {
   }, [isAuthenticated, verseKey]);
 
   const handleShare = async () => {
-    const url = typeof window !== "undefined" ? window.location.href : "";
-    const full = `${shareText}\n${url}`.trim();
     if (navigator.share) {
       try {
-        await navigator.share({ title: headerLabel, text: full });
+        await navigator.share({ title: headerLabel, text: sharePlainText });
         return;
       } catch {
         /* user cancelled or share failed */
       }
     }
-    try {
-      await navigator.clipboard.writeText(full);
-    } catch {
-      /* ignore */
-    }
-    window.open(`https://wa.me/?text=${encodeURIComponent(full)}`, "_blank", "noopener,noreferrer");
+    const ok = await copyTextToClipboard(sharePlainText);
+    setShareHint(ok ? "Copied to clipboard" : "Copy failed — use the WhatsApp or Copy button");
   };
 
   const openSms = () => {
-    const full = `${shareText}\n${typeof window !== "undefined" ? window.location.href : ""}`.trim();
-    window.location.href = `sms:?&body=${encodeURIComponent(full)}`;
+    window.location.href = `sms:?&body=${encodeURIComponent(sharePlainText)}`;
   };
 
   const copyShare = async () => {
-    const full = `${shareText}\n${typeof window !== "undefined" ? window.location.href : ""}`.trim();
-    try {
-      await navigator.clipboard.writeText(full);
-    } catch {
-      /* ignore */
-    }
+    const ok = await copyTextToClipboard(sharePlainText);
+    setShareHint(ok ? "Copied to clipboard" : "Could not copy this text — try Messages or WhatsApp link");
   };
 
   if (loading) {
@@ -200,9 +210,21 @@ export default function VerseReflectionCard({ verseKey, meta }: Props) {
           <button type="button" onClick={handleShare} className="flex items-center gap-2 px-4 py-2 text-sm text-[var(--text-3)] hover:text-white transition-colors rounded-full hover:bg-white/5">
             <ShareNetwork weight="regular" size={16} /> Share reflection
           </button>
-          <button type="button" onClick={() => window.open(`https://wa.me/?text=${encodeURIComponent(`${shareText}\n${typeof window !== "undefined" ? window.location.href : ""}`)}`, "_blank", "noopener,noreferrer")} title="WhatsApp" className="flex items-center gap-1 px-3 py-2 text-sm rounded-full border border-emerald-500/30 text-emerald-200/90 hover:bg-emerald-500/10">
-            WhatsApp
-          </button>
+          {whatsAppHref ? (
+            <a
+              href={whatsAppHref}
+              target="_blank"
+              rel="noopener noreferrer"
+              title="Open WhatsApp with this reflection"
+              className="inline-flex items-center gap-1 px-3 py-2 text-sm rounded-full border border-emerald-500/30 text-emerald-200/90 hover:bg-emerald-500/10"
+            >
+              WhatsApp
+            </a>
+          ) : (
+            <span className="inline-flex items-center gap-1 px-3 py-2 text-sm rounded-full border border-emerald-500/20 text-emerald-200/40">
+              WhatsApp
+            </span>
+          )}
           <button type="button" onClick={openSms} title="Messages / SMS" className="flex items-center gap-1 px-3 py-2 text-sm rounded-full border border-white/15 text-white/80 hover:bg-white/5">
             <ChatCircle weight="regular" size={16} /> Message
           </button>
@@ -210,6 +232,7 @@ export default function VerseReflectionCard({ verseKey, meta }: Props) {
             <Copy weight="regular" size={16} /> Copy
           </button>
         </div>
+        {shareHint ? <p className="text-xs text-emerald-200/90">{shareHint}</p> : null}
         {saveError ? <p className="text-xs text-amber-200/90">{saveError}</p> : null}
         <div className="flex justify-end">
           <SaveButton
