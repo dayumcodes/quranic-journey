@@ -10,10 +10,12 @@ import JourneyBadge from "@/components/journey/JourneyBadge";
 import BadgeStrip from "@/components/journey/BadgeStrip";
 import type { Chapter, PanelState } from "@/types";
 import { getChapters, getRecitationByAyah, getVerseByKey } from "@/lib/api/quran";
+import { postActivitySession, postCollection } from "@/lib/api/user";
 import { pageVariants } from "@/lib/constants/motion";
 import { normalizeRecitationAudioUrl } from "@/lib/utils/audioUrl";
 import { verseArabicDisplay, verseTranslationDisplay } from "@/lib/utils/quranVerse";
 import { GATES_TOTAL, useJourneyProgressStore } from "@/lib/store/journeyProgressStore";
+import { useAuthStore } from "@/lib/store/authStore";
 
 const DEFAULT_FALLBACK_ARABIC = "قُلْ أَعُوذُ بِرَبِّ النَّاسِ";
 const DEFAULT_FALLBACK_TRANSLATION = "Say, \"I seek refuge in the Lord of mankind,\"";
@@ -42,6 +44,8 @@ export default function JourneyPage() {
   const [verseRetryKey, setVerseRetryKey] = useState(0);
   const ayahCacheRef = useRef<Map<string, AyahBundle>>(new Map());
   const ayahInflightRef = useRef<Map<string, Promise<AyahBundle>>>(new Map());
+  const sessionLoggedRef = useRef<Set<string>>(new Set());
+  const { isAuthenticated } = useAuthStore();
 
   const gatesLitThisCycle = useJourneyProgressStore((s) => s.gatesLitThisCycle);
   const gateCycleIndex = useJourneyProgressStore((s) => s.gateCycleIndex);
@@ -244,6 +248,20 @@ export default function JourneyPage() {
 
   const shortMapNotice = chapters.length > 0 && chapters.length < CHAPTER_TARGET;
 
+  useEffect(() => {
+    if (!isAuthenticated || !activeNode?.chapterId || !ayahNumber) return;
+    const verseKey = `${activeNode.chapterId}:${ayahNumber}`;
+    if (sessionLoggedRef.current.has(verseKey)) return;
+    sessionLoggedRef.current.add(verseKey);
+    void postActivitySession({
+      type: "listening",
+      verse_key: verseKey,
+      duration_seconds: 25
+    }).catch(() => {
+      sessionLoggedRef.current.delete(verseKey);
+    });
+  }, [isAuthenticated, activeNode?.chapterId, ayahNumber]);
+
   return (
     <>
       <GlobalNav currentPage="journey" />
@@ -313,6 +331,12 @@ export default function JourneyPage() {
                   quizSessionKey={quizSessionKey * 20_047 + activeNode.chapterId * 1_009 + gateCycleIndex * 17}
                   onCompletePassed={() => {
                     advanceGateAfterQuizPass();
+                    if (isAuthenticated && activeNode?.chapterId) {
+                      void postCollection({
+                        name: "Journey Gates",
+                        items: [{ verse_key: `${activeNode.chapterId}:${ayahNumber}`, badge_id: `gate-${gatesLitThisCycle + 1}` }]
+                      }).catch(() => undefined);
+                    }
                     setPanelState("BADGE");
                   }}
                 />

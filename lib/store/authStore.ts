@@ -19,12 +19,13 @@ const SCOPE =
 export const useAuthStore = create<AuthState>((set) => ({
   user: null,
   accessToken: typeof window !== "undefined" ? sessionStorage.getItem("access_token") : null,
-  isAuthenticated: false,
+  isAuthenticated: typeof window !== "undefined" ? !!sessionStorage.getItem("access_token") : false,
   login: async () => {
     const verifier = generateCodeVerifier();
     sessionStorage.setItem("pkce_verifier", verifier);
     const challenge = await generateCodeChallenge(verifier);
-    const authUrl = new URL("https://auth.quran.foundation/oauth2/authorize");
+    const oauthBase = process.env.NEXT_PUBLIC_OAUTH_BASE_URL ?? "https://auth.quran.foundation";
+    const authUrl = new URL(`${oauthBase.replace(/\/+$/, "")}/oauth2/authorize`);
     authUrl.searchParams.set("client_id", process.env.NEXT_PUBLIC_OAUTH_CLIENT_ID ?? "");
     authUrl.searchParams.set("redirect_uri", process.env.NEXT_PUBLIC_OAUTH_REDIRECT_URI ?? "");
     authUrl.searchParams.set("response_type", "code");

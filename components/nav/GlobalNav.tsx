@@ -5,12 +5,14 @@ import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
 import { User } from "@phosphor-icons/react";
 import { SPRINGS } from "@/lib/constants/motion";
+import { useAuthStore } from "@/lib/store/authStore";
 
 interface Props {
   currentPage: "home" | "journey" | "reflect" | "pal";
 }
 
 export default function GlobalNav({ currentPage }: Props) {
+  const { isAuthenticated, user, login, logout } = useAuthStore();
   const [scrolled, setScrolled] = useState(false);
   const [nudgeActive, setNudgeActive] = useState(false);
   useEffect(() => {
@@ -63,8 +65,23 @@ export default function GlobalNav({ currentPage }: Props) {
         </AnimatePresence>
       </div>
       <div className="flex-1 flex justify-end">
-        <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="w-9 h-9 rounded-full ring-1 ring-[var(--gold)]/60 overflow-hidden relative group bg-[var(--parchment)]">
-          <User weight="regular" size={20} className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[var(--ink)] opacity-50" />
+        <motion.button
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          onClick={() => {
+            if (isAuthenticated) logout();
+            else void login();
+          }}
+          title={isAuthenticated ? "Logout" : "Login"}
+          className="w-9 h-9 rounded-full ring-1 ring-[var(--gold)]/60 overflow-hidden relative group bg-[var(--parchment)]"
+        >
+          {isAuthenticated ? (
+            <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[11px] font-bold text-[var(--ink)]">
+              {user?.avatar_initials ?? "U"}
+            </span>
+          ) : (
+            <User weight="regular" size={20} className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[var(--ink)] opacity-50" />
+          )}
         </motion.button>
       </div>
     </motion.nav>

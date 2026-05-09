@@ -4,6 +4,29 @@ import { Suspense, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuthStore } from "@/lib/store/authStore";
 
+interface OAuthTokenResponse {
+  access_token?: string;
+  error?: string;
+  error_description?: string;
+}
+
+interface UserInfoResponse {
+  sub?: string;
+  name?: string;
+  preferred_username?: string;
+  given_name?: string;
+  family_name?: string;
+  email?: string;
+}
+
+function initialsFromName(name: string): string {
+  const words = name.trim().split(/\s+/).filter(Boolean);
+  if (words.length === 0) return "U";
+  const a = words[0]?.[0] ?? "";
+  const b = words.length > 1 ? words[1]?.[0] ?? "" : "";
+  return `${a}${b}`.toUpperCase() || "U";
+}
+
 function AuthCallbackContent() {
   const params = useSearchParams();
   const router = useRouter();
@@ -23,15 +46,50 @@ function AuthCallbackContent() {
       client_id: process.env.NEXT_PUBLIC_OAUTH_CLIENT_ID ?? "",
       code_verifier: verifier
     });
-    fetch("https://auth.quran.foundation/oauth2/token", {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body
-    })
-      .then((r) => r.json())
-      .then((d: { access_token: string }) =>
-        setTokens(d.access_token, { id: "me", name: "You", email: "you@example.com", avatar_initials: "Y" })
-      )
+    const oauthBase = (process.env.NEXT_PUBLIC_OAUTH_BASE_URL ?? "https://auth.quran.foundation").replace(/\/+$/, "");
+
+    const run = async () => {
+      const tokenRes = await fetch(`${oauthBase}/oauth2/token`, {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body
+      });
+      const tokenData = (await tokenRes.json()) as OAuthTokenResponse;
+      if (!tokenRes.ok || !tokenData.access_token) {
+        throw new Error(tokenData.error_description || tokenData.error || "Token exchange failed");
+      }
+
+      const userInfoEndpoints = [`${oauthBase}/openid/userinfo`, `${oauthBase}/oauth2/userinfo`];
+      let info: UserInfoResponse | null = null;
+
+      for (const endpoint of userInfoEndpoints) {
+        try {
+          const r = await fetch(endpoint, {
+            headers: { Authorization: `Bearer ${tokenData.access_token}` }
+          });
+          if (!r.ok) continue;
+          info = (await r.json()) as UserInfoResponse;
+          break;
+        } catch {
+          continue;
+        }
+      }
+
+      const displayName = info?.name || info?.preferred_username || [info?.given_name, info?.family_name].filter(Boolean).join(" ") || "You";
+      const email = info?.email || "unknown@quran.foundation";
+      const id = info?.sub || email || "me";
+      setTokens(tokenData.access_token, {
+        id,
+        name: displayName,
+        email,
+        avatar_initials: initialsFromName(displayName)
+      });
+    };
+
+    run()
+      .catch(() => {
+        sessionStorage.removeItem("access_token");
+      })
       .finally(() => router.push("/"));
   }, [params, router, setTokens]);
 

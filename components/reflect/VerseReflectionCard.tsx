@@ -6,7 +6,9 @@ import { CaretDown, ShareNetwork } from "@phosphor-icons/react";
 import AnimatedTextRTL from "@/components/shared/AnimatedTextRTL";
 import SaveButton from "@/components/reflect/SaveButton";
 import { getTafsirByAyah, getVerseByKey } from "@/lib/api/quran";
+import { getCollections, postCollection } from "@/lib/api/user";
 import { verseArabicDisplay, verseTranslationDisplay } from "@/lib/utils/quranVerse";
+import { useAuthStore } from "@/lib/store/authStore";
 import type { MCPSearchResult } from "@/types";
 
 interface Props {
@@ -24,6 +26,7 @@ function formatHeaderLabel(key: string, meta?: Props["meta"]): string {
 }
 
 export default function VerseReflectionCard({ verseKey, meta }: Props) {
+  const { isAuthenticated, login } = useAuthStore();
   const [tafsirOpen, setTafsirOpen] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
   const [arabic, setArabic] = useState(meta?.text_arabic ?? "");
@@ -63,6 +66,19 @@ export default function VerseReflectionCard({ verseKey, meta }: Props) {
       cancelled = true;
     };
   }, [verseKey, meta?.text_arabic, meta?.translation]);
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      setIsSaved(false);
+      return;
+    }
+    getCollections()
+      .then((collections) => {
+        const exists = collections.some((c) => (c.items ?? []).some((i) => i.verse_key === verseKey));
+        setIsSaved(exists);
+      })
+      .catch(() => setIsSaved(false));
+  }, [isAuthenticated, verseKey]);
 
   if (loading) {
     return (
@@ -108,7 +124,22 @@ export default function VerseReflectionCard({ verseKey, meta }: Props) {
         <button type="button" className="flex items-center gap-2 px-4 py-2 text-sm text-[var(--text-3)] hover:text-white transition-colors rounded-full hover:bg-white/5">
           <ShareNetwork weight="regular" size={16} /> Share Reflection
         </button>
-        <SaveButton isSaved={isSaved} onSave={() => setIsSaved(true)} />
+        <SaveButton
+          isSaved={isSaved}
+          onSave={() => {
+            if (isSaved) return;
+            if (!isAuthenticated) {
+              void login();
+              return;
+            }
+            postCollection({
+              name: "Saved Reflections",
+              items: [{ verse_key: verseKey }]
+            })
+              .then(() => setIsSaved(true))
+              .catch(() => setIsSaved(false));
+          }}
+        />
       </div>
     </motion.div>
   );
