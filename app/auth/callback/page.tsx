@@ -6,6 +6,7 @@ import { useAuthStore } from "@/lib/store/authStore";
 
 interface OAuthTokenResponse {
   access_token?: string;
+  user?: UserInfoResponse | null;
   error?: string;
   error_description?: string;
 }
@@ -42,25 +43,21 @@ function AuthCallbackContent() {
       return;
     }
     sessionStorage.removeItem("oauth_state");
-    const body = new URLSearchParams({
-      grant_type: "authorization_code",
+    const body = {
       code,
       redirect_uri: process.env.NEXT_PUBLIC_OAUTH_REDIRECT_URI ?? "",
-      client_id: process.env.NEXT_PUBLIC_OAUTH_CLIENT_ID ?? "",
       code_verifier: verifier
-    });
-    const oauthBase = (process.env.NEXT_PUBLIC_OAUTH_BASE_URL ?? "https://oauth2.quran.foundation").replace(/\/+$/, "");
+    };
 
     const run = async () => {
-      const tokenRes = await fetch(`${oauthBase}/oauth2/token`, {
+      const tokenRes = await fetch("/api/auth/qf/exchange", {
         method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body)
       });
       const tokenData = (await tokenRes.json()) as OAuthTokenResponse;
       if (process.env.NODE_ENV !== "production") {
         console.info("[auth/callback] token exchange response", {
-          oauthBase,
           status: tokenRes.status,
           ok: tokenRes.ok,
           error: tokenData.error,
@@ -71,21 +68,7 @@ function AuthCallbackContent() {
         throw new Error(tokenData.error_description || tokenData.error || "Token exchange failed");
       }
 
-      const userInfoEndpoints = [`${oauthBase}/openid/userinfo`, `${oauthBase}/oauth2/userinfo`];
-      let info: UserInfoResponse | null = null;
-
-      for (const endpoint of userInfoEndpoints) {
-        try {
-          const r = await fetch(endpoint, {
-            headers: { Authorization: `Bearer ${tokenData.access_token}` }
-          });
-          if (!r.ok) continue;
-          info = (await r.json()) as UserInfoResponse;
-          break;
-        } catch {
-          continue;
-        }
-      }
+      const info = tokenData.user ?? null;
 
       const displayName = info?.name || info?.preferred_username || [info?.given_name, info?.family_name].filter(Boolean).join(" ") || "You";
       const email = info?.email || "unknown@quran.foundation";
@@ -102,7 +85,6 @@ function AuthCallbackContent() {
       .catch((err) => {
         if (process.env.NODE_ENV !== "production") {
           console.error("[auth/callback] login flow failed", {
-            oauthBase,
             message: err instanceof Error ? err.message : String(err)
           });
         }
