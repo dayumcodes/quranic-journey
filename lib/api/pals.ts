@@ -6,8 +6,10 @@ export type SyncedPal = {
   updatedAt: number;
 };
 
+const palsFetchOpts = { logoutOnUnauthorized: false as const };
+
 export function getPals() {
-  return apiFetch<{ pals: SyncedPal[] }>("/api/pals");
+  return apiFetch<{ pals: SyncedPal[] }>("/api/pals", palsFetchOpts);
 }
 
 export function acceptPal(payload: {
@@ -16,6 +18,7 @@ export function acceptPal(payload: {
   myDisplayNameForPartner?: string;
 }) {
   return apiFetch<{ success: true }>("/api/pals/accept", {
+    ...palsFetchOpts,
     method: "POST",
     body: JSON.stringify(payload)
   });
@@ -23,6 +26,7 @@ export function acceptPal(payload: {
 
 export function removePal(partnerId: string) {
   return apiFetch<{ success: true }>(`/api/pals/${encodeURIComponent(partnerId)}`, {
+    ...palsFetchOpts,
     method: "DELETE"
   });
 }

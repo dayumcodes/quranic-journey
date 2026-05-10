@@ -5,6 +5,9 @@ node_modules/
 .next/
 out/
 
+db/migrations/001_create_pal_links.sql
+001_create_pal_links.sql
+
 # Build
 build/
 dist/

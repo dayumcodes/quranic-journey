@@ -15,6 +15,7 @@ import PalPartnerOnboarding from "@/components/pal/PalPartnerOnboarding";
 import PalSharedGoalStarter from "@/components/pal/PalSharedGoalStarter";
 import PalChatSidebar from "@/components/pal/PalChatSidebar";
 import { pageVariants } from "@/lib/constants/motion";
+import { RequestError } from "@/lib/api/client";
 import { acceptPal, getPals, removePal as removePalApi } from "@/lib/api/pals";
 import { createPost } from "@/lib/api/posts";
 import { usePalInvitePrompt } from "@/lib/hooks/usePalInvitePrompt";
@@ -91,6 +92,7 @@ function PalPageInner() {
 
   const syncPalsFromServer = useCallback(async () => {
     if (!isAuthenticated || !user?.id) return;
+    const { accessToken } = useAuthStore.getState();
     try {
       const { pals } = await getPals();
       const normalized = (Array.isArray(pals) ? pals : [])
@@ -103,8 +105,18 @@ function PalPageInner() {
       if (!normalized.length) return;
       savePalThreads(user.id, normalized);
       setThreads(normalized);
-    } catch {
-      /* keep local fallback */
+    } catch (e) {
+      const status = e instanceof RequestError ? e.status : undefined;
+      console.warn("[pal] syncPalsFromServer failed (session not cleared — pals uses logoutOnUnauthorized: false)", {
+        status,
+        message: e instanceof Error ? e.message : String(e),
+        clientUserIdSuffix: user.id.slice(-8),
+        sentBearer: !!accessToken,
+        hint401:
+          status === 401
+            ? "Server could not map Bearer to QF sub (check Vercel QF_CLIENT_ID/SECRET, QF_ENV/QF_AUTH_BASE_URL; see Vercel function logs for [pals-auth])."
+            : undefined
+      });
     }
   }, [isAuthenticated, user?.id]);
 

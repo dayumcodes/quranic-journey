@@ -17,6 +17,20 @@ function loadStoredUser(): User | null {
   }
 }
 
+function initialSession(): Pick<AuthState, "user" | "accessToken" | "isAuthenticated"> {
+  if (typeof window === "undefined") {
+    return { user: null, accessToken: null, isAuthenticated: false };
+  }
+  const token = sessionStorage.getItem("access_token");
+  const user = loadStoredUser();
+  const ok = !!(token && user);
+  return {
+    accessToken: token,
+    user: ok ? user : null,
+    isAuthenticated: ok
+  };
+}
+
 interface AuthState {
   user: User | null;
   accessToken: string | null;
@@ -36,9 +50,7 @@ function randomState(bytes = 16): string {
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
-  user: loadStoredUser(),
-  accessToken: typeof window !== "undefined" ? sessionStorage.getItem("access_token") : null,
-  isAuthenticated: typeof window !== "undefined" ? !!sessionStorage.getItem("access_token") : false,
+  ...initialSession(),
   login: async () => {
     const verifier = generateCodeVerifier();
     sessionStorage.setItem("pkce_verifier", verifier);
