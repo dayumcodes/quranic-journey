@@ -63,13 +63,15 @@ export default function ProfilePage() {
                 </div>
               </div>
 
-              <p className="text-[12px] text-[var(--text-3)] leading-relaxed mb-6 bg-amber-50/90 dark:bg-amber-950/35 border border-amber-100 dark:border-amber-800/50 rounded-xl px-4 py-3">
-                For Pal links and API features (posts, goals, collections), Quran Foundation must return a unique <strong className="font-medium text-[var(--ink)]">sub</strong> and approved OAuth scopes. If two logins show the same id, open the{" "}
-                <a className="underline text-[var(--ink)]" href="https://docs.google.com/forms/d/1iYYHrU3AOM9OIaDi_nWdtBpHUSaliQgdwzzwcK_wGTw/viewform" target="_blank" rel="noopener noreferrer">
-                  Quran.Foundation API access form
-                </a>{" "}
-                and ensure your OAuth app requests <strong className="font-medium">openid</strong> (and <strong className="font-medium">email</strong> if you want it shown here).
-              </p>
+              {process.env.NODE_ENV !== "production" ? (
+                <p className="text-[12px] text-[var(--text-3)] leading-relaxed mb-6 bg-amber-50/90 dark:bg-amber-950/35 border border-amber-100 dark:border-amber-800/50 rounded-xl px-4 py-3">
+                  For Pal links and API features (posts, goals, collections), Quran Foundation must return a unique <strong className="font-medium text-[var(--ink)]">sub</strong> and approved OAuth scopes. If two logins show the same id, open the{" "}
+                  <a className="underline text-[var(--ink)]" href="https://docs.google.com/forms/d/1iYYHrU3AOM9OIaDi_nWdtBpHUSaliQgdwzzwcK_wGTw/viewform" target="_blank" rel="noopener noreferrer">
+                    Quran.Foundation API access form
+                  </a>{" "}
+                  and ensure your OAuth app requests <strong className="font-medium">openid</strong> (and <strong className="font-medium">email</strong> if you want it shown here).
+                </p>
+              ) : null}
               <dl className="space-y-4 text-sm">
                 <div>
                   <dt className="text-[var(--text-3)] font-medium uppercase tracking-wider text-[11px]">Account ID</dt>
