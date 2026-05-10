@@ -23,11 +23,11 @@ export default function PalChatSidebar({
   myReadingLine?: string;
 }) {
   return (
-    <aside className="w-full md:w-[300px] lg:w-[320px] shrink-0 flex flex-col rounded-2xl border border-[rgba(13,15,18,0.08)] bg-white/85 dark:bg-white/80 backdrop-blur-sm overflow-hidden shadow-card-resting min-h-[420px] max-h-[calc(100vh-8rem)] md:sticky md:top-28 text-[#0D0F12]">
-      <div className="p-4 border-b border-[rgba(13,15,18,0.06)] flex items-start gap-3 justify-between">
+    <aside className="w-full md:w-[300px] lg:w-[320px] shrink-0 flex flex-col rounded-2xl border border-[var(--panel-border)] bg-[var(--panel-muted)] backdrop-blur-sm overflow-hidden shadow-card-resting min-h-[420px] max-h-[calc(100vh-8rem)] md:sticky md:top-28 text-[var(--ink)]">
+      <div className="p-4 border-b border-[var(--panel-border)] flex items-start gap-3 justify-between">
         <div className="min-w-0 flex-1">
           <h2 className="font-display font-semibold text-lg">Pals</h2>
-          {myReadingLine ? <p className="text-[11px] text-[#0D0F12]/65 mt-1 leading-snug">{myReadingLine}</p> : null}
+          {myReadingLine ? <p className="text-[11px] text-[var(--text-3)] mt-1 leading-snug">{myReadingLine}</p> : null}
         </div>
         {onClose ? (
           <button
@@ -35,7 +35,7 @@ export default function PalChatSidebar({
             title="Hide pals list"
             aria-label="Hide pals list"
             onClick={onClose}
-            className="shrink-0 p-2 rounded-full text-[#0D0F12]/55 hover:bg-black/[0.06] hover:text-[#0D0F12] transition-colors -mr-1 -mt-1"
+            className="shrink-0 p-2 rounded-full text-[var(--text-3)] hover:bg-black/[0.06] dark:hover:bg-white/[0.08] hover:text-[var(--ink)] transition-colors -mr-1 -mt-1"
           >
             <X weight="bold" size={18} />
           </button>
@@ -43,7 +43,7 @@ export default function PalChatSidebar({
       </div>
       <div className="flex-1 overflow-y-auto">
         {threads.length === 0 ? (
-          <div className="p-6 text-sm text-[#0D0F12]/70 text-center">No pals yet — add someone to compete and share reflections.</div>
+          <div className="p-6 text-sm text-[var(--text-2)] text-center">No pals yet — add someone to compete and share reflections.</div>
         ) : (
           threads.map((t) => {
             const active = t.partnerId === activePartnerId;
@@ -55,14 +55,14 @@ export default function PalChatSidebar({
                 layout
                 whileTap={{ scale: 0.98 }}
                 onClick={() => onSelect(t.partnerId)}
-                className={`w-full text-left px-4 py-3 flex items-center gap-3 border-b border-[rgba(13,15,18,0.04)] hover:bg-black/[0.03] transition-colors ${active ? "bg-[var(--gold)]/12 border-l-4 border-l-[var(--gold)] pl-3" : "border-l-4 border-l-transparent"}`}
+                className={`w-full text-left px-4 py-3 flex items-center gap-3 border-b border-[var(--panel-border)] hover:bg-black/[0.03] dark:hover:bg-white/[0.04] transition-colors ${active ? "bg-[var(--gold)]/12 border-l-4 border-l-[var(--gold)] pl-3" : "border-l-4 border-l-transparent"}`}
               >
                 <div className="w-10 h-10 rounded-full bg-[var(--jade)]/15 border border-[var(--jade)]/30 flex items-center justify-center text-sm font-semibold text-[var(--jade)]">
                   {initial}
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="font-sans font-medium truncate">{t.displayName}</div>
-                  <div className="font-mono text-[10px] text-[#0D0F12]/55 truncate">{t.partnerId.slice(0, 10)}…</div>
+                  <div className="font-mono text-[10px] text-[var(--text-3)] truncate">{t.partnerId.slice(0, 10)}…</div>
                 </div>
                 {onRemovePal ? (
                   <button
@@ -72,7 +72,7 @@ export default function PalChatSidebar({
                       e.stopPropagation();
                       onRemovePal(t.partnerId);
                     }}
-                    className="shrink-0 p-2 rounded-full text-[#0D0F12]/50 hover:bg-red-50 hover:text-red-600 transition-colors"
+                    className="shrink-0 p-2 rounded-full text-[var(--text-3)] hover:bg-red-500/15 hover:text-red-400 transition-colors"
                   >
                     <X weight="bold" size={14} />
                   </button>
@@ -88,12 +88,12 @@ export default function PalChatSidebar({
           title="Add pal"
           aria-label="Add pal"
           onClick={onAddClick}
-          className="w-11 h-11 rounded-full border border-dashed border-[rgba(13,15,18,0.18)] flex items-center justify-center text-[#0D0F12]/70 hover:bg-black/[0.04] hover:border-[var(--gold)]/45 transition-colors shadow-sm"
+          className="w-11 h-11 rounded-full border border-dashed border-[var(--panel-border)] flex items-center justify-center text-[var(--text-2)] hover:bg-black/[0.04] dark:hover:bg-white/[0.05] hover:border-[var(--gold)]/45 transition-colors shadow-sm"
         >
           <Plus weight="bold" size={22} className="text-[var(--gold)]" />
         </button>
       </div>
-      <div className="px-4 pb-3 flex items-center gap-2 text-[10px] text-[#0D0F12]/58">
+      <div className="px-4 pb-3 flex items-center gap-2 text-[10px] text-[var(--text-3)]">
         <User weight="regular" size={14} />
         Your surah focus is the same in every chat — pick a pal to compare stats.
       </div>

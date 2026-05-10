@@ -31,9 +31,9 @@ interface Props {
   onComplete: () => void;
 }
 
-/** Cream/frosted cards stay legible in app dark mode — do not use theme `--ink` / `--text-*` here. */
+/** Journey panel matches Profile: `--panel-muted` + `--ink` in dark mode. */
 const panelBaseClasses =
-  "bg-white/85 dark:bg-white/70 backdrop-blur-sm border border-[rgba(13,15,18,0.08)] rounded-[2.5rem] p-10 h-full flex flex-col relative overflow-hidden shadow-card-resting text-[#0D0F12]";
+  "bg-[var(--panel-muted)] backdrop-blur-sm border border-[var(--panel-border)] rounded-[2.5rem] p-10 h-full flex flex-col relative overflow-hidden shadow-card-resting text-[var(--ink)]";
 
 export default function JourneyPlayer({
   nodeName,
@@ -60,7 +60,7 @@ export default function JourneyPlayer({
 
   const ayahLabel =
     ayahCount > 0 ? (
-      <p className="font-sans text-xs uppercase tracking-[0.15em] text-[#0D0F12]/55 mt-3">
+      <p className="font-sans text-xs uppercase tracking-[0.15em] text-[var(--text-3)] mt-3">
         Ayah {ayahNumber} of {ayahCount}
       </p>
     ) : null;
@@ -78,17 +78,17 @@ export default function JourneyPlayer({
   if (playerError) {
     return (
       <motion.div layoutId="panelContent" className={`${panelBaseClasses} justify-center gap-6`}>
-        <span className="text-[10px] tracking-[0.2em] uppercase text-[#0D0F12]/55 font-medium mb-4 block">Now Listening</span>
-        <h2 className="font-display font-semibold text-2xl text-[#0D0F12]">{nodeName}</h2>
+        <span className="text-[10px] tracking-[0.2em] uppercase text-[var(--text-3)] font-medium mb-4 block">Now Listening</span>
+        <h2 className="font-display font-semibold text-2xl text-[var(--ink)]">{nodeName}</h2>
         {ayahLabel}
-        <p className="font-sans text-sm text-[#0D0F12]/85">{playerError}</p>
+        <p className="font-sans text-sm text-[var(--text-2)]">{playerError}</p>
         {onRetryPlayer ? (
           <motion.button
             whileHover={{ scale: 0.98 }}
             whileTap={{ scale: 0.95 }}
             type="button"
             onClick={onRetryPlayer}
-            className="w-full py-4 rounded-full bg-[#0D0F12] text-[#F4EFE6] font-sans font-medium text-sm"
+            className="w-full py-4 rounded-full bg-[var(--ink)] text-[var(--parchment)] font-sans font-medium text-sm"
           >
             Retry
           </motion.button>
@@ -98,14 +98,14 @@ export default function JourneyPlayer({
   }
   return (
     <motion.div layoutId="panelContent" className={panelBaseClasses}>
-      <span className="text-[10px] tracking-[0.2em] uppercase text-[#0D0F12]/55 font-medium mb-1 block">Now Listening</span>
-      <h2 className="font-display font-semibold text-2xl text-[#0D0F12]">{nodeName}</h2>
+      <span className="text-[10px] tracking-[0.2em] uppercase text-[var(--text-3)] font-medium mb-1 block">Now Listening</span>
+      <h2 className="font-display font-semibold text-2xl text-[var(--ink)]">{nodeName}</h2>
       {ayahLabel}
       <div className="flex-1 min-h-0 min-w-0 overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch] mt-6">
         <AnimatedTextRTL text={arabic} delay={0.2} />
-        <p className="font-sans text-sm text-[#0D0F12]/90 italic text-right mt-6 max-w-[48ch] ml-auto">{translation}</p>
+        <p className="font-sans text-sm text-[var(--text-2)] italic text-right mt-6 max-w-[48ch] ml-auto">{translation}</p>
       </div>
-      <hr className="border-[rgba(13,15,18,0.08)] my-8" />
+      <hr className="border-[var(--panel-border)] my-8" />
       <div className="flex items-end gap-[3px] h-16 mb-4">
         {waveBars.map((v, i) => (
           <motion.div key={i} className="w-2 bg-[var(--gold)] rounded-full origin-bottom" animate={{ height: `${v}%` }} style={{ minHeight: "4px" }} />
@@ -118,7 +118,7 @@ export default function JourneyPlayer({
           aria-label="Previous ayah"
           disabled={disablePreviousAyah || !onPreviousAyah}
           onClick={() => onPreviousAyah?.()}
-          className="w-11 h-11 rounded-full border border-[rgba(13,15,18,0.1)] flex items-center justify-center text-[#0D0F12]/80 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-black/[0.03]"
+          className="w-11 h-11 rounded-full border border-[var(--panel-border)] flex items-center justify-center text-[var(--text-2)] disabled:opacity-40 disabled:cursor-not-allowed hover:bg-black/[0.03] dark:hover:bg-white/[0.06]"
           title="Previous ayah"
         >
           <SkipBack weight="regular" size={20} />
@@ -154,7 +154,7 @@ export default function JourneyPlayer({
           aria-label="Next ayah"
           disabled={disableNextAyah || !onNextAyah}
           onClick={() => onNextAyah?.()}
-          className="w-11 h-11 rounded-full border border-[rgba(13,15,18,0.1)] flex items-center justify-center text-[#0D0F12]/80 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-black/[0.03]"
+          className="w-11 h-11 rounded-full border border-[var(--panel-border)] flex items-center justify-center text-[var(--text-2)] disabled:opacity-40 disabled:cursor-not-allowed hover:bg-black/[0.03] dark:hover:bg-white/[0.06]"
           title="Next ayah"
         >
           <SkipForward weight="regular" size={20} />
@@ -164,7 +164,7 @@ export default function JourneyPlayer({
       <div className="flex flex-wrap justify-center gap-3 mb-8">
         <button
           type="button"
-          className="inline-flex items-center gap-2 rounded-full border border-[rgba(13,15,18,0.12)] px-4 py-2 text-xs font-sans font-medium text-[#0D0F12]/80 hover:bg-black/[0.03] disabled:opacity-35 disabled:pointer-events-none"
+          className="inline-flex items-center gap-2 rounded-full border border-[var(--panel-border)] px-4 py-2 text-xs font-sans font-medium text-[var(--text-2)] hover:bg-black/[0.03] dark:hover:bg-white/[0.06] disabled:opacity-35 disabled:pointer-events-none"
           disabled={disablePreviousSurah || !onPreviousSurah}
           onClick={() => onPreviousSurah?.()}
         >
@@ -172,7 +172,7 @@ export default function JourneyPlayer({
         </button>
         <button
           type="button"
-          className="inline-flex items-center gap-2 rounded-full border border-[rgba(13,15,18,0.12)] px-4 py-2 text-xs font-sans font-medium text-[#0D0F12]/80 hover:bg-black/[0.03] disabled:opacity-35 disabled:pointer-events-none"
+          className="inline-flex items-center gap-2 rounded-full border border-[var(--panel-border)] px-4 py-2 text-xs font-sans font-medium text-[var(--text-2)] hover:bg-black/[0.03] dark:hover:bg-white/[0.06] disabled:opacity-35 disabled:pointer-events-none"
           disabled={disableNextSurah || !onNextSurah}
           onClick={() => onNextSurah?.()}
         >
@@ -185,7 +185,7 @@ export default function JourneyPlayer({
         whileTap={{ scale: 0.95 }}
         onClick={onComplete}
         type="button"
-        className="w-full py-4 rounded-full bg-[#0D0F12] text-[#F4EFE6] font-sans font-medium text-sm"
+        className="w-full py-4 rounded-full bg-[var(--ink)] text-[var(--parchment)] font-sans font-medium text-sm"
       >
         I finished listening
       </motion.button>

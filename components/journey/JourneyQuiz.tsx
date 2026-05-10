@@ -7,7 +7,7 @@ import ParticleBurst from "@/components/shared/ParticleBurst";
 import { buildJourneyQuizQuestion } from "@/lib/quiz/generateJourneyQuiz";
 
 const panelBaseClasses =
-  "bg-white/85 dark:bg-white/70 backdrop-blur-sm border border-[rgba(13,15,18,0.08)] rounded-[2.5rem] p-10 h-full flex flex-col relative overflow-hidden shadow-card-resting text-[#0D0F12]";
+  "bg-[var(--panel-muted)] backdrop-blur-sm border border-[var(--panel-border)] rounded-[2.5rem] p-10 h-full flex flex-col relative overflow-hidden shadow-card-resting text-[var(--ink)]";
 
 interface Props {
   chapterId: number;
@@ -58,16 +58,16 @@ export default function JourneyQuiz({
 
   return (
     <motion.div layoutId="panelContent" className={panelBaseClasses}>
-      <span className="text-[10px] tracking-[0.2em] uppercase text-[#0D0F12]/55 font-medium mb-4 block">Quick Question</span>
-      <h2 className="font-display font-semibold text-xl text-[#0D0F12] leading-snug whitespace-pre-wrap max-w-[42ch] mb-8">{question.prompt}</h2>
+      <span className="text-[10px] tracking-[0.2em] uppercase text-[var(--text-3)] font-medium mb-4 block">Quick Question</span>
+      <h2 className="font-display font-semibold text-xl text-[var(--ink)] leading-snug whitespace-pre-wrap max-w-[42ch] mb-8">{question.prompt}</h2>
       <div className="flex flex-col gap-3 flex-1">
         {question.choices.map((ans, idx) => {
           const isSelected = selected === idx;
           const isCorrect = idx === question.correctIndex;
           const showReveal = lockedCorrect;
-          let stateClasses = "border border-[rgba(13,15,18,0.1)] hover:bg-[rgba(184,148,63,0.08)] hover:border-[var(--gold)]/40";
+          let stateClasses = "border border-[var(--panel-border)] hover:bg-[rgba(184,148,63,0.08)] hover:border-[var(--gold)]/40";
           if (showReveal && isCorrect) stateClasses = "bg-[#2A6B5E]/10 border-[var(--jade)] border-l-4";
-          else if (showReveal && !isCorrect) stateClasses = "opacity-55 border-[rgba(13,15,18,0.08)]";
+          else if (showReveal && !isCorrect) stateClasses = "opacity-55 border-[var(--panel-border)]";
           else if (!lockedCorrect && isSelected && !isCorrect)
             stateClasses = "bg-red-50 border-red-200 text-red-700 animate-shake";
 
@@ -97,7 +97,7 @@ export default function JourneyQuiz({
           );
         })}
       </div>
-      <p className="font-sans text-xs text-[#0D0F12]/60 mt-6 text-center leading-relaxed flex items-center justify-center gap-3">
+      <p className="font-sans text-xs text-[var(--text-3)] mt-6 text-center leading-relaxed flex items-center justify-center gap-3">
         <CaretLeft aria-hidden weight="regular" />
         Quiz mix changes each time you finish listening and varies with your gate cycle
         <CaretRight aria-hidden weight="regular" />

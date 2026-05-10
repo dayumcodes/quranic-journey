@@ -27,11 +27,11 @@ export default function PalSharedGoalStarter({
           Start a shared reading goal with {partnerLabel}
         </button>
       ) : (
-        <div className="rounded-2xl border border-[rgba(13,15,18,0.1)] bg-white dark:bg-white/90 p-6 text-left space-y-4 text-[#0D0F12]">
+        <div className="rounded-2xl border border-[var(--panel-border)] bg-[var(--panel-muted)] backdrop-blur-sm p-6 text-left space-y-4 text-[var(--ink)]">
           <h4 className="font-display font-semibold text-lg">Shared goal</h4>
-          <p className="text-xs text-[#0D0F12]/70">Creates a Quran Foundation shared goal pointing at both accounts. Tune numbers to match how you practice.</p>
+          <p className="text-xs text-[var(--text-3)]">Creates a Quran Foundation shared goal pointing at both accounts. Tune numbers to match how you practice.</p>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <label className="text-[11px] text-[#0D0F12]/75 flex flex-col gap-1">
+            <label className="text-[11px] text-[var(--text-2)] flex flex-col gap-1">
               Target surah (id)
               <input
                 type="number"
@@ -39,27 +39,27 @@ export default function PalSharedGoalStarter({
                 max={114}
                 value={surah}
                 onChange={(e) => setSurah(Number(e.target.value))}
-                className="rounded-lg border px-3 py-2 text-sm text-[#0D0F12]"
+                className="rounded-lg border border-[var(--panel-border)] bg-[var(--panel)] px-3 py-2 text-sm text-[var(--ink)]"
               />
             </label>
-            <label className="text-[11px] text-[#0D0F12]/75 flex flex-col gap-1">
+            <label className="text-[11px] text-[var(--text-2)] flex flex-col gap-1">
               Verses / day
-              <input type="number" min={1} max={286} value={vpd} onChange={(e) => setVpd(Number(e.target.value))} className="rounded-lg border px-3 py-2 text-sm text-[#0D0F12]" />
+              <input type="number" min={1} max={286} value={vpd} onChange={(e) => setVpd(Number(e.target.value))} className="rounded-lg border border-[var(--panel-border)] bg-[var(--panel)] px-3 py-2 text-sm text-[var(--ink)]" />
             </label>
-            <label className="text-[11px] text-[#0D0F12]/75 flex flex-col gap-1">
+            <label className="text-[11px] text-[var(--text-2)] flex flex-col gap-1">
               Days / week
-              <input type="number" min={1} max={7} value={dpw} onChange={(e) => setDpw(Number(e.target.value))} className="rounded-lg border px-3 py-2 text-sm text-[#0D0F12]" />
+              <input type="number" min={1} max={7} value={dpw} onChange={(e) => setDpw(Number(e.target.value))} className="rounded-lg border border-[var(--panel-border)] bg-[var(--panel)] px-3 py-2 text-sm text-[var(--ink)]" />
             </label>
           </div>
           <div className="flex gap-2 justify-end pt-2">
-            <button type="button" onClick={() => setOpen(false)} className="text-sm px-4 py-2 rounded-full border border-[rgba(13,15,18,0.12)] text-[#0D0F12]">
+            <button type="button" onClick={() => setOpen(false)} className="text-sm px-4 py-2 rounded-full border border-[var(--panel-border)] text-[var(--ink)]">
               Cancel
             </button>
             <button
               type="button"
               disabled={busy}
               onClick={() => onCreate(surah, vpd, dpw)}
-              className="text-sm px-5 py-2 rounded-full bg-[var(--gold)] text-[#0D0F12] font-medium disabled:opacity-40"
+              className="text-sm px-5 py-2 rounded-full bg-[var(--gold)] text-[var(--void)] font-medium disabled:opacity-40"
             >
               {busy ? "Creating…" : "Create goal"}
             </button>

@@ -474,10 +474,10 @@ function PalPageInner() {
           animate="animate"
           exit="exit"
         >
-          <div className="max-w-lg text-center bg-[var(--panel-muted)] rounded-3xl border border-[var(--panel-border)] p-10 backdrop-blur-sm text-[#0D0F12]">
+          <div className="max-w-lg text-center bg-[var(--panel-muted)] rounded-3xl border border-[var(--panel-border)] p-10 backdrop-blur-sm text-[var(--ink)]">
             <h2 className="font-display text-3xl mb-3">Login required</h2>
-            <p className="text-[#0D0F12]/80 mb-8">Pal compares progress with linked pals using your Quran Foundation account.</p>
-            <button type="button" onClick={() => void login()} className="px-6 py-3 rounded-full bg-[#0D0F12] text-[#F4EFE6] font-medium">
+            <p className="text-[var(--text-2)] mb-8">Pal compares progress with linked pals using your Quran Foundation account.</p>
+            <button type="button" onClick={() => void login()} className="px-6 py-3 rounded-full bg-[var(--ink)] text-[var(--parchment)] font-medium">
               Login to continue
             </button>
           </div>
@@ -509,10 +509,10 @@ function PalPageInner() {
               title="Open pals"
               aria-label="Open pals"
               onClick={() => setPalSidebarOpen(true)}
-              className="shrink-0 w-full md:w-[52px] lg:w-14 min-h-[3rem] md:min-h-[min(420px,calc(100vh-8rem))] rounded-2xl border border-[var(--panel-border)] bg-[var(--panel)] backdrop-blur-sm shadow-card-resting flex flex-row md:flex-col items-center justify-center gap-2 py-3 md:py-6 hover:bg-black/[0.03] dark:hover:bg-white/[0.06] hover:border-[var(--gold)]/35 transition-colors md:sticky md:top-28"
+              className="shrink-0 w-full md:w-14 md:h-14 md:min-h-0 rounded-2xl md:rounded-full border border-[var(--panel-border)] bg-[var(--panel)] backdrop-blur-sm shadow-card-resting flex flex-row md:flex-col items-center justify-center gap-2 py-3 md:py-0 min-h-[3rem] hover:bg-black/[0.03] dark:hover:bg-white/[0.06] hover:border-[var(--gold)]/35 transition-colors md:sticky md:top-28"
             >
               <Plus weight="bold" size={22} className="text-[var(--gold)] shrink-0" />
-              <span className="text-sm font-medium text-[#0D0F12]/85 md:hidden">Open pals</span>
+              <span className="text-sm font-medium text-[var(--text-2)] md:hidden">Open pals</span>
             </button>
           )}
 
@@ -529,15 +529,15 @@ function PalPageInner() {
                     <input
                       value={inviteNick}
                       onChange={(e) => setInviteNick(e.target.value)}
-                      className="mt-1 block w-full max-w-xs rounded-lg border border-[rgba(13,15,18,0.12)] px-3 py-2 text-sm text-[#0D0F12]"
+                      className="mt-1 block w-full max-w-xs rounded-lg border border-[var(--panel-border)] bg-[var(--panel)] px-3 py-2 text-sm text-[var(--ink)]"
                     />
                   </label>
                 </div>
                 <div className="flex gap-2 shrink-0">
-                  <button type="button" onClick={handleInviteDismiss} className="px-4 py-2 rounded-full border border-[rgba(13,15,18,0.15)] text-sm text-[#0D0F12]">
+                  <button type="button" onClick={handleInviteDismiss} className="px-4 py-2 rounded-full border border-[var(--panel-border)] text-sm text-[var(--ink)]">
                     Not now
                   </button>
-                  <button type="button" onClick={handleInviteConfirm} className="px-5 py-2 rounded-full bg-[#0D0F12] text-[#F4EFE6] text-sm font-medium">
+                  <button type="button" onClick={handleInviteConfirm} className="px-5 py-2 rounded-full bg-[var(--ink)] text-[var(--parchment)] text-sm font-medium">
                     Add pal
                   </button>
                 </div>

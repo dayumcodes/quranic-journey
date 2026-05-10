@@ -1,7 +1,7 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
-import { Sparkle } from "@phosphor-icons/react";
+import { PaperPlaneRight, Sparkle } from "@phosphor-icons/react";
 
 export default function NudgeCard({
   nudgeSent,
@@ -31,22 +31,24 @@ export default function NudgeCard({
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: -80, opacity: 0, scale: 0.95 }}
           transition={{ type: "spring", stiffness: 400, damping: 18 }}
-          className="bg-amber-50 border border-amber-200/60 rounded-[1.5rem] p-8 mb-20 flex items-center justify-between shadow-card-resting"
+          className="bg-amber-50/95 dark:bg-[var(--panel-muted)] border border-amber-200/60 dark:border-[var(--panel-border)] rounded-[1.5rem] p-8 mb-20 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between shadow-card-resting"
         >
           <div className="flex items-center gap-4 flex-1 min-w-0">
-            <div className="w-12 h-12 rounded-full bg-amber-100 flex items-center justify-center shrink-0">
-              <Sparkle weight="regular" size={24} className="text-amber-500" />
+            <div className="w-12 h-12 rounded-full bg-amber-100 dark:bg-[var(--gold)]/15 flex items-center justify-center shrink-0">
+              <Sparkle weight="regular" size={24} className="text-amber-500 dark:text-[var(--gold)]" />
             </div>
-            <p className="font-sans font-medium text-[#0D0F12]">{label}</p>
+            <p className="font-sans font-medium text-[var(--ink)]">{label}</p>
           </div>
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             type="button"
             onClick={onSend}
-            className="bg-[#0D0F12] text-[#F4EFE6] px-6 py-3 rounded-full font-sans font-medium text-sm relative shrink-0 ml-4"
+            title="Send nudge"
+            aria-label="Send nudge"
+            className="w-12 h-12 shrink-0 rounded-full bg-[var(--gold)] text-[var(--void)] flex items-center justify-center shadow-md sm:ml-4 self-end sm:self-auto"
           >
-            Send Nudge
+            <PaperPlaneRight weight="bold" size={22} className="-translate-x-px" aria-hidden />
           </motion.button>
         </motion.div>
       )}

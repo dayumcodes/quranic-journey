@@ -24,11 +24,11 @@ interface Props {
 export default function JannahMap({ nodes, onSelect, loading, mapError, onRetryMap }: Props) {
   if (mapError && !loading) {
     return (
-      <div className="w-full lg:w-[58%] relative min-h-[600px] rounded-3xl overflow-hidden border border-[rgba(13,15,18,0.08)] bg-gradient-to-br from-[#F4EFE6] to-[#EDE5D5] shadow-inner p-8 flex items-center justify-center flex-col gap-4">
+      <div className="w-full lg:w-[58%] relative min-h-[600px] rounded-3xl overflow-hidden border border-[var(--panel-border)] bg-gradient-to-br from-[#F4EFE6] to-[#EDE5D5] dark:from-[#252830] dark:to-[#181b22] shadow-inner p-8 flex items-center justify-center flex-col gap-4">
         <svg width="80" height="80" viewBox="0 0 24 24" fill="var(--gold)" opacity="0.3"><path d="M12 2a9 9 0 1 0 9 9 7 7 0 0 1-9-9z" /><path d="M16 3l1 2 2 1-2 1-1 2-1-2-2-1 2-1z" /></svg>
-        <p className="font-sans text-sm text-[#0D0F12]/85 text-center max-w-md">{mapError}</p>
+        <p className="font-sans text-sm text-[var(--text-2)] text-center max-w-md">{mapError}</p>
         {onRetryMap ? (
-          <button type="button" onClick={onRetryMap} className="font-sans text-sm font-medium px-5 py-2 rounded-full bg-[#0D0F12] text-[#F4EFE6] hover:opacity-90 transition-opacity">
+          <button type="button" onClick={onRetryMap} className="font-sans text-sm font-medium px-5 py-2 rounded-full bg-[var(--ink)] text-[var(--parchment)] hover:opacity-90 transition-opacity">
             Retry
           </button>
         ) : null}
@@ -37,9 +37,9 @@ export default function JannahMap({ nodes, onSelect, loading, mapError, onRetryM
   }
   if (loading || nodes.length === 0) {
     return (
-      <div className="w-full lg:w-[58%] relative min-h-[600px] rounded-3xl overflow-hidden border border-[rgba(13,15,18,0.08)] bg-gradient-to-br from-[#F4EFE6] to-[#EDE5D5] shadow-inner p-8 flex items-center justify-center flex-col gap-4">
+      <div className="w-full lg:w-[58%] relative min-h-[600px] rounded-3xl overflow-hidden border border-[var(--panel-border)] bg-gradient-to-br from-[#F4EFE6] to-[#EDE5D5] dark:from-[#252830] dark:to-[#181b22] shadow-inner p-8 flex items-center justify-center flex-col gap-4">
         <svg width="80" height="80" viewBox="0 0 24 24" fill="var(--gold)" opacity="0.3"><path d="M12 2a9 9 0 1 0 9 9 7 7 0 0 1-9-9z" /><path d="M16 3l1 2 2 1-2 1-1 2-1-2-2-1 2-1z" /></svg>
-        <p className="font-sans text-sm text-[#0D0F12]/70 shimmer px-4 py-2 rounded-full">Loading your map...</p>
+        <p className="font-sans text-sm text-[var(--text-3)] shimmer px-4 py-2 rounded-full">Loading your map...</p>
       </div>
     );
   }
@@ -52,8 +52,8 @@ export default function JannahMap({ nodes, onSelect, loading, mapError, onRetryM
   const pathAnimated = nodes.length <= 24;
 
   return (
-    <div className="w-full lg:w-[58%] relative min-h-[560px] max-h-[min(72vh,720px)] rounded-3xl border border-[rgba(13,15,18,0.08)] bg-gradient-to-br from-[#F4EFE6] to-[#EDE5D5] shadow-inner flex flex-col overflow-hidden">
-      <p className="font-sans text-xs text-[#0D0F12]/70 px-6 pt-4 shrink-0">Scroll to follow all surahs along the path</p>
+    <div className="w-full lg:w-[58%] relative min-h-[560px] max-h-[min(72vh,720px)] rounded-3xl border border-[var(--panel-border)] bg-gradient-to-br from-[#F4EFE6] to-[#EDE5D5] dark:from-[#252830] dark:to-[#181b22] shadow-inner flex flex-col overflow-hidden">
+      <p className="font-sans text-xs text-[var(--text-3)] px-6 pt-4 shrink-0">Scroll to follow all surahs along the path</p>
       <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-8 pb-8 pt-2 [-webkit-overflow-scrolling:touch]">
         <svg
           className="w-full block drop-shadow-md"
@@ -171,7 +171,7 @@ export default function JannahMap({ nodes, onSelect, loading, mapError, onRetryM
                   x={labelX}
                   y="1.2"
                   textAnchor={labelToRight ? "start" : "end"}
-                  className="font-sans font-bold fill-[#0D0F12] pointer-events-none"
+                  className="font-sans font-bold fill-[var(--ink)] pointer-events-none"
                   style={{ fontSize: "3.05px" }}
                 >
                   {label}
