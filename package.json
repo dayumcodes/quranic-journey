@@ -7,13 +7,15 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "db:migrate:pals": "node scripts/migrate-pals.mjs"
   },
   "dependencies": {
     "@phosphor-icons/react": "^2.1.7",
     "framer-motion": "^11.11.17",
     "howler": "^2.2.4",
     "next": "^15.0.0",
+    "pg": "^8.20.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "zustand": "^5.0.0"
@@ -21,6 +23,7 @@
   "devDependencies": {
     "@types/howler": "^2.2.12",
     "@types/node": "^22.9.0",
+    "@types/pg": "^8.20.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "autoprefixer": "^10.4.20",

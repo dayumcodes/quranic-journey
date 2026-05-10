@@ -15,6 +15,7 @@ import PalPartnerOnboarding from "@/components/pal/PalPartnerOnboarding";
 import PalSharedGoalStarter from "@/components/pal/PalSharedGoalStarter";
 import PalChatSidebar from "@/components/pal/PalChatSidebar";
 import { pageVariants } from "@/lib/constants/motion";
+import { acceptPal, getPals, removePal as removePalApi } from "@/lib/api/pals";
 import { createPost } from "@/lib/api/posts";
 import { usePalInvitePrompt } from "@/lib/hooks/usePalInvitePrompt";
 import { useAuthStore } from "@/lib/store/authStore";
@@ -28,6 +29,7 @@ import {
   removeMirroredPalLink,
   renamePalThread,
   saveActiveThreadId,
+  savePalThreads,
   syncThreadsFromGoals,
   type PalThread
 } from "@/lib/utils/palThreadsStorage";
@@ -87,9 +89,32 @@ function PalPageInner() {
       .catch(() => setGoals([]));
   }, [isAuthenticated, user?.id]);
 
+  const syncPalsFromServer = useCallback(async () => {
+    if (!isAuthenticated || !user?.id) return;
+    try {
+      const { pals } = await getPals();
+      const normalized = (Array.isArray(pals) ? pals : [])
+        .filter((p) => isLikelyPartnerUserId(p.partnerId))
+        .map((p) => ({
+          partnerId: p.partnerId.trim(),
+          displayName: p.displayName?.trim() || "Partner",
+          updatedAt: typeof p.updatedAt === "number" ? p.updatedAt : Date.now()
+        }));
+      if (!normalized.length) return;
+      savePalThreads(user.id, normalized);
+      setThreads(normalized);
+    } catch {
+      /* keep local fallback */
+    }
+  }, [isAuthenticated, user?.id]);
+
   useEffect(() => {
     refreshGoals();
   }, [refreshGoals]);
+
+  useEffect(() => {
+    void syncPalsFromServer();
+  }, [syncPalsFromServer]);
 
   useEffect(() => {
     if (!user?.id) return;
@@ -338,8 +363,13 @@ function PalPageInner() {
   );
 
   const removePal = useCallback(
-    (pid: string) => {
+    async (pid: string) => {
       if (!user?.id) return;
+      try {
+        await removePalApi(pid);
+      } catch {
+        /* still update local mirror */
+      }
       const next = removeMirroredPalLink(user.id, pid);
       setThreads(next);
       if (selectedPartnerId === pid) {
@@ -347,8 +377,9 @@ function PalPageInner() {
         setSelectedPartnerId(nxt);
         saveActiveThreadId(user.id, nxt);
       }
+      void syncPalsFromServer();
     },
-    [user?.id, selectedPartnerId]
+    [user?.id, selectedPartnerId, syncPalsFromServer]
   );
 
   const addPartnerHandlers = useCallback(
@@ -361,6 +392,15 @@ function PalPageInner() {
       const partnerDisplayName = nick || fromApi || "Partner";
       const myDisplayNameForPartner =
         user.name?.trim() || (typeof user.email === "string" ? user.email.split("@")[0]?.trim() : "") || "Pal";
+      try {
+        await acceptPal({
+          partnerId: pid,
+          partnerDisplayName,
+          myDisplayNameForPartner
+        });
+      } catch {
+        /* local fallback remains active */
+      }
       const next = establishMutualPalLink({
         myUserId: user.id,
         partnerId: pid,
@@ -370,9 +410,10 @@ function PalPageInner() {
       setThreads(next);
       selectThread(pid);
       setShowAddPalPanel(false);
+      void syncPalsFromServer();
       return true;
     },
-    [user, selectThread]
+    [user, selectThread, syncPalsFromServer]
   );
 
   const clearQuery = () => {
