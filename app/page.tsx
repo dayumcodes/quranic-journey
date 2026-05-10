@@ -1,19 +1,69 @@
 "use client";
+import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { ArrowRight, InstagramLogo, YoutubeLogo } from "@phosphor-icons/react";
 import GlobalNav from "@/components/nav/GlobalNav";
 import { pageVariants, SPRINGS } from "@/lib/constants/motion";
 
-function LandingCard({ title, desc, href, bg, dark }: { title: string; desc: string; href: string; bg: string; dark?: boolean }) {
+const LANDING_IMG =
+  "?auto=format&fit=crop&w=1200&q=80";
+
+function LandingCard({
+  title,
+  desc,
+  href,
+  bg,
+  dark,
+  imageSrc,
+  imageAlt,
+  overlayClassName,
+  priority,
+  imageObjectClass,
+}: {
+  title: string;
+  desc: string;
+  href: string;
+  bg: string;
+  dark?: boolean;
+  imageSrc: string;
+  imageAlt: string;
+  overlayClassName: string;
+  priority?: boolean;
+  /** Tailwind object-* classes for focal point (wide assets may need a custom crop). */
+  imageObjectClass?: string;
+}) {
+  const resolvedSrc = imageSrc.startsWith("/") ? imageSrc : `${imageSrc}${LANDING_IMG}`;
+  const objectClass =
+    imageObjectClass ?? "object-cover object-[center_25%] transition-transform duration-500 group-hover:scale-[1.03]";
+
   return (
-    <Link href={href}>
-        <motion.div whileHover={{ y: -12, scale: 1.02 }} transition={SPRINGS.DEFAULT} className={`cursor-pointer rounded-3xl sm:rounded-[2.5rem] p-7 sm:p-10 min-h-[280px] h-[min(400px,58vh)] sm:h-[400px] flex flex-col justify-end relative overflow-hidden group ${bg} ${dark ? "border border-white/10" : "border border-[var(--panel-border)] shadow-card-resting hover:shadow-card-hover"}`}>
-        <div className={`absolute top-6 right-6 sm:top-10 sm:right-10 w-11 h-11 sm:w-12 sm:h-12 rounded-full border flex items-center justify-center transition-transform group-hover:scale-110 group-hover:-rotate-12 ${dark ? "border-white/20 text-white" : "border-[rgba(13,15,18,0.1)] text-[var(--ink)]"}`}>
+    <Link href={href} className="block h-full">
+      <motion.div
+        whileHover={{ y: -12, scale: 1.02 }}
+        transition={SPRINGS.DEFAULT}
+        className={`cursor-pointer rounded-3xl sm:rounded-[2.5rem] p-7 sm:p-10 min-h-[280px] h-[min(400px,58vh)] sm:h-[400px] flex flex-col justify-end relative overflow-hidden group ${bg} ${dark ? "border border-white/10" : "border border-[var(--panel-border)] shadow-card-resting hover:shadow-card-hover"}`}
+      >
+        <div className="absolute inset-0 z-0">
+          <Image
+            src={resolvedSrc}
+            alt={imageAlt}
+            fill
+            sizes="(max-width: 768px) 100vw, 33vw"
+            className={objectClass}
+            priority={priority}
+          />
+          <div className={`pointer-events-none absolute inset-0 bg-gradient-to-t ${overlayClassName}`} aria-hidden />
+        </div>
+        <div
+          className={`absolute top-6 right-6 sm:top-10 sm:right-10 z-20 w-11 h-11 sm:w-12 sm:h-12 rounded-full border flex items-center justify-center transition-transform group-hover:scale-110 group-hover:-rotate-12 backdrop-blur-[2px] ${dark ? "border-white/25 bg-black/20 text-white" : "border-[rgba(13,15,18,0.12)] bg-white/30 text-[var(--ink)]"}`}
+        >
           <ArrowRight weight="regular" size={20} />
         </div>
-        <h3 className={`font-display font-semibold text-2xl sm:text-4xl tracking-tight mb-3 sm:mb-4 ${dark ? "text-white" : "text-[var(--ink)]"}`}>{title}</h3>
-        <p className={`font-sans text-sm leading-relaxed ${dark ? "text-[var(--text-3)]" : "text-[var(--text-2)]"}`}>{desc}</p>
+        <div className="relative z-10">
+          <h3 className={`font-display font-semibold text-2xl sm:text-4xl tracking-tight mb-3 sm:mb-4 drop-shadow-sm ${dark ? "text-white" : "text-[var(--ink)]"}`}>{title}</h3>
+          <p className={`font-sans text-sm leading-relaxed ${dark ? "text-white/80" : "text-[var(--text-2)]"}`}>{desc}</p>
+        </div>
       </motion.div>
     </Link>
   );
@@ -30,9 +80,38 @@ export default function HomePage() {
             <p className="font-sans text-base sm:text-lg text-[var(--text-2)] max-w-[60ch] mx-auto px-2">Three distinct interfaces for Quranic engagement, built with award-winning motion physics and asymmetrical gallery layouts.</p>
           </div>
           <div className="w-full max-w-[1320px] grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 md:gap-12">
-            <LandingCard title="Journey" desc="Gamified learning paths for kids with dynamic SVG maps and spring-physics interactions." bg="bg-[var(--panel)]" href="/journey" />
-            <LandingCard title="Reflect" desc="Location-aware meditative space featuring generative canvas meshes and massive typography." bg="bg-[var(--void)] text-white" href="/reflect" dark />
-            <LandingCard title="Pal" desc="Social accountability dashboard with asymmetric layouts and synchronized progress tracking." bg="bg-[#EDE5D5] dark:bg-[#252218]" href="/pal" />
+            <LandingCard
+              title="Journey"
+              desc="Gamified learning paths for kids with dynamic SVG maps and spring-physics interactions."
+              bg="bg-[var(--panel)]"
+              href="/journey"
+              imageSrc="https://images.unsplash.com/photo-1471958680802-1345a694ba6d"
+              imageAlt="Asphalt road winding through autumn forest"
+              overlayClassName="from-[var(--panel)] via-[var(--panel)]/92 to-transparent"
+              imageObjectClass="object-cover object-[center_50%_45%] transition-transform duration-500 group-hover:scale-[1.03]"
+              priority
+            />
+            <LandingCard
+              title="Reflect"
+              desc="Location-aware meditative space featuring generative canvas meshes and massive typography."
+              bg="bg-[var(--void)] text-white"
+              href="/reflect"
+              dark
+              imageSrc="/landing/reflect-tadabbur.png"
+              imageAlt="Open Quran at dusk by still water with mosque and crescent moon"
+              overlayClassName="from-[var(--void)] via-[var(--void)]/88 to-transparent"
+              imageObjectClass="object-cover object-[center_50%_42%] transition-transform duration-500 group-hover:scale-[1.03]"
+            />
+            <LandingCard
+              title="Pal"
+              desc="Social accountability dashboard with asymmetric layouts and synchronized progress tracking."
+              bg="bg-[#EDE5D5] dark:bg-[#252218]"
+              href="/pal"
+              imageSrc="/landing/pal-courtyard.png"
+              imageAlt="Embossed Quran volumes, lamp, and prayer beads in a tiled courtyard at golden hour"
+              overlayClassName="from-[#EDE5D5] via-[#EDE5D5]/92 to-transparent dark:from-[#252218] dark:via-[#252218]/92"
+              imageObjectClass="object-cover object-[center_48%_45%] transition-transform duration-500 group-hover:scale-[1.03]"
+            />
           </div>
           <footer className="bg-[var(--parchment)] pt-16 sm:pt-24 pb-0 mb-0 border-t border-[var(--panel-border)] mt-16 relative">
             <div className="w-full max-w-[1320px] mx-auto px-4 sm:px-6 lg:px-8 mb-16 sm:mb-24">

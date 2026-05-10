@@ -3,6 +3,7 @@ const nextConfig = {
   reactStrictMode: true,
   images: {
     remotePatterns: [
+      { protocol: "https", hostname: "images.unsplash.com" },
       { protocol: "https", hostname: "api.quran.foundation" },
       { protocol: "https", hostname: "apis.quran.foundation" },
       { protocol: "https", hostname: "mcp.quran.ai" },
