@@ -77,7 +77,7 @@ export default function HomePage() {
         <div className="max-w-[1320px] mx-auto flex flex-col min-h-[calc(100vh-6rem)] sm:min-h-[calc(100vh-8rem)]">
           <div className="text-center mb-14 sm:mb-20 md:mb-24">
             <h1 className="font-display font-bold text-[clamp(2.25rem,10vw,6rem)] md:text-8xl tracking-tighter leading-[0.95] sm:leading-[0.9] text-[var(--ink)] mb-4 sm:mb-6 px-1">The Journey.</h1>
-            <p className="font-sans text-base sm:text-lg text-[var(--text-2)] max-w-[60ch] mx-auto px-2">Three distinct interfaces for Quranic engagement, built with award-winning motion physics and asymmetrical gallery layouts.</p>
+            <p className="font-sans text-base sm:text-lg text-[var(--text-2)] max-w-[60ch] mx-auto px-2">Your Quranic journey starts here — built for those who want more than reading. Learn with purpose, reflect with stillness, and grow with someone walking beside you.</p>
           </div>
           <div className="w-full max-w-[1320px] grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 md:gap-12">
             <LandingCard
