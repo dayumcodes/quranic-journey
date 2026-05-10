@@ -3,9 +3,10 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
-import { User } from "@phosphor-icons/react";
+import { Moon, Sun, User } from "@phosphor-icons/react";
 import { SPRINGS } from "@/lib/constants/motion";
 import { useAuthStore } from "@/lib/store/authStore";
+import { useThemeStore } from "@/lib/store/themeStore";
 import { usePalEncouragementToastStore } from "@/lib/store/palEncouragementToastStore";
 
 interface Props {
@@ -14,6 +15,8 @@ interface Props {
 
 export default function GlobalNav({ currentPage }: Props) {
   const { isAuthenticated, user, login, logout } = useAuthStore();
+  const theme = useThemeStore((s) => s.theme);
+  const toggleTheme = useThemeStore((s) => s.toggleTheme);
   const [scrolled, setScrolled] = useState(false);
   const encouragementPeek = usePalEncouragementToastStore((s) => s.peek);
   const setEncouragementPeek = usePalEncouragementToastStore((s) => s.setEncouragementPeek);
@@ -34,10 +37,12 @@ export default function GlobalNav({ currentPage }: Props) {
   useEffect(() => {
     if (currentPage !== "pal") setEncouragementPeek(null);
   }, [currentPage, setEncouragementPeek]);
-  const isDark = currentPage === "reflect";
-  const inactiveTabTone = currentPage === "profile" ? "text-[var(--text-2)] hover:text-black" : isDark ? "text-[var(--text-3)] hover:text-white" : "text-[var(--text-2)] hover:text-black";
-  const navBg = isDark ? "bg-[#080A0E]/80" : "bg-[#F4EFE6]/80";
-  const navBorder = isDark ? "border-[rgba(255,255,255,0.04)]" : "border-[rgba(13,15,18,0.06)]";
+  const inactiveTabTone =
+    currentPage === "profile"
+      ? "text-[var(--text-2)] hover:text-[var(--ink)]"
+      : "text-[var(--text-2)] hover:text-[var(--ink)] dark:text-[var(--text-3)] dark:hover:text-[var(--ink)]";
+  const navBg = "bg-[#F4EFE6]/80 dark:bg-[#080A0E]/80";
+  const navBorder = "border-[rgba(13,15,18,0.06)] dark:border-[rgba(255,255,255,0.06)]";
 
   return (
     <motion.nav
@@ -46,13 +51,20 @@ export default function GlobalNav({ currentPage }: Props) {
       className={`fixed top-0 left-0 right-0 z-40 backdrop-blur-md border-b ${navBg} ${navBorder} flex items-center px-6 md:px-12`}
     >
       <Link href="/" className="flex-1 flex items-center gap-2 cursor-pointer">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className={isDark ? "drop-shadow-[0_0_8px_rgba(184,148,63,0.4)]" : ""}>
+        <svg
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+          className={theme === "dark" ? "drop-shadow-[0_0_8px_rgba(184,148,63,0.4)]" : undefined}
+        >
           <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="var(--gold)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
         <span className="font-display font-bold text-lg text-[var(--gold)]">Al-Rihla</span>
       </Link>
       <div className="flex-none relative flex flex-col items-center pt-1">
-        <motion.div layoutId="dynamicIslandTabs" className={`flex p-1 rounded-full border ${isDark ? "bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.06)]" : "bg-[rgba(13,15,18,0.05)] border-[rgba(13,15,18,0.06)]"}`}>
+        <motion.div layoutId="dynamicIslandTabs" className="flex p-1 rounded-full border bg-[rgba(13,15,18,0.05)] border-[rgba(13,15,18,0.06)] dark:bg-[rgba(255,255,255,0.05)] dark:border-[rgba(255,255,255,0.06)]">
           {["journey", "reflect", "pal"].map((tab) => {
             const isActive = currentPage === tab;
             return (
@@ -73,7 +85,7 @@ export default function GlobalNav({ currentPage }: Props) {
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -6, scale: 0.95 }}
               transition={SPRINGS.SNAPPY}
-              className={`pointer-events-none absolute top-full mt-3 left-1/2 -translate-x-1/2 z-50 whitespace-nowrap flex items-center gap-3 px-4 py-2 rounded-full shadow-lg ${isDark ? "bg-white/10 text-white border border-white/10" : "bg-white text-black border border-[rgba(13,15,18,0.12)]"} backdrop-blur-xl max-w-[min(92vw,480px)]`}
+              className="pointer-events-none absolute top-full mt-3 left-1/2 -translate-x-1/2 z-50 whitespace-nowrap flex items-center gap-3 px-4 py-2 rounded-full shadow-lg bg-white text-[var(--ink)] border border-[rgba(13,15,18,0.12)] dark:bg-white/10 dark:text-white dark:border-white/10 backdrop-blur-xl max-w-[min(92vw,480px)]"
             >
               <div className="w-6 h-6 rounded-full bg-[var(--jade)]/20 border border-[var(--jade)] flex items-center justify-center text-[10px] font-semibold text-[var(--jade)]">
                 {encouragementPeek.senderInitials.slice(0, 2)}
@@ -85,7 +97,18 @@ export default function GlobalNav({ currentPage }: Props) {
           ) : null}
         </AnimatePresence>
       </div>
-      <div className="flex-1 flex justify-end">
+      <div className="flex-1 flex justify-end items-center gap-2">
+        <motion.button
+          type="button"
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          onClick={() => toggleTheme()}
+          aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+          title={theme === "dark" ? "Light mode" : "Dark mode"}
+          className="w-9 h-9 shrink-0 rounded-full ring-1 ring-[var(--gold)]/50 dark:ring-white/20 bg-[var(--parchment)] dark:bg-white/10 flex items-center justify-center text-[var(--ink)] dark:text-[var(--ink)]"
+        >
+          {theme === "dark" ? <Sun weight="regular" size={18} className="text-amber-200" /> : <Moon weight="regular" size={18} />}
+        </motion.button>
         <div className="relative">
           <motion.button
             whileHover={{ scale: 1.05 }}
@@ -109,12 +132,12 @@ export default function GlobalNav({ currentPage }: Props) {
             )}
           </motion.button>
           {isAuthenticated && menuOpen ? (
-            <div className="absolute right-0 mt-3 min-w-[180px] rounded-xl border border-white/10 bg-black/80 text-white backdrop-blur-md p-2 z-50 shadow-xl">
-              <div className="px-3 py-2 text-xs text-white/70 truncate">Signed in as {user?.name ?? "User"}</div>
+            <div className="absolute right-0 mt-3 min-w-[180px] rounded-xl border border-[var(--panel-border)] bg-[var(--panel)] dark:bg-black/85 dark:text-white dark:border-white/10 text-[var(--ink)] backdrop-blur-md p-2 z-50 shadow-xl">
+              <div className="px-3 py-2 text-xs text-[var(--text-2)] dark:text-white/70 truncate">Signed in as {user?.name ?? "User"}</div>
               <Link
                 href="/profile"
                 onClick={() => setMenuOpen(false)}
-                className="block w-full text-left px-3 py-2 rounded-lg hover:bg-white/10 text-sm"
+                className="block w-full text-left px-3 py-2 rounded-lg hover:bg-black/[0.06] dark:hover:bg-white/10 text-sm"
               >
                 Profile
               </Link>
@@ -123,7 +146,7 @@ export default function GlobalNav({ currentPage }: Props) {
                   setMenuOpen(false);
                   logout();
                 }}
-                className="w-full text-left px-3 py-2 rounded-lg hover:bg-white/10 text-sm"
+                className="w-full text-left px-3 py-2 rounded-lg hover:bg-black/[0.06] dark:hover:bg-white/10 text-sm"
               >
                 Logout
               </button>

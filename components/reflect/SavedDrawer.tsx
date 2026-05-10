@@ -76,27 +76,27 @@ export default function SavedDrawer() {
 
   return (
     <>
-      <motion.button type="button" onClick={() => setOpen(true)} whileHover={{ scale: 1.05 }} className="fixed bottom-8 right-8 z-50 flex items-center gap-3 bg-white/5 border border-white/10 backdrop-blur-xl rounded-full px-5 py-3 shadow-2xl">
+      <motion.button type="button" onClick={() => setOpen(true)} whileHover={{ scale: 1.05 }} className="fixed bottom-8 right-8 z-50 flex items-center gap-3 bg-[var(--reflect-ui-bg)] border border-[var(--reflect-ui-border)] backdrop-blur-xl rounded-full px-5 py-3 shadow-2xl">
         <BookmarkSimple weight="regular" size={20} className="text-[var(--gold)]" />
         <div className="w-5 h-5 rounded-full bg-[var(--gold)] text-[var(--ink)] font-mono text-[10px] flex items-center justify-center font-bold">{count}</div>
       </motion.button>
       {open ? (
-        <div className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm flex justify-end">
-          <div className="w-full max-w-md h-full bg-[#0b1117] border-l border-white/10 p-6 overflow-auto">
+        <div className="fixed inset-0 z-[60] bg-black/50 dark:bg-black/60 backdrop-blur-sm flex justify-end">
+          <div className="w-full max-w-md h-full bg-[var(--reflect-drawer)] border-l border-[var(--reflect-drawer-border)] p-6 overflow-auto">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-white">Saved bookmarks</h3>
-              <button type="button" onClick={() => setOpen(false)} className="text-white/70 hover:text-white">
+              <h3 className="text-lg font-semibold text-[var(--reflect-fg)]">Saved bookmarks</h3>
+              <button type="button" onClick={() => setOpen(false)} className="text-[var(--reflect-fg-soft)] hover:text-[var(--reflect-fg)]">
                 Close
               </button>
             </div>
             {ordered.length === 0 ? (
-              <p className="text-sm text-white/60">No saved verses yet. Tap Save on a reflection.</p>
+              <p className="text-sm text-[var(--reflect-fg-soft)]">No saved verses yet. Tap Save on a reflection.</p>
             ) : (
               <div className="space-y-3">
                 {ordered.map((i) => (
-                  <Link key={i.id + i.source} href={`/reflect?verse=${encodeURIComponent(i.verse_key)}`} onClick={() => setOpen(false)} className="block rounded-lg border border-white/10 px-3 py-2 text-sm text-white/90 hover:bg-white/5">
+                  <Link key={i.id + i.source} href={`/reflect?verse=${encodeURIComponent(i.verse_key)}`} onClick={() => setOpen(false)} className="block rounded-lg border border-[var(--reflect-ui-border)] px-3 py-2 text-sm text-[var(--reflect-fg)] hover:bg-black/[0.04] dark:hover:bg-white/5">
                     <span className="font-mono text-[var(--gold)]">{i.verse_key}</span>
-                    {i.source === "local" ? <span className="ml-2 text-[10px] uppercase tracking-wide text-white/40">device</span> : null}
+                    {i.source === "local" ? <span className="ml-2 text-[10px] uppercase tracking-wide text-[var(--reflect-fg-soft)]">device</span> : null}
                   </Link>
                 ))}
               </div>

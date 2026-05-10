@@ -277,7 +277,7 @@ export default function JourneyPage() {
             Your Content API credentials returned{" "}
             <strong>{chapters.length}</strong> chapter{chapters.length === 1 ? "" : "s"}. Demo keys are often capped;
             deploy with{" "}
-            <code className="text-xs px-1.5 py-0.5 bg-white rounded">QF_ENV=production</code> and production keys from
+            <code className="text-xs px-1.5 py-0.5 bg-[var(--panel)] border border-[var(--panel-border)] rounded">QF_ENV=production</code> and production keys from
             Quran Foundation when you need the full 114-surah catalog.
           </p>
         ) : null}

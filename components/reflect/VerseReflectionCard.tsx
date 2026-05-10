@@ -142,11 +142,11 @@ export default function VerseReflectionCard({ verseKey, meta }: Props) {
 
   if (loading) {
     return (
-      <motion.div initial={{ y: 60, opacity: 0, scale: 0.96 }} animate={{ y: 0, opacity: 1, scale: 1 }} transition={{ type: "spring", stiffness: 60, damping: 25, delay: 0.3 }} whileHover={{ y: -4 }} className="w-full max-w-[680px] mt-16 bg-white/[0.03] backdrop-blur-[24px] border border-white/10 rounded-[2.5rem] p-8 md:p-14 shadow-[inset_0_1px_0_rgba(255,255,255,0.06),_0_32px_64px_-16px_rgba(0,0,0,0.5)] transition-shadow duration-500 hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.06),_0_32px_80px_-12px_rgba(0,0,0,0.6)]">
-        <div className="h-3 w-32 shimmer-dark rounded-full" />
-        <div className="h-28 w-full shimmer-dark rounded-xl mt-10" />
-        <div className="h-4 w-full shimmer-dark rounded-full mt-8" />
-        <div className="h-4 w-3/4 shimmer-dark rounded-full mt-2 ml-auto" />
+      <motion.div initial={{ y: 60, opacity: 0, scale: 0.96 }} animate={{ y: 0, opacity: 1, scale: 1 }} transition={{ type: "spring", stiffness: 60, damping: 25, delay: 0.3 }} whileHover={{ y: -4 }} className="w-full max-w-[680px] mt-16 bg-[var(--reflect-glass)] backdrop-blur-[24px] border border-[var(--reflect-glass-border)] rounded-[2.5rem] p-8 md:p-14 shadow-[0_32px_64px_-16px_rgba(13,15,18,0.1)] transition-shadow duration-500 hover:shadow-[0_36px_72px_-12px_rgba(13,15,18,0.14)] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_32px_64px_-16px_rgba(0,0,0,0.5)] dark:hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_36px_80px_-12px_rgba(0,0,0,0.58)]">
+        <div className="h-3 w-32 reflect-loading-shimmer rounded-full" />
+        <div className="h-28 w-full reflect-loading-shimmer rounded-xl mt-10" />
+        <div className="h-4 w-full reflect-loading-shimmer rounded-full mt-8" />
+        <div className="h-4 w-3/4 reflect-loading-shimmer rounded-full mt-2 ml-auto" />
       </motion.div>
     );
   }
@@ -157,10 +157,10 @@ export default function VerseReflectionCard({ verseKey, meta }: Props) {
       animate={{ y: 0, opacity: 1, scale: 1 }}
       transition={{ type: "spring", stiffness: 60, damping: 25, delay: 0.3 }}
       whileHover={{ y: -4 }}
-      className="w-full max-w-[680px] mt-16 bg-white/[0.03] backdrop-blur-[24px] border border-white/10 rounded-[2.5rem] p-8 md:p-14 shadow-[inset_0_1px_0_rgba(255,255,255,0.06),_0_32px_64px_-16px_rgba(0,0,0,0.5)] transition-shadow duration-500 hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.06),_0_32px_80px_-12px_rgba(0,0,0,0.6)]"
+      className="w-full max-w-[680px] mt-16 text-[var(--reflect-fg)] bg-[var(--reflect-glass)] backdrop-blur-[24px] border border-[var(--reflect-glass-border)] rounded-[2.5rem] p-8 md:p-14 shadow-[0_32px_64px_-16px_rgba(13,15,18,0.1)] transition-shadow duration-500 hover:shadow-[0_36px_72px_-12px_rgba(13,15,18,0.14)] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_32px_64px_-16px_rgba(0,0,0,0.5)] dark:hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_36px_80px_-12px_rgba(0,0,0,0.58)]"
     >
       <div className="flex flex-wrap items-center gap-4 justify-between mb-6">
-        <span className="font-sans text-[11px] tracking-[0.18em] uppercase text-[var(--text-3)]">{headerLabel}</span>
+        <span className="font-sans text-[11px] tracking-[0.18em] uppercase text-[var(--reflect-fg-soft)]">{headerLabel}</span>
         <div className="flex items-center gap-2 shrink-0">
           <motion.button
             type="button"
@@ -172,7 +172,7 @@ export default function VerseReflectionCard({ verseKey, meta }: Props) {
               if (isPlaying) pause();
               else play();
             }}
-            className="flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-2 text-[12px] font-medium text-white/90 hover:bg-white/10 disabled:opacity-40 disabled:cursor-not-allowed"
+            className="flex items-center gap-2 rounded-full border border-[var(--reflect-ui-border)] bg-[var(--reflect-ui-bg)] px-3 py-2 text-[12px] font-medium text-[var(--reflect-fg)] hover:bg-black/[0.06] dark:hover:bg-white/10 disabled:opacity-40 disabled:cursor-not-allowed"
           >
             {isPlaying ? <Pause weight="fill" size={16} /> : <Play weight="fill" size={16} />}
             Listen
@@ -181,19 +181,19 @@ export default function VerseReflectionCard({ verseKey, meta }: Props) {
       </div>
 
       {arabic ? <AnimatedTextRTL text={arabic} delay={0.5} /> : null}
-      <hr className="border-white/5 my-8" />
-      <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.5, duration: 1 }} className="font-sans text-base text-[var(--text-3)] italic text-right max-w-[52ch] ml-auto leading-relaxed">
+      <hr className="border-[var(--reflect-ui-border)] my-8 opacity-60" />
+      <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.5, duration: 1 }} className="font-sans text-base text-[var(--reflect-fg-soft)] italic text-right max-w-[52ch] ml-auto leading-relaxed">
         {translation ? `"${translation}"` : null}
       </motion.p>
-      <div className="mt-10 pt-6 border-t border-white/5">
-        <button type="button" onClick={() => setTafsirOpen(!tafsirOpen)} className="flex items-center gap-2 text-[13px] font-medium text-[var(--text-3)] hover:text-[var(--parchment)] transition-colors w-full">
+      <div className="mt-10 pt-6 border-t border-[var(--reflect-ui-border)] opacity-90">
+        <button type="button" onClick={() => setTafsirOpen(!tafsirOpen)} className="flex items-center gap-2 text-[13px] font-medium text-[var(--reflect-fg-soft)] hover:text-[var(--reflect-fg)] transition-colors w-full">
           View Tafsir <CaretDown weight="regular" size={14} className={`transform transition-transform ${tafsirOpen ? "rotate-180" : ""}`} />
         </button>
         <AnimatePresence>
           {tafsirOpen && (
             <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
               <div
-                className="font-sans text-[13px] text-[var(--text-3)] leading-[1.9] pt-4 space-y-3 [&_h1]:text-base [&_h1]:font-semibold [&_h2]:text-sm [&_h2]:font-semibold [&_p]:mb-2 [&_ul]:list-disc [&_ul]:pl-5"
+                className="font-sans text-[13px] text-[var(--reflect-fg-soft)] leading-[1.9] pt-4 space-y-3 [&_h1]:text-base [&_h1]:font-semibold [&_h2]:text-sm [&_h2]:font-semibold [&_p]:mb-2 [&_ul]:list-disc [&_ul]:pl-5"
                 dangerouslySetInnerHTML={{
                   __html:
                     tafsirText ||
@@ -205,9 +205,9 @@ export default function VerseReflectionCard({ verseKey, meta }: Props) {
         </AnimatePresence>
       </div>
 
-      <div className="flex flex-col gap-4 mt-12 pt-6 border-t border-white/5">
+      <div className="flex flex-col gap-4 mt-12 pt-6 border-t border-[var(--reflect-ui-border)] opacity-90">
         <div className="flex flex-wrap gap-2 items-center">
-          <button type="button" onClick={handleShare} className="flex items-center gap-2 px-4 py-2 text-sm text-[var(--text-3)] hover:text-white transition-colors rounded-full hover:bg-white/5">
+          <button type="button" onClick={handleShare} className="flex items-center gap-2 px-4 py-2 text-sm text-[var(--reflect-fg-soft)] hover:text-[var(--reflect-fg)] transition-colors rounded-full hover:bg-black/[0.04] dark:hover:bg-white/5">
             <ShareNetwork weight="regular" size={16} /> Share reflection
           </button>
           {whatsAppHref ? (
@@ -216,24 +216,24 @@ export default function VerseReflectionCard({ verseKey, meta }: Props) {
               target="_blank"
               rel="noopener noreferrer"
               title="Open WhatsApp with this reflection"
-              className="inline-flex items-center gap-1 px-3 py-2 text-sm rounded-full border border-emerald-500/30 text-emerald-200/90 hover:bg-emerald-500/10"
+              className="inline-flex items-center gap-1 px-3 py-2 text-sm rounded-full border border-emerald-600/35 text-emerald-800 dark:border-emerald-500/30 dark:text-emerald-200/90 hover:bg-emerald-500/10"
             >
               WhatsApp
             </a>
           ) : (
-            <span className="inline-flex items-center gap-1 px-3 py-2 text-sm rounded-full border border-emerald-500/20 text-emerald-200/40">
+            <span className="inline-flex items-center gap-1 px-3 py-2 text-sm rounded-full border border-emerald-600/25 text-emerald-800/40 dark:border-emerald-500/20 dark:text-emerald-200/40">
               WhatsApp
             </span>
           )}
-          <button type="button" onClick={openSms} title="Messages / SMS" className="flex items-center gap-1 px-3 py-2 text-sm rounded-full border border-white/15 text-white/80 hover:bg-white/5">
+          <button type="button" onClick={openSms} title="Messages / SMS" className="flex items-center gap-1 px-3 py-2 text-sm rounded-full border border-[var(--reflect-ui-border)] text-[var(--reflect-fg-soft)] hover:bg-black/[0.04] dark:hover:bg-white/5">
             <ChatCircle weight="regular" size={16} /> Message
           </button>
-          <button type="button" onClick={copyShare} title="Copy to clipboard" className="flex items-center gap-1 px-3 py-2 text-sm rounded-full border border-white/15 text-white/80 hover:bg-white/5">
+          <button type="button" onClick={copyShare} title="Copy to clipboard" className="flex items-center gap-1 px-3 py-2 text-sm rounded-full border border-[var(--reflect-ui-border)] text-[var(--reflect-fg-soft)] hover:bg-black/[0.04] dark:hover:bg-white/5">
             <Copy weight="regular" size={16} /> Copy
           </button>
         </div>
-        {shareHint ? <p className="text-xs text-emerald-200/90">{shareHint}</p> : null}
-        {saveError ? <p className="text-xs text-amber-200/90">{saveError}</p> : null}
+        {shareHint ? <p className="text-xs text-emerald-700 dark:text-emerald-200/90">{shareHint}</p> : null}
+        {saveError ? <p className="text-xs text-amber-800 dark:text-amber-200/90">{saveError}</p> : null}
         <div className="flex justify-end">
           <SaveButton
             isSaved={isSaved}

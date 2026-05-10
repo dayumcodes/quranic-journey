@@ -172,7 +172,7 @@ function ReflectPageInner() {
   return (
     <>
       <GlobalNav currentPage="reflect" />
-      <motion.div className="min-h-screen bg-[var(--void)] text-white pt-32 pb-40 px-6 relative" variants={pageVariants} initial="initial" animate="animate" exit="exit">
+      <motion.div className="min-h-screen bg-[var(--reflect-surface)] text-[var(--reflect-fg)] pt-32 pb-40 px-6 relative" variants={pageVariants} initial="initial" animate="animate" exit="exit">
         <ReflectCanvasMesh />
         <div className="absolute inset-0 grain-overlay" />
         <div className="relative z-10 max-w-[1320px] mx-auto flex flex-col items-center">
@@ -181,13 +181,13 @@ function ReflectPageInner() {
             type="button"
             aria-expanded={manualPanelOpen}
             onClick={() => setManualPanelOpen((o) => !o)}
-            className="mt-4 text-[13px] text-[var(--text-3)] underline cursor-pointer hover:text-white transition-colors text-center"
+            className="mt-4 text-[13px] text-[var(--reflect-fg-soft)] underline cursor-pointer hover:text-[var(--reflect-fg)] transition-colors text-center"
           >
             Enter context manually →
           </button>
           {manualPanelOpen ? (
-            <div className="mt-5 w-full max-w-lg mx-auto rounded-2xl border border-white/12 bg-white/[0.04] backdrop-blur-md p-5 space-y-3">
-              <label htmlFor="reflect-manual-context" className="block text-left text-[12px] font-medium text-white/80">
+            <div className="mt-5 w-full max-w-lg mx-auto rounded-2xl border border-[var(--reflect-ui-border)] bg-[var(--reflect-ui-bg)] backdrop-blur-md p-5 space-y-3">
+              <label htmlFor="reflect-manual-context" className="block text-left text-[12px] font-medium text-[var(--reflect-fg-soft)]">
                 Describe your mood, situation, or what you are seeking reflection on
               </label>
               <textarea
@@ -196,7 +196,7 @@ function ReflectPageInner() {
                 onChange={(e) => setManualQuery(e.target.value)}
                 rows={4}
                 placeholder="e.g. patience during difficulty, gratitude, family..."
-                className="w-full rounded-xl border border-white/15 bg-black/30 px-3 py-3 text-sm text-white placeholder:text-white/35 resize-y min-h-[100px] focus:outline-none focus:ring-1 focus:ring-[var(--gold)]/40"
+                className="w-full rounded-xl border border-[var(--reflect-ui-border)] bg-[var(--reflect-input-bg)] px-3 py-3 text-sm text-[var(--reflect-fg)] placeholder:text-[var(--reflect-fg-soft)] resize-y min-h-[100px] focus:outline-none focus:ring-1 focus:ring-[var(--gold)]/40"
               />
               <div className="flex flex-wrap gap-2 justify-end">
                 <button
@@ -205,7 +205,7 @@ function ReflectPageInner() {
                     setManualPanelOpen(false);
                     setManualQuery("");
                   }}
-                  className="px-4 py-2 text-[13px] rounded-full border border-white/15 text-white/70 hover:bg-white/5"
+                  className="px-4 py-2 text-[13px] rounded-full border border-[var(--reflect-ui-border)] text-[var(--reflect-fg-soft)] hover:bg-black/[0.04] dark:hover:bg-white/5"
                 >
                   Cancel
                 </button>
@@ -239,7 +239,7 @@ function ReflectPageInner() {
 
 export default function ReflectPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-[var(--void)] text-white pt-32 flex justify-center">Loading reflect…</div>}>
+    <Suspense fallback={<div className="min-h-screen bg-[var(--reflect-surface)] text-[var(--reflect-fg)] pt-32 flex justify-center">Loading reflect…</div>}>
       <ReflectPageInner />
     </Suspense>
   );

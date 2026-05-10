@@ -8,7 +8,7 @@ import { pageVariants, SPRINGS } from "@/lib/constants/motion";
 function LandingCard({ title, desc, href, bg, dark }: { title: string; desc: string; href: string; bg: string; dark?: boolean }) {
   return (
     <Link href={href}>
-      <motion.div whileHover={{ y: -12, scale: 1.02 }} transition={SPRINGS.DEFAULT} className={`cursor-pointer rounded-[2.5rem] p-10 h-[400px] flex flex-col justify-end relative overflow-hidden group ${bg} ${dark ? "border border-white/10" : "border border-[rgba(13,15,18,0.08)] shadow-card-resting hover:shadow-card-hover"}`}>
+        <motion.div whileHover={{ y: -12, scale: 1.02 }} transition={SPRINGS.DEFAULT} className={`cursor-pointer rounded-[2.5rem] p-10 h-[400px] flex flex-col justify-end relative overflow-hidden group ${bg} ${dark ? "border border-white/10" : "border border-[var(--panel-border)] shadow-card-resting hover:shadow-card-hover"}`}>
         <div className={`absolute top-10 right-10 w-12 h-12 rounded-full border flex items-center justify-center transition-transform group-hover:scale-110 group-hover:-rotate-12 ${dark ? "border-white/20 text-white" : "border-[rgba(13,15,18,0.1)] text-[var(--ink)]"}`}>
           <ArrowRight weight="regular" size={20} />
         </div>
@@ -30,11 +30,11 @@ export default function HomePage() {
             <p className="font-sans text-lg text-[var(--text-2)] max-w-[60ch] mx-auto">Three distinct interfaces for Quranic engagement, built with award-winning motion physics and asymmetrical gallery layouts.</p>
           </div>
           <div className="w-full max-w-[1320px] grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12">
-            <LandingCard title="Journey" desc="Gamified learning paths for kids with dynamic SVG maps and spring-physics interactions." bg="bg-white" href="/journey" />
+            <LandingCard title="Journey" desc="Gamified learning paths for kids with dynamic SVG maps and spring-physics interactions." bg="bg-[var(--panel)]" href="/journey" />
             <LandingCard title="Reflect" desc="Location-aware meditative space featuring generative canvas meshes and massive typography." bg="bg-[var(--void)] text-white" href="/reflect" dark />
-            <LandingCard title="Pal" desc="Social accountability dashboard with asymmetric layouts and synchronized progress tracking." bg="bg-[#EDE5D5]" href="/pal" />
+            <LandingCard title="Pal" desc="Social accountability dashboard with asymmetric layouts and synchronized progress tracking." bg="bg-[#EDE5D5] dark:bg-[#252218]" href="/pal" />
           </div>
-          <footer className="bg-[var(--parchment)] pt-16 sm:pt-24 pb-0 mb-0 border-t border-gray-100 mt-16 relative">
+          <footer className="bg-[var(--parchment)] pt-16 sm:pt-24 pb-0 mb-0 border-t border-[var(--panel-border)] mt-16 relative">
             <div className="w-full max-w-[1320px] mx-auto px-4 sm:px-6 lg:px-8 mb-16 sm:mb-24">
               <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-8 lg:gap-12">
                 <div className="col-span-2 lg:col-span-2">
@@ -42,42 +42,42 @@ export default function HomePage() {
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                       <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="#1D4ED8" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
-                    <span className="font-display font-bold text-[38px] leading-none tracking-tight text-[#0F172A]">Al-Rihla</span>
+                    <span className="font-display font-bold text-[38px] leading-none tracking-tight text-[var(--ink)]">Al-Rihla</span>
                   </div>
                   <div className="flex flex-col gap-4">
-                    <p className="text-gray-500 text-sm leading-relaxed max-w-xs">Deepen Quran engagement with guided journey, contextual reflection, and accountability with your learning partner.</p>
-                    <div className="flex gap-4 mt-2 text-gray-400">
+                    <p className="text-[var(--text-2)] text-sm leading-relaxed max-w-xs">Deepen Quran engagement with guided journey, contextual reflection, and accountability with your learning partner.</p>
+                    <div className="flex gap-4 mt-2 text-[var(--text-3)]">
                       <InstagramLogo weight="regular" size={20} />
                       <YoutubeLogo weight="regular" size={20} />
                     </div>
-                    <p className="text-gray-400 text-xs mt-4">© 2026 Al-Rihla. All rights reserved.</p>
-                    <div className="mt-2 flex items-center gap-3 px-3 py-2 border border-gray-100 rounded-lg w-fit bg-gray-50">
-                      <div className="w-8 h-8 rounded-full bg-[var(--ink)] text-white text-[10px] flex items-center justify-center font-bold">AR</div>
+                    <p className="text-[var(--text-3)] text-xs mt-4">© 2026 Al-Rihla. All rights reserved.</p>
+                    <div className="mt-2 flex items-center gap-3 px-3 py-2 border border-[var(--panel-border)] rounded-lg w-fit bg-[var(--panel-muted)]">
+                      <div className="w-8 h-8 rounded-full bg-[var(--ink)] text-[var(--parchment)] text-[10px] flex items-center justify-center font-bold">AR</div>
                       <div className="flex flex-col">
-                        <span className="text-gray-400 text-[10px] font-semibold uppercase tracking-wider leading-tight">Security</span>
-                        <span className="text-gray-400 text-[10px] font-semibold uppercase tracking-wider leading-tight">Partner</span>
+                        <span className="text-[var(--text-3)] text-[10px] font-semibold uppercase tracking-wider leading-tight">Security</span>
+                        <span className="text-[var(--text-3)] text-[10px] font-semibold uppercase tracking-wider leading-tight">Partner</span>
                       </div>
                     </div>
                   </div>
                 </div>
                 <div className="flex flex-col gap-4">
-                  <h4 className="font-semibold text-gray-900">Company</h4>
-                  <Link className="text-gray-500 hover:text-blue-600 transition-colors text-sm" href="/privacy">Privacy Policy</Link>
-                  <Link className="text-gray-500 hover:text-blue-600 transition-colors text-sm" href="/terms">Terms &amp; Conditions</Link>
-                  <Link className="text-gray-500 hover:text-blue-600 transition-colors text-sm" href="/contact">Contact Us</Link>
-                  <Link className="text-gray-500 hover:text-blue-600 transition-colors text-sm" href="/security">Security</Link>
+                  <h4 className="font-semibold text-[var(--ink)]">Company</h4>
+                  <Link className="text-[var(--text-2)] hover:text-[var(--gold)] transition-colors text-sm" href="/privacy">Privacy Policy</Link>
+                  <Link className="text-[var(--text-2)] hover:text-[var(--gold)] transition-colors text-sm" href="/terms">Terms &amp; Conditions</Link>
+                  <Link className="text-[var(--text-2)] hover:text-[var(--gold)] transition-colors text-sm" href="/contact">Contact Us</Link>
+                  <Link className="text-[var(--text-2)] hover:text-[var(--gold)] transition-colors text-sm" href="/security">Security</Link>
                 </div>
                 <div className="flex flex-col gap-4">
-                  <h4 className="font-semibold text-gray-900">Explore</h4>
-                  <Link className="text-gray-500 hover:text-blue-600 transition-colors text-sm" href="/journey">Journey</Link>
-                  <Link className="text-gray-500 hover:text-blue-600 transition-colors text-sm" href="/reflect">Reflect</Link>
-                  <Link className="text-gray-500 hover:text-blue-600 transition-colors text-sm" href="/pal">Pal</Link>
+                  <h4 className="font-semibold text-[var(--ink)]">Explore</h4>
+                  <Link className="text-[var(--text-2)] hover:text-[var(--gold)] transition-colors text-sm" href="/journey">Journey</Link>
+                  <Link className="text-[var(--text-2)] hover:text-[var(--gold)] transition-colors text-sm" href="/reflect">Reflect</Link>
+                  <Link className="text-[var(--text-2)] hover:text-[var(--gold)] transition-colors text-sm" href="/pal">Pal</Link>
                 </div>
                 <div className="flex flex-col gap-4">
-                  <h4 className="font-semibold text-gray-900">Account</h4>
-                  <Link className="text-gray-500 hover:text-blue-600 transition-colors text-sm" href="/delete-account">Delete Account</Link>
-                  <Link className="text-gray-500 hover:text-blue-600 transition-colors text-sm" href="/auth/callback">OAuth Callback</Link>
-                  <Link className="text-gray-500 hover:text-blue-600 transition-colors text-sm" href="/logout">Logout</Link>
+                  <h4 className="font-semibold text-[var(--ink)]">Account</h4>
+                  <Link className="text-[var(--text-2)] hover:text-[var(--gold)] transition-colors text-sm" href="/delete-account">Delete Account</Link>
+                  <Link className="text-[var(--text-2)] hover:text-[var(--gold)] transition-colors text-sm" href="/auth/callback">OAuth Callback</Link>
+                  <Link className="text-[var(--text-2)] hover:text-[var(--gold)] transition-colors text-sm" href="/logout">Logout</Link>
                 </div>
               </div>
             </div>

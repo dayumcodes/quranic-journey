@@ -474,7 +474,7 @@ function PalPageInner() {
           animate="animate"
           exit="exit"
         >
-          <div className="max-w-lg text-center bg-white/70 rounded-3xl border border-[rgba(13,15,18,0.08)] p-10">
+          <div className="max-w-lg text-center bg-[var(--panel-muted)] rounded-3xl border border-[var(--panel-border)] p-10 backdrop-blur-sm">
             <h2 className="font-display text-3xl text-[var(--ink)] mb-3">Login required</h2>
             <p className="text-[var(--text-2)] mb-8">Pal compares progress with linked pals using your Quran Foundation account.</p>
             <button type="button" onClick={() => void login()} className="px-6 py-3 rounded-full bg-[var(--ink)] text-[var(--parchment)] font-medium">
@@ -509,7 +509,7 @@ function PalPageInner() {
               title="Open pals"
               aria-label="Open pals"
               onClick={() => setPalSidebarOpen(true)}
-              className="shrink-0 w-full md:w-[52px] lg:w-14 min-h-[3rem] md:min-h-[min(420px,calc(100vh-8rem))] rounded-2xl border border-[rgba(13,15,18,0.08)] bg-white/80 backdrop-blur-sm shadow-card-resting flex flex-row md:flex-col items-center justify-center gap-2 py-3 md:py-6 hover:bg-black/[0.03] hover:border-[var(--gold)]/35 transition-colors md:sticky md:top-28"
+              className="shrink-0 w-full md:w-[52px] lg:w-14 min-h-[3rem] md:min-h-[min(420px,calc(100vh-8rem))] rounded-2xl border border-[var(--panel-border)] bg-[var(--panel)] backdrop-blur-sm shadow-card-resting flex flex-row md:flex-col items-center justify-center gap-2 py-3 md:py-6 hover:bg-black/[0.03] dark:hover:bg-white/[0.06] hover:border-[var(--gold)]/35 transition-colors md:sticky md:top-28"
             >
               <Plus weight="bold" size={22} className="text-[var(--gold)] shrink-0" />
               <span className="text-sm font-medium text-[var(--text-2)] md:hidden">Open pals</span>
