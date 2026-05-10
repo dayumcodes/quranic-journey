@@ -36,13 +36,13 @@ function FeedItem({
       <div className="flex flex-col gap-1 max-w-[80%]">
         {verse && (
           <div
-            className={`self-start inline-flex items-center gap-1.5 px-3 py-1 bg-[var(--gold)]/10 border border-[var(--gold)]/20 rounded-full text-xs font-medium text-[var(--ink)] mb-1 ${isMine ? "self-end" : ""}`}
+            className={`self-start inline-flex items-center gap-1.5 px-3 py-1 bg-[var(--gold)]/10 border border-[var(--gold)]/20 rounded-full text-xs font-medium mb-1 ${isMine ? "self-end text-[var(--ink)]" : "text-[#0D0F12]"}`}
           >
             <BookOpen weight="regular" size={12} className="text-[var(--gold)]" /> {verse}
           </div>
         )}
         <div
-          className={`p-4 font-sans text-sm leading-[1.8] ${isMine ? "bg-[var(--ink)] text-[var(--parchment)] rounded-[1.5rem_0.5rem_1.5rem_1.5rem]" : "bg-white border border-[rgba(13,15,18,0.08)] rounded-[0.5rem_1.5rem_1.5rem_1.5rem]"}`}
+          className={`p-4 font-sans text-sm leading-[1.8] ${isMine ? "bg-[var(--ink)] text-[var(--parchment)] rounded-[1.5rem_0.5rem_1.5rem_1.5rem]" : "bg-white border border-[rgba(13,15,18,0.08)] rounded-[0.5rem_1.5rem_1.5rem_1.5rem] text-[#0D0F12]"}`}
         >
           {text}
         </div>
@@ -108,10 +108,10 @@ export default function SharedFeed({
             value={feedInput}
             onChange={(e) => setFeedInput(e.target.value)}
             placeholder={partnerLinked ? "Share a reflection…" : "Link a partner to post…"}
-            className="w-full bg-white border border-[rgba(13,15,18,0.1)] rounded-2xl px-5 py-4 font-sans text-sm outline-none focus:border-[var(--gold)] focus:shadow-gold-glow transition-all pr-24 disabled:opacity-50"
+            className="w-full bg-white border border-[rgba(13,15,18,0.1)] rounded-2xl px-5 py-4 font-sans text-sm text-[#0D0F12] placeholder:text-[#0D0F12]/45 outline-none focus:border-[var(--gold)] focus:shadow-gold-glow transition-all pr-24 disabled:opacity-50"
           />
           <div className="absolute right-2 top-1/2 -translate-y-1/2 flex gap-2">
-            <button type="button" disabled className="p-2 text-[var(--text-3)]" aria-hidden>
+            <button type="button" disabled className="p-2 text-[#0D0F12]/45" aria-hidden>
               <MagnifyingGlass weight="regular" size={18} />
             </button>
             <button
@@ -123,7 +123,7 @@ export default function SharedFeed({
                 onSend?.(text);
                 setFeedInput("");
               }}
-              className="bg-[var(--gold)] text-[var(--ink)] p-2 rounded-xl hover:scale-105 transition-transform disabled:opacity-40 disabled:hover:scale-100"
+              className="bg-[var(--gold)] text-[#0D0F12] p-2 rounded-xl hover:scale-105 transition-transform disabled:opacity-40 disabled:hover:scale-100"
             >
               <ArrowRight weight="regular" size={18} />
             </button>

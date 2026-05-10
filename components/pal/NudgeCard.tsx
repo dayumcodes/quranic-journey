@@ -37,14 +37,14 @@ export default function NudgeCard({
             <div className="w-12 h-12 rounded-full bg-amber-100 flex items-center justify-center shrink-0">
               <Sparkle weight="regular" size={24} className="text-amber-500" />
             </div>
-            <p className="font-sans font-medium text-[var(--ink)]">{label}</p>
+            <p className="font-sans font-medium text-[#0D0F12]">{label}</p>
           </div>
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             type="button"
             onClick={onSend}
-            className="bg-[var(--ink)] text-[var(--parchment)] px-6 py-3 rounded-full font-sans font-medium text-sm relative shrink-0 ml-4"
+            className="bg-[#0D0F12] text-[#F4EFE6] px-6 py-3 rounded-full font-sans font-medium text-sm relative shrink-0 ml-4"
           >
             Send Nudge
           </motion.button>

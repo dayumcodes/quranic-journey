@@ -474,10 +474,10 @@ function PalPageInner() {
           animate="animate"
           exit="exit"
         >
-          <div className="max-w-lg text-center bg-[var(--panel-muted)] rounded-3xl border border-[var(--panel-border)] p-10 backdrop-blur-sm">
-            <h2 className="font-display text-3xl text-[var(--ink)] mb-3">Login required</h2>
-            <p className="text-[var(--text-2)] mb-8">Pal compares progress with linked pals using your Quran Foundation account.</p>
-            <button type="button" onClick={() => void login()} className="px-6 py-3 rounded-full bg-[var(--ink)] text-[var(--parchment)] font-medium">
+          <div className="max-w-lg text-center bg-[var(--panel-muted)] rounded-3xl border border-[var(--panel-border)] p-10 backdrop-blur-sm text-[#0D0F12]">
+            <h2 className="font-display text-3xl mb-3">Login required</h2>
+            <p className="text-[#0D0F12]/80 mb-8">Pal compares progress with linked pals using your Quran Foundation account.</p>
+            <button type="button" onClick={() => void login()} className="px-6 py-3 rounded-full bg-[#0D0F12] text-[#F4EFE6] font-medium">
               Login to continue
             </button>
           </div>
@@ -512,28 +512,32 @@ function PalPageInner() {
               className="shrink-0 w-full md:w-[52px] lg:w-14 min-h-[3rem] md:min-h-[min(420px,calc(100vh-8rem))] rounded-2xl border border-[var(--panel-border)] bg-[var(--panel)] backdrop-blur-sm shadow-card-resting flex flex-row md:flex-col items-center justify-center gap-2 py-3 md:py-6 hover:bg-black/[0.03] dark:hover:bg-white/[0.06] hover:border-[var(--gold)]/35 transition-colors md:sticky md:top-28"
             >
               <Plus weight="bold" size={22} className="text-[var(--gold)] shrink-0" />
-              <span className="text-sm font-medium text-[var(--text-2)] md:hidden">Open pals</span>
+              <span className="text-sm font-medium text-[#0D0F12]/85 md:hidden">Open pals</span>
             </button>
           )}
 
           <div className="flex-1 min-w-0 w-full">
             {pendingInvitePartnerId ? (
-              <div className="rounded-2xl border border-emerald-200 bg-emerald-50/90 p-6 mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="rounded-2xl border border-emerald-200 bg-emerald-50/90 dark:bg-emerald-100/95 p-6 mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between text-emerald-950">
                 <div>
-                  <p className="font-medium text-[var(--ink)]">Pal invite</p>
-                  <p className="text-sm text-[var(--text-3)] mt-1">
+                  <p className="font-medium">Pal invite</p>
+                  <p className="text-sm text-emerald-900/85 mt-1">
                     Link <span className="font-mono text-xs">{pendingInvitePartnerId.slice(0, 14)}…</span>?
                   </p>
-                  <label className="block text-[11px] text-[var(--text-3)] mt-3">
+                  <label className="block text-[11px] text-emerald-900/80 mt-3">
                     Nickname (optional)
-                    <input value={inviteNick} onChange={(e) => setInviteNick(e.target.value)} className="mt-1 block w-full max-w-xs rounded-lg border border-[rgba(13,15,18,0.12)] px-3 py-2 text-sm" />
+                    <input
+                      value={inviteNick}
+                      onChange={(e) => setInviteNick(e.target.value)}
+                      className="mt-1 block w-full max-w-xs rounded-lg border border-[rgba(13,15,18,0.12)] px-3 py-2 text-sm text-[#0D0F12]"
+                    />
                   </label>
                 </div>
                 <div className="flex gap-2 shrink-0">
-                  <button type="button" onClick={handleInviteDismiss} className="px-4 py-2 rounded-full border border-[rgba(13,15,18,0.15)] text-sm">
+                  <button type="button" onClick={handleInviteDismiss} className="px-4 py-2 rounded-full border border-[rgba(13,15,18,0.15)] text-sm text-[#0D0F12]">
                     Not now
                   </button>
-                  <button type="button" onClick={handleInviteConfirm} className="px-5 py-2 rounded-full bg-[var(--ink)] text-[var(--parchment)] text-sm font-medium">
+                  <button type="button" onClick={handleInviteConfirm} className="px-5 py-2 rounded-full bg-[#0D0F12] text-[#F4EFE6] text-sm font-medium">
                     Add pal
                   </button>
                 </div>
