@@ -17,7 +17,7 @@ export default function SharedGoalWidget({
   partnerName?: string;
 }) {
   return (
-    <div className="mt-32 rounded-[2rem] p-12 relative overflow-hidden flex flex-col lg:flex-row lg:items-center lg:justify-between gap-10 shadow-card-resting bg-[var(--panel-muted)] backdrop-blur-sm border border-[var(--panel-border)] text-[var(--ink)]">
+    <div className="mt-16 sm:mt-24 lg:mt-32 rounded-2xl sm:rounded-[2rem] p-6 sm:p-10 lg:p-12 relative overflow-hidden flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6 sm:gap-10 shadow-card-resting bg-[var(--panel-muted)] backdrop-blur-sm border border-[var(--panel-border)] text-[var(--ink)]">
       <div
         className="absolute inset-0 opacity-[0.06] dark:opacity-[0.08] pointer-events-none text-[var(--ink)]"
         style={{

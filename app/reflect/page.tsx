@@ -172,7 +172,7 @@ function ReflectPageInner() {
   return (
     <>
       <GlobalNav currentPage="reflect" />
-      <motion.div className="min-h-screen bg-[var(--reflect-surface)] text-[var(--reflect-fg)] pt-32 pb-40 px-6 relative" variants={pageVariants} initial="initial" animate="animate" exit="exit">
+      <motion.div className="min-h-screen bg-[var(--reflect-surface)] text-[var(--reflect-fg)] pt-[5.75rem] sm:pt-32 pb-28 sm:pb-40 px-4 sm:px-6 relative" variants={pageVariants} initial="initial" animate="animate" exit="exit">
         <ReflectCanvasMesh />
         <div className="absolute inset-0 grain-overlay" />
         <div className="relative z-10 max-w-[1320px] mx-auto flex flex-col items-center">

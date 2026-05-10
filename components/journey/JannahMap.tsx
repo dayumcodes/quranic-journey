@@ -24,7 +24,7 @@ interface Props {
 export default function JannahMap({ nodes, onSelect, loading, mapError, onRetryMap }: Props) {
   if (mapError && !loading) {
     return (
-      <div className="w-full lg:w-[58%] relative min-h-[600px] rounded-3xl overflow-hidden border border-[var(--panel-border)] bg-gradient-to-br from-[#F4EFE6] to-[#EDE5D5] dark:from-[#252830] dark:to-[#181b22] shadow-inner p-8 flex items-center justify-center flex-col gap-4">
+      <div className="w-full lg:w-[58%] relative min-h-[min(520px,70vh)] sm:min-h-[600px] rounded-2xl sm:rounded-3xl overflow-hidden border border-[var(--panel-border)] bg-gradient-to-br from-[#F4EFE6] to-[#EDE5D5] dark:from-[#252830] dark:to-[#181b22] shadow-inner p-4 sm:p-8 flex items-center justify-center flex-col gap-4">
         <svg width="80" height="80" viewBox="0 0 24 24" fill="var(--gold)" opacity="0.3"><path d="M12 2a9 9 0 1 0 9 9 7 7 0 0 1-9-9z" /><path d="M16 3l1 2 2 1-2 1-1 2-1-2-2-1 2-1z" /></svg>
         <p className="font-sans text-sm text-[var(--text-2)] text-center max-w-md">{mapError}</p>
         {onRetryMap ? (
@@ -37,7 +37,7 @@ export default function JannahMap({ nodes, onSelect, loading, mapError, onRetryM
   }
   if (loading || nodes.length === 0) {
     return (
-      <div className="w-full lg:w-[58%] relative min-h-[600px] rounded-3xl overflow-hidden border border-[var(--panel-border)] bg-gradient-to-br from-[#F4EFE6] to-[#EDE5D5] dark:from-[#252830] dark:to-[#181b22] shadow-inner p-8 flex items-center justify-center flex-col gap-4">
+      <div className="w-full lg:w-[58%] relative min-h-[min(520px,70vh)] sm:min-h-[600px] rounded-2xl sm:rounded-3xl overflow-hidden border border-[var(--panel-border)] bg-gradient-to-br from-[#F4EFE6] to-[#EDE5D5] dark:from-[#252830] dark:to-[#181b22] shadow-inner p-4 sm:p-8 flex items-center justify-center flex-col gap-4">
         <svg width="80" height="80" viewBox="0 0 24 24" fill="var(--gold)" opacity="0.3"><path d="M12 2a9 9 0 1 0 9 9 7 7 0 0 1-9-9z" /><path d="M16 3l1 2 2 1-2 1-1 2-1-2-2-1 2-1z" /></svg>
         <p className="font-sans text-sm text-[var(--text-3)] shimmer px-4 py-2 rounded-full">Loading your map...</p>
       </div>
@@ -52,9 +52,9 @@ export default function JannahMap({ nodes, onSelect, loading, mapError, onRetryM
   const pathAnimated = nodes.length <= 24;
 
   return (
-    <div className="w-full lg:w-[58%] relative min-h-[560px] max-h-[min(72vh,720px)] rounded-3xl border border-[var(--panel-border)] bg-gradient-to-br from-[#F4EFE6] to-[#EDE5D5] dark:from-[#252830] dark:to-[#181b22] shadow-inner flex flex-col overflow-hidden">
-      <p className="font-sans text-xs text-[var(--text-3)] px-6 pt-4 shrink-0">Scroll to follow all surahs along the path</p>
-      <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-8 pb-8 pt-2 [-webkit-overflow-scrolling:touch]">
+    <div className="w-full lg:w-[58%] relative min-h-[min(480px,65vh)] sm:min-h-[560px] max-h-[min(72vh,720px)] rounded-2xl sm:rounded-3xl border border-[var(--panel-border)] bg-gradient-to-br from-[#F4EFE6] to-[#EDE5D5] dark:from-[#252830] dark:to-[#181b22] shadow-inner flex flex-col overflow-hidden">
+      <p className="font-sans text-[11px] sm:text-xs text-[var(--text-3)] px-3 sm:px-6 pt-3 sm:pt-4 shrink-0">Scroll to follow all surahs along the path</p>
+      <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-3 pb-4 pt-1 sm:px-8 sm:pb-8 sm:pt-2 [-webkit-overflow-scrolling:touch]">
         <svg
           className="w-full block drop-shadow-md"
           viewBox={`0 0 100 ${vbHeight}`}

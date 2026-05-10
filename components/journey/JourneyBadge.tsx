@@ -6,10 +6,10 @@ import { SPRINGS } from "@/lib/constants/motion";
 export default function JourneyBadge({ onContinue, streakDays }: { onContinue: () => void; streakDays: number }) {
   const streakLabel = `${streakDays} day${streakDays === 1 ? "" : "s"} streak!`;
   const panelBaseClasses =
-    "bg-[var(--panel-muted)] backdrop-blur-sm border border-[var(--panel-border)] rounded-[2.5rem] p-10 h-full flex flex-col relative overflow-hidden shadow-card-resting text-[var(--ink)]";
+    "bg-[var(--panel-muted)] backdrop-blur-sm border border-[var(--panel-border)] rounded-3xl sm:rounded-[2.5rem] p-6 sm:p-10 min-h-0 h-full flex flex-col relative overflow-hidden shadow-card-resting text-[var(--ink)]";
   return (
     <motion.div layoutId="panelContent" className={`${panelBaseClasses} items-center justify-center text-center`}>
-      <motion.h2 initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="font-display font-bold text-3xl text-[var(--ink)] mb-12">
+      <motion.h2 initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="font-display font-bold text-2xl sm:text-3xl text-[var(--ink)] mb-8 sm:mb-12">
         Mashallah!
         <br />
         Gate Unlocked

@@ -23,7 +23,7 @@ export default function ProgressCard({
       initial={{ y: 20, opacity: 0 }}
       whileInView={{ y: 0, opacity: 1 }}
       transition={{ type: "spring", stiffness: 100, damping: 20, delay: delay + 0.1 }}
-      className="bg-[var(--panel-muted)] backdrop-blur-sm border border-[var(--panel-border)] rounded-[1.5rem] p-7 shadow-card-resting text-[var(--ink)]"
+      className="bg-[var(--panel-muted)] backdrop-blur-sm border border-[var(--panel-border)] rounded-[1.25rem] sm:rounded-[1.5rem] p-5 sm:p-7 shadow-card-resting text-[var(--ink)]"
     >
       <div className="flex justify-between items-end mb-4">
         <div className="font-sans text-sm text-[var(--text-3)]">{label}</div>

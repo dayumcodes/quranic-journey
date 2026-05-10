@@ -99,7 +99,7 @@ export default function SharedFeed({
           ))
         )}
       </div>
-      <div className="sticky bottom-6 bg-[var(--parchment)]/90 backdrop-blur-md border-t border-[rgba(13,15,18,0.07)] pt-4 pb-2">
+      <div className="sticky bottom-3 sm:bottom-6 bg-[var(--parchment)]/90 backdrop-blur-md border-t border-[rgba(13,15,18,0.07)] dark:border-white/[0.07] pt-3 sm:pt-4 pb-2 -mx-1 px-1 sm:mx-0 sm:px-0">
         {composerHint ? <p className="text-[11px] text-[var(--text-3)] mb-2">{composerHint}</p> : null}
         <div className="relative">
           <input
@@ -108,7 +108,7 @@ export default function SharedFeed({
             value={feedInput}
             onChange={(e) => setFeedInput(e.target.value)}
             placeholder={partnerLinked ? "Share a reflection…" : "Link a partner to post…"}
-            className="w-full bg-[var(--panel)] border border-[var(--panel-border)] rounded-2xl px-5 py-4 font-sans text-sm text-[var(--ink)] placeholder:text-[var(--text-3)] outline-none focus:border-[var(--gold)] focus:shadow-gold-glow transition-all pr-24 disabled:opacity-50"
+            className="w-full bg-[var(--panel)] border border-[var(--panel-border)] rounded-2xl px-4 py-3.5 sm:px-5 sm:py-4 font-sans text-sm text-[var(--ink)] placeholder:text-[var(--text-3)] outline-none focus:border-[var(--gold)] focus:shadow-gold-glow transition-all pr-[5.5rem] sm:pr-24 disabled:opacity-50"
           />
           <div className="absolute right-2 top-1/2 -translate-y-1/2 flex gap-2">
             <button type="button" disabled className="p-2 text-[var(--text-3)]" aria-hidden>

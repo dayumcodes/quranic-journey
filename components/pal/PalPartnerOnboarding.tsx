@@ -51,7 +51,7 @@ export default function PalPartnerOnboarding({
   };
 
   return (
-    <div className="rounded-[1.5rem] border border-[var(--panel-border)] bg-[var(--panel-muted)] backdrop-blur-sm p-8 mb-8 shadow-card-resting max-w-2xl mx-auto md:mx-0 text-[var(--ink)]">
+    <div className="rounded-[1.5rem] border border-[var(--panel-border)] bg-[var(--panel-muted)] backdrop-blur-sm p-5 sm:p-8 mb-6 sm:mb-8 shadow-card-resting max-w-2xl mx-auto md:mx-0 text-[var(--ink)]">
       <div className="flex items-center justify-between gap-3 mb-2">
         <div className="flex items-center gap-3">
           <UserCircle weight="regular" size={28} className="text-[var(--gold)]" />

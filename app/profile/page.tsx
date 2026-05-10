@@ -41,10 +41,10 @@ export default function ProfilePage() {
   return (
     <>
       <GlobalNav currentPage="profile" />
-      <motion.main className="min-h-screen bg-[var(--parchment)] pt-28 pb-16 px-6 md:px-12" variants={pageVariants} initial="initial" animate="animate" exit="exit">
+      <motion.main className="min-h-screen bg-[var(--parchment)] pt-[5.75rem] sm:pt-28 pb-12 sm:pb-16 px-4 sm:px-6 md:px-12" variants={pageVariants} initial="initial" animate="animate" exit="exit">
         <div className="max-w-lg mx-auto">
           {!isAuthenticated || !user ? (
-            <div className="rounded-3xl border border-[var(--panel-border)] bg-[var(--panel-muted)] p-10 text-center backdrop-blur-sm">
+            <div className="rounded-3xl border border-[var(--panel-border)] bg-[var(--panel-muted)] p-6 sm:p-10 text-center backdrop-blur-sm">
               <h1 className="font-display text-2xl text-[var(--ink)] mb-4">Your profile</h1>
               <p className="text-[var(--text-2)] mb-8">Sign in to see account details synced with Quran Foundation.</p>
               <button type="button" onClick={() => void login()} className="rounded-full bg-[var(--ink)] text-[var(--parchment)] px-6 py-3 font-medium">
@@ -52,7 +52,7 @@ export default function ProfilePage() {
               </button>
             </div>
           ) : (
-            <div className="rounded-3xl border border-[var(--panel-border)] bg-[var(--panel)] p-10 shadow-card-resting backdrop-blur-sm">
+            <div className="rounded-3xl border border-[var(--panel-border)] bg-[var(--panel)] p-6 sm:p-10 shadow-card-resting backdrop-blur-sm">
               <div className="flex items-center gap-4 mb-8">
                 <div className="w-16 h-16 rounded-full bg-[var(--gold)]/20 border-2 border-[var(--gold)]/60 flex items-center justify-center font-bold text-xl text-[var(--ink)]">
                   {user.avatar_initials}

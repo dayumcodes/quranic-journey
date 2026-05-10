@@ -7,7 +7,7 @@ import ParticleBurst from "@/components/shared/ParticleBurst";
 import { buildJourneyQuizQuestion } from "@/lib/quiz/generateJourneyQuiz";
 
 const panelBaseClasses =
-  "bg-[var(--panel-muted)] backdrop-blur-sm border border-[var(--panel-border)] rounded-[2.5rem] p-10 h-full flex flex-col relative overflow-hidden shadow-card-resting text-[var(--ink)]";
+  "bg-[var(--panel-muted)] backdrop-blur-sm border border-[var(--panel-border)] rounded-3xl sm:rounded-[2.5rem] p-6 sm:p-10 min-h-0 h-full flex flex-col relative overflow-hidden shadow-card-resting text-[var(--ink)]";
 
 interface Props {
   chapterId: number;
@@ -59,7 +59,7 @@ export default function JourneyQuiz({
   return (
     <motion.div layoutId="panelContent" className={panelBaseClasses}>
       <span className="text-[10px] tracking-[0.2em] uppercase text-[var(--text-3)] font-medium mb-4 block">Quick Question</span>
-      <h2 className="font-display font-semibold text-xl text-[var(--ink)] leading-snug whitespace-pre-wrap max-w-[42ch] mb-8">{question.prompt}</h2>
+      <h2 className="font-display font-semibold text-lg sm:text-xl text-[var(--ink)] leading-snug whitespace-pre-wrap max-w-[42ch] mb-6 sm:mb-8">{question.prompt}</h2>
       <div className="flex flex-col gap-3 flex-1">
         {question.choices.map((ans, idx) => {
           const isSelected = selected === idx;
@@ -87,7 +87,7 @@ export default function JourneyQuiz({
               type="button"
               onClick={handlePick}
               disabled={lockedCorrect && !isCorrect}
-              className={`text-left px-6 py-4 rounded-2xl font-sans font-medium transition-all duration-300 relative leading-snug ${stateClasses}`}
+              className={`text-left px-4 py-3.5 sm:px-6 sm:py-4 rounded-xl sm:rounded-2xl font-sans text-sm sm:text-base font-medium transition-all duration-300 relative leading-snug ${stateClasses}`}
               animate={isSelected && !isCorrect && !lockedCorrect ? { x: [0, -8, 8, -6, 6, -3, 3, 0] } : {}}
               transition={{ duration: 0.4 }}
             >

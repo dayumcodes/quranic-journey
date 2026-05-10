@@ -8,11 +8,11 @@ import { pageVariants, SPRINGS } from "@/lib/constants/motion";
 function LandingCard({ title, desc, href, bg, dark }: { title: string; desc: string; href: string; bg: string; dark?: boolean }) {
   return (
     <Link href={href}>
-        <motion.div whileHover={{ y: -12, scale: 1.02 }} transition={SPRINGS.DEFAULT} className={`cursor-pointer rounded-[2.5rem] p-10 h-[400px] flex flex-col justify-end relative overflow-hidden group ${bg} ${dark ? "border border-white/10" : "border border-[var(--panel-border)] shadow-card-resting hover:shadow-card-hover"}`}>
-        <div className={`absolute top-10 right-10 w-12 h-12 rounded-full border flex items-center justify-center transition-transform group-hover:scale-110 group-hover:-rotate-12 ${dark ? "border-white/20 text-white" : "border-[rgba(13,15,18,0.1)] text-[var(--ink)]"}`}>
+        <motion.div whileHover={{ y: -12, scale: 1.02 }} transition={SPRINGS.DEFAULT} className={`cursor-pointer rounded-3xl sm:rounded-[2.5rem] p-7 sm:p-10 min-h-[280px] h-[min(400px,58vh)] sm:h-[400px] flex flex-col justify-end relative overflow-hidden group ${bg} ${dark ? "border border-white/10" : "border border-[var(--panel-border)] shadow-card-resting hover:shadow-card-hover"}`}>
+        <div className={`absolute top-6 right-6 sm:top-10 sm:right-10 w-11 h-11 sm:w-12 sm:h-12 rounded-full border flex items-center justify-center transition-transform group-hover:scale-110 group-hover:-rotate-12 ${dark ? "border-white/20 text-white" : "border-[rgba(13,15,18,0.1)] text-[var(--ink)]"}`}>
           <ArrowRight weight="regular" size={20} />
         </div>
-        <h3 className={`font-display font-semibold text-4xl tracking-tight mb-4 ${dark ? "text-white" : "text-[var(--ink)]"}`}>{title}</h3>
+        <h3 className={`font-display font-semibold text-2xl sm:text-4xl tracking-tight mb-3 sm:mb-4 ${dark ? "text-white" : "text-[var(--ink)]"}`}>{title}</h3>
         <p className={`font-sans text-sm leading-relaxed ${dark ? "text-[var(--text-3)]" : "text-[var(--text-2)]"}`}>{desc}</p>
       </motion.div>
     </Link>
@@ -23,13 +23,13 @@ export default function HomePage() {
   return (
     <>
       <GlobalNav currentPage="home" />
-      <motion.div className="min-h-screen bg-[var(--parchment)] pt-32 pb-0 px-6 md:px-12" variants={pageVariants} initial="initial" animate="animate" exit="exit">
-        <div className="max-w-[1320px] mx-auto flex flex-col min-h-[calc(100vh-8rem)]">
-          <div className="text-center mb-24">
-            <h1 className="font-display font-bold text-6xl md:text-8xl tracking-tighter leading-[0.9] text-[var(--ink)] mb-6">The Journey.</h1>
-            <p className="font-sans text-lg text-[var(--text-2)] max-w-[60ch] mx-auto">Three distinct interfaces for Quranic engagement, built with award-winning motion physics and asymmetrical gallery layouts.</p>
+      <motion.div className="min-h-screen bg-[var(--parchment)] pt-[5.75rem] sm:pt-32 pb-0 px-4 sm:px-6 md:px-12" variants={pageVariants} initial="initial" animate="animate" exit="exit">
+        <div className="max-w-[1320px] mx-auto flex flex-col min-h-[calc(100vh-6rem)] sm:min-h-[calc(100vh-8rem)]">
+          <div className="text-center mb-14 sm:mb-20 md:mb-24">
+            <h1 className="font-display font-bold text-[clamp(2.25rem,10vw,6rem)] md:text-8xl tracking-tighter leading-[0.95] sm:leading-[0.9] text-[var(--ink)] mb-4 sm:mb-6 px-1">The Journey.</h1>
+            <p className="font-sans text-base sm:text-lg text-[var(--text-2)] max-w-[60ch] mx-auto px-2">Three distinct interfaces for Quranic engagement, built with award-winning motion physics and asymmetrical gallery layouts.</p>
           </div>
-          <div className="w-full max-w-[1320px] grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12">
+          <div className="w-full max-w-[1320px] grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 md:gap-12">
             <LandingCard title="Journey" desc="Gamified learning paths for kids with dynamic SVG maps and spring-physics interactions." bg="bg-[var(--panel)]" href="/journey" />
             <LandingCard title="Reflect" desc="Location-aware meditative space featuring generative canvas meshes and massive typography." bg="bg-[var(--void)] text-white" href="/reflect" dark />
             <LandingCard title="Pal" desc="Social accountability dashboard with asymmetric layouts and synchronized progress tracking." bg="bg-[#EDE5D5] dark:bg-[#252218]" href="/pal" />

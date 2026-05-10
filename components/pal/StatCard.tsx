@@ -8,7 +8,7 @@ export default function StatCard({ icon, value, label, delay = 0 }: { icon: Reac
       initial={{ y: 20, opacity: 0 }}
       whileInView={{ y: 0, opacity: 1 }}
       transition={{ type: "spring", stiffness: 100, damping: 20, delay }}
-      className="bg-[var(--panel-muted)] backdrop-blur-sm border border-[var(--panel-border)] rounded-[1.5rem] p-7 flex items-center gap-6 shadow-card-resting text-[var(--ink)]"
+      className="bg-[var(--panel-muted)] backdrop-blur-sm border border-[var(--panel-border)] rounded-[1.25rem] sm:rounded-[1.5rem] p-5 sm:p-7 flex items-center gap-4 sm:gap-6 shadow-card-resting text-[var(--ink)]"
     >
       <motion.div
         animate={{ y: [-4, 0, -4] }}
@@ -18,7 +18,7 @@ export default function StatCard({ icon, value, label, delay = 0 }: { icon: Reac
         {icon}
       </motion.div>
       <div>
-        <div className="font-mono font-bold text-5xl leading-none mb-1">{value}</div>
+        <div className="font-mono font-bold text-4xl sm:text-5xl leading-none mb-1">{value}</div>
         <div className="font-sans text-sm text-[var(--text-3)]">{label}</div>
       </div>
     </motion.div>

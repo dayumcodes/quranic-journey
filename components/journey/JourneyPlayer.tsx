@@ -33,7 +33,7 @@ interface Props {
 
 /** Journey panel matches Profile: `--panel-muted` + `--ink` in dark mode. */
 const panelBaseClasses =
-  "bg-[var(--panel-muted)] backdrop-blur-sm border border-[var(--panel-border)] rounded-[2.5rem] p-10 h-full flex flex-col relative overflow-hidden shadow-card-resting text-[var(--ink)]";
+  "bg-[var(--panel-muted)] backdrop-blur-sm border border-[var(--panel-border)] rounded-3xl sm:rounded-[2.5rem] p-6 sm:p-10 min-h-0 h-full flex flex-col relative overflow-hidden shadow-card-resting text-[var(--ink)]";
 
 export default function JourneyPlayer({
   nodeName,

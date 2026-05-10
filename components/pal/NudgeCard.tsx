@@ -31,7 +31,7 @@ export default function NudgeCard({
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: -80, opacity: 0, scale: 0.95 }}
           transition={{ type: "spring", stiffness: 400, damping: 18 }}
-          className="bg-amber-50/95 dark:bg-[var(--panel-muted)] border border-amber-200/60 dark:border-[var(--panel-border)] rounded-[1.5rem] p-8 mb-20 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between shadow-card-resting"
+          className="bg-amber-50/95 dark:bg-[var(--panel-muted)] border border-amber-200/60 dark:border-[var(--panel-border)] rounded-[1.5rem] p-5 sm:p-8 mb-12 sm:mb-16 lg:mb-20 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between shadow-card-resting"
         >
           <div className="flex items-center gap-4 flex-1 min-w-0">
             <div className="w-12 h-12 rounded-full bg-amber-100 dark:bg-[var(--gold)]/15 flex items-center justify-center shrink-0">

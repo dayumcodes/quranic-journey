@@ -266,7 +266,7 @@ export default function JourneyPage() {
     <>
       <GlobalNav currentPage="journey" />
       <motion.div
-        className="min-h-screen pt-24 pb-32 px-6 md:px-12 max-w-[1320px] mx-auto bg-[var(--parchment)]"
+        className="min-h-screen pt-[5.5rem] sm:pt-24 pb-20 sm:pb-32 px-4 sm:px-6 md:px-12 max-w-[1320px] mx-auto bg-[var(--parchment)]"
         variants={pageVariants}
         initial="initial"
         animate="animate"
@@ -282,7 +282,7 @@ export default function JourneyPage() {
           </p>
         ) : null}
 
-        <div className="flex flex-col lg:flex-row gap-12">
+        <div className="flex flex-col lg:flex-row gap-8 lg:gap-12">
           <JannahMap
             nodes={displayNodes}
             onSelect={onSelectNode}
@@ -290,7 +290,7 @@ export default function JourneyPage() {
             mapError={mapError}
             onRetryMap={fetchChapters}
           />
-          <div className="w-full lg:w-[42%] h-[600px] sticky top-24">
+          <div className="w-full lg:w-[42%] min-h-[min(520px,75vh)] lg:min-h-[600px] lg:h-[600px] lg:sticky lg:top-24 shrink-0">
             <AnimatePresence mode="wait">
               {panelState === "PLAYER" && (
                 <JourneyPlayer
@@ -347,8 +347,8 @@ export default function JourneyPage() {
             </AnimatePresence>
           </div>
         </div>
-        <div className="mt-32">
-          <h3 className="font-display font-semibold text-2xl text-[var(--ink)] mb-1">Your Collection</h3>
+        <div className="mt-16 sm:mt-24 lg:mt-32">
+          <h3 className="font-display font-semibold text-xl sm:text-2xl text-[var(--ink)] mb-1">Your Collection</h3>
           {process.env.NODE_ENV !== "production" ? (
             <p className="font-sans text-sm text-[var(--text-2)] mb-3 max-w-2xl">
               Thirty gates persist in an httpOnly cookie via <span className="font-mono text-xs px-1">/api/journey/gates</span>.

@@ -123,9 +123,9 @@ export default function PalSharedReadingPanel({
     <motion.section
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
-      className="mb-10 grid grid-cols-1 lg:grid-cols-2 gap-6"
+      className="mb-8 sm:mb-10 grid grid-cols-1 lg:grid-cols-2 gap-5 sm:gap-6"
     >
-      <div className="rounded-2xl border border-[var(--panel-border)] bg-[var(--panel-muted)] backdrop-blur-sm p-6 shadow-card-resting">
+        <div className="rounded-2xl border border-[var(--panel-border)] bg-[var(--panel-muted)] backdrop-blur-sm p-5 sm:p-6 shadow-card-resting">
         <h3 className="font-display font-semibold text-lg text-[var(--ink)] mb-1">Your reading</h3>
         <p className="text-xs text-[var(--text-3)] mb-5">Visible to your pal — update anytime.</p>
 
@@ -153,7 +153,7 @@ export default function PalSharedReadingPanel({
             </select>
           </label>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <label className="block text-[11px] font-medium text-[var(--text-2)]">
               Verses this week
               <input

@@ -569,13 +569,13 @@ function PalPageInner() {
       <>
         <GlobalNav currentPage="pal" />
         <motion.div
-          className="min-h-screen bg-[var(--parchment)] pt-24 pb-32 px-6 md:px-12 flex items-center justify-center"
+          className="min-h-screen bg-[var(--parchment)] pt-[5.5rem] sm:pt-24 pb-20 sm:pb-32 px-4 sm:px-6 md:px-12 flex items-center justify-center"
           variants={pageVariants}
           initial="initial"
           animate="animate"
           exit="exit"
         >
-          <div className="max-w-lg text-center bg-[var(--panel-muted)] rounded-3xl border border-[var(--panel-border)] p-10 backdrop-blur-sm text-[var(--ink)]">
+          <div className="max-w-lg text-center bg-[var(--panel-muted)] rounded-3xl border border-[var(--panel-border)] p-6 sm:p-10 backdrop-blur-sm text-[var(--ink)]">
             <h2 className="font-display text-3xl mb-3">Login required</h2>
             <p className="text-[var(--text-2)] mb-8">Pal compares progress with linked pals using your Quran Foundation account.</p>
             <button type="button" onClick={() => void login()} className="px-6 py-3 rounded-full bg-[var(--ink)] text-[var(--parchment)] font-medium">
@@ -592,8 +592,8 @@ function PalPageInner() {
   return (
     <>
       <GlobalNav currentPage="pal" />
-      <motion.div className="min-h-screen bg-[var(--parchment)] pt-24 pb-32 px-4 md:px-8 lg:px-12" variants={pageVariants} initial="initial" animate="animate" exit="exit">
-        <div className="max-w-[1400px] mx-auto flex flex-col md:flex-row gap-8 items-start">
+      <motion.div className="min-h-screen bg-[var(--parchment)] pt-[5.5rem] sm:pt-24 pb-20 sm:pb-32 px-3 sm:px-6 md:px-8 lg:px-12" variants={pageVariants} initial="initial" animate="animate" exit="exit">
+        <div className="max-w-[1400px] mx-auto flex flex-col md:flex-row gap-6 md:gap-8 items-stretch md:items-start">
           {palSidebarOpen ? (
             <PalChatSidebar
               threads={threads}
@@ -610,14 +610,14 @@ function PalPageInner() {
               title="Open pals"
               aria-label="Open pals"
               onClick={() => setPalSidebarOpen(true)}
-              className="shrink-0 w-full md:w-14 md:h-14 md:min-h-0 rounded-2xl md:rounded-full border border-[var(--panel-border)] bg-[var(--panel)] backdrop-blur-sm shadow-card-resting flex flex-row md:flex-col items-center justify-center gap-2 py-3 md:py-0 min-h-[3rem] hover:bg-black/[0.03] dark:hover:bg-white/[0.06] hover:border-[var(--gold)]/35 transition-colors md:sticky md:top-28"
+              className="order-2 md:order-1 shrink-0 w-full md:w-14 md:h-14 md:min-h-0 rounded-2xl md:rounded-full border border-[var(--panel-border)] bg-[var(--panel)] backdrop-blur-sm shadow-card-resting flex flex-row md:flex-col items-center justify-center gap-2 py-3 md:py-0 min-h-[3rem] hover:bg-black/[0.03] dark:hover:bg-white/[0.06] hover:border-[var(--gold)]/35 transition-colors md:sticky md:top-28"
             >
               <Plus weight="bold" size={22} className="text-[var(--gold)] shrink-0" />
               <span className="text-sm font-medium text-[var(--text-2)] md:hidden">Open pals</span>
             </button>
           )}
 
-          <div className="flex-1 min-w-0 w-full">
+          <div className="order-1 md:order-2 flex-1 min-w-0 w-full">
             {pendingInvitePartnerId ? (
               <div className="rounded-2xl border border-emerald-200 bg-emerald-50/90 dark:bg-emerald-100/95 p-6 mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between text-emerald-950">
                 <div>
