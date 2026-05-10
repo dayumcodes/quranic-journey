@@ -70,3 +70,74 @@ export async function deletePalLink(meId: string, partnerId: string): Promise<vo
   const { low, high } = orderedPair(meId, partnerId);
   await getPool().query("DELETE FROM pal_links WHERE user_low = $1 AND user_high = $2", [low, high]);
 }
+
+export async function palLinkExists(userA: string, userB: string): Promise<boolean> {
+  const { low, high } = orderedPair(userA, userB);
+  const res = await getPool().query("SELECT 1 FROM pal_links WHERE user_low = $1 AND user_high = $2 LIMIT 1", [low, high]);
+  return (res.rowCount ?? 0) > 0;
+}
+
+export type PalReadingProgressRow = {
+  userId: string;
+  targetSurahId: number;
+  versesReadWeek: number;
+  weeklyGoal: number;
+  streakDays: number;
+  streakActive: boolean;
+  updatedAt: string;
+};
+
+function mapReadingRow(r: QueryResultRow): PalReadingProgressRow {
+  return {
+    userId: String(r.user_id),
+    targetSurahId: Number(r.target_surah_id),
+    versesReadWeek: Number(r.verses_read_week),
+    weeklyGoal: Number(r.weekly_goal),
+    streakDays: Number(r.streak_days),
+    streakActive: Boolean(r.streak_active),
+    updatedAt: new Date(r.updated_at as string).toISOString()
+  };
+}
+
+export async function getReadingProgress(userId: string): Promise<PalReadingProgressRow | null> {
+  const res = await getPool().query(
+    `SELECT user_id, target_surah_id, verses_read_week, weekly_goal, streak_days, streak_active, updated_at
+     FROM pal_reading_progress WHERE user_id = $1`,
+    [userId]
+  );
+  const r = res.rows[0];
+  return r ? mapReadingRow(r) : null;
+}
+
+export type ReadingProgressPatch = Partial<{
+  targetSurahId: number;
+  versesReadWeek: number;
+  weeklyGoal: number;
+  streakDays: number;
+  streakActive: boolean;
+}>;
+
+export async function upsertReadingProgress(userId: string, patch: ReadingProgressPatch): Promise<PalReadingProgressRow> {
+  const existing = await getReadingProgress(userId);
+  const targetSurahId = patch.targetSurahId ?? existing?.targetSurahId ?? 1;
+  const versesReadWeek = patch.versesReadWeek ?? existing?.versesReadWeek ?? 0;
+  const weeklyGoal = patch.weeklyGoal ?? existing?.weeklyGoal ?? 100;
+  const streakDays = patch.streakDays ?? existing?.streakDays ?? 0;
+  const streakActive = patch.streakActive ?? existing?.streakActive ?? true;
+
+  await getPool().query(
+    `INSERT INTO pal_reading_progress (user_id, target_surah_id, verses_read_week, weekly_goal, streak_days, streak_active, updated_at)
+     VALUES ($1, $2, $3, $4, $5, $6, NOW())
+     ON CONFLICT (user_id) DO UPDATE SET
+       target_surah_id = EXCLUDED.target_surah_id,
+       verses_read_week = EXCLUDED.verses_read_week,
+       weekly_goal = EXCLUDED.weekly_goal,
+       streak_days = EXCLUDED.streak_days,
+       streak_active = EXCLUDED.streak_active,
+       updated_at = NOW()`,
+    [userId, targetSurahId, versesReadWeek, weeklyGoal, streakDays, streakActive]
+  );
+  const row = await getReadingProgress(userId);
+  if (!row) throw new Error("pal_reading_progress upsert failed");
+  return row;
+}

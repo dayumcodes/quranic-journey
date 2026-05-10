@@ -14,6 +14,7 @@ import SharedGoalWidget from "@/components/pal/SharedGoalWidget";
 import PalPartnerOnboarding from "@/components/pal/PalPartnerOnboarding";
 import PalSharedGoalStarter from "@/components/pal/PalSharedGoalStarter";
 import PalChatSidebar from "@/components/pal/PalChatSidebar";
+import PalSharedReadingPanel from "@/components/pal/PalSharedReadingPanel";
 import { pageVariants } from "@/lib/constants/motion";
 import { RequestError } from "@/lib/api/client";
 import { acceptPal, getPals, removePal as removePalApi } from "@/lib/api/pals";
@@ -21,6 +22,8 @@ import { createPost } from "@/lib/api/posts";
 import { usePalInvitePrompt } from "@/lib/hooks/usePalInvitePrompt";
 import { useAuthStore } from "@/lib/store/authStore";
 import { usePalEncouragementToastStore } from "@/lib/store/palEncouragementToastStore";
+import { getPalProgress, putPalProgress } from "@/lib/api/palProgress";
+import { getChapters } from "@/lib/api/quran";
 import { fetchPartnerDisplayName, getActivity, getGoals, getPosts, getStreaks, postActivitySession, postGoal } from "@/lib/api/user";
 import { isLikelyPartnerUserId } from "@/lib/utils/palPartnerStorage";
 import {
@@ -34,7 +37,7 @@ import {
   syncThreadsFromGoals,
   type PalThread
 } from "@/lib/utils/palThreadsStorage";
-import type { Goal, Post, StreakData } from "@/types";
+import type { Chapter, Goal, PalReadingSnapshot, Post, StreakData } from "@/types";
 
 function initialsFrom(userName: string, fallback = "?"): string {
   const u = userName.trim();
@@ -68,6 +71,13 @@ function PalPageInner() {
   const [inviteNick, setInviteNick] = useState("");
   const [postsError, setPostsError] = useState<string | null>(null);
   const [goalBusy, setGoalBusy] = useState(false);
+  const [chapters, setChapters] = useState<Chapter[]>([]);
+  const [palProgressData, setPalProgressData] = useState<{
+    self: PalReadingSnapshot | null;
+    partner: PalReadingSnapshot | null;
+  } | null>(null);
+  const [palProgressFailed, setPalProgressFailed] = useState(false);
+  const [palSaving, setPalSaving] = useState(false);
 
   const threadPartnerIds = useMemo(() => threads.map((t) => t.partnerId), [threads]);
   const { pendingInvitePartnerId, dismissPendingInvite } = usePalInvitePrompt(user?.id, invitePartnerIdFromUrl, threadPartnerIds);
@@ -123,6 +133,39 @@ function PalPageInner() {
   useEffect(() => {
     refreshGoals();
   }, [refreshGoals]);
+
+  const loadPalProgress = useCallback(async () => {
+    if (!isAuthenticated || !user?.id || !partnerId) {
+      setPalProgressData(null);
+      setPalProgressFailed(false);
+      return;
+    }
+    try {
+      setPalProgressFailed(false);
+      const data = await getPalProgress(partnerId);
+      setPalProgressData(data);
+    } catch {
+      setPalProgressData(null);
+      setPalProgressFailed(true);
+    }
+  }, [isAuthenticated, user?.id, partnerId]);
+
+  useEffect(() => {
+    void loadPalProgress();
+  }, [loadPalProgress]);
+
+  useEffect(() => {
+    if (!partnerId || !isAuthenticated) return;
+    const id = window.setInterval(() => void loadPalProgress(), 45000);
+    return () => window.clearInterval(id);
+  }, [partnerId, isAuthenticated, loadPalProgress]);
+
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    void getChapters()
+      .then(setChapters)
+      .catch(() => setChapters([]));
+  }, [isAuthenticated]);
 
   useEffect(() => {
     void syncPalsFromServer();
@@ -322,11 +365,53 @@ function PalPageInner() {
     return "Sharing space — invite them to post!";
   }, [partnerId, partnerLastSeen]);
 
+  const palLoaded = palProgressData !== null && !palProgressFailed;
+  const selfPalSnap = palProgressData?.self ?? null;
+  const partnerPalSnap = palProgressData?.partner ?? null;
+
   const comparisonBadge = useMemo(() => {
-    if (!partnerWeeklyKnown || partnerId == null) return undefined;
+    if (!partnerId) return undefined;
+    if (palLoaded && selfPalSnap && partnerPalSnap) {
+      if (partnerPalSnap.versesReadWeek > selfPalSnap.versesReadWeek) {
+        return `+${partnerPalSnap.versesReadWeek - selfPalSnap.versesReadWeek} verses this week vs you`;
+      }
+      return undefined;
+    }
+    if (!partnerWeeklyKnown) return undefined;
     if (partnerWeeklyVerses > myWeeklyVerses) return `+${partnerWeeklyVerses - myWeeklyVerses} verses this week vs you`;
     return undefined;
-  }, [partnerWeeklyKnown, partnerId, partnerWeeklyVerses, myWeeklyVerses]);
+  }, [
+    partnerId,
+    palLoaded,
+    selfPalSnap,
+    partnerPalSnap,
+    partnerWeeklyKnown,
+    partnerWeeklyVerses,
+    myWeeklyVerses
+  ]);
+
+  const myStreakCardValue = palLoaded
+    ? selfPalSnap?.streakActive === false
+      ? "—"
+      : String(selfPalSnap?.streakDays ?? 0)
+    : String(myStreak?.streak_count ?? 0);
+  const myStreakCardLabel = palLoaded && selfPalSnap?.streakActive === false ? "streak on hold" : "day streak";
+
+  const partnerStreakCardValue =
+    palLoaded && partnerPalSnap
+      ? partnerPalSnap.streakActive === false
+        ? "—"
+        : String(partnerPalSnap.streakDays)
+      : "—";
+  const partnerStreakCardLabel =
+    palLoaded && partnerPalSnap ? (partnerPalSnap.streakActive ? "day streak" : "streak on hold") : "pal streak";
+
+  const myVersesVal = palLoaded ? (selfPalSnap?.versesReadWeek ?? 0) : myWeeklyVerses;
+  const myVersesGoal = palLoaded ? (selfPalSnap?.weeklyGoal ?? 100) : 100;
+
+  const partnerVersesKnown = palLoaded && partnerPalSnap != null ? true : partnerWeeklyKnown;
+  const partnerVersesVal = palLoaded && partnerPalSnap ? partnerPalSnap.versesReadWeek : partnerWeeklyVerses;
+  const partnerVersesGoal = palLoaded && partnerPalSnap ? partnerPalSnap.weeklyGoal : 100;
 
   const nudgeDynamicMessage = useMemo(() => {
     if (!hasPartner || !comparisonBadge) return undefined;
@@ -340,30 +425,46 @@ function PalPageInner() {
 
   const meSide = useMemo(() => {
     const gFocus = goals[0];
+    let readingLine: string | undefined;
+    if (palLoaded && selfPalSnap) {
+      const title = chapters.find((c) => c.id === selfPalSnap.targetSurahId)?.name_simple;
+      readingLine = title
+        ? `Reading: Surah ${selfPalSnap.targetSurahId} (${title})`
+        : `Reading: Surah ${selfPalSnap.targetSurahId}`;
+    } else if (gFocus) {
+      readingLine = `Goal focus: Surah ${gFocus.target_surah_id}`;
+    }
     return {
       avatarLetter: (user?.avatar_initials || initialsFrom(user?.name ?? "You")).slice(0, 3),
       displayName: "You",
       presenceLabel: "Active now",
       presenceVariant: "online" as const,
-      readingLine: gFocus ? `Goal focus: Surah ${gFocus.target_surah_id}` : undefined,
+      readingLine,
       comparisonBadge: undefined
     };
-  }, [user?.avatar_initials, user?.name, goals]);
+  }, [user?.avatar_initials, user?.name, goals, palLoaded, selfPalSnap, chapters]);
 
   const partnerSide = useMemo(() => {
     if (!partnerId) return null;
     const nameForAvatar = partnerDisplayName.trim();
     const avatarLetter =
       nameForAvatar.length > 0 ? ([...nameForAvatar][0] ?? "?").toString() : partnerId.slice(0, 1).toUpperCase();
+    let readingLine: string | undefined;
+    if (palLoaded && partnerPalSnap) {
+      const title = chapters.find((c) => c.id === partnerPalSnap.targetSurahId)?.name_simple;
+      readingLine = title
+        ? `Reading: Surah ${partnerPalSnap.targetSurahId} (${title})`
+        : `Reading: Surah ${partnerPalSnap.targetSurahId}`;
+    }
     return {
       avatarLetter,
       displayName: partnerDisplayName,
       presenceLabel: partnerPresenceLabel,
       presenceVariant: "offline" as const,
-      readingLine: undefined,
+      readingLine,
       comparisonBadge
     };
-  }, [partnerId, partnerDisplayName, partnerPresenceLabel, comparisonBadge]);
+  }, [partnerId, partnerDisplayName, partnerPresenceLabel, comparisonBadge, palLoaded, partnerPalSnap, chapters]);
 
   const selectThread = useCallback(
     (pid: string) => {
@@ -556,24 +657,53 @@ function PalPageInner() {
               <>
                 <PartnerHeader me={meSide} partner={partnerSide} partnerColumnPlaceholder="Select a pal" />
 
+                <PalSharedReadingPanel
+                  chapters={chapters}
+                  partnerLabel={partnerDisplayName}
+                  selfSnapshot={palProgressData?.self ?? null}
+                  partnerSnapshot={palProgressData?.partner ?? null}
+                  loadFailed={palProgressFailed}
+                  saving={palSaving}
+                  disabled={!hasPartner}
+                  onSave={async (patch) => {
+                    setPalSaving(true);
+                    try {
+                      await putPalProgress(patch);
+                      await loadPalProgress();
+                    } finally {
+                      setPalSaving(false);
+                    }
+                  }}
+                />
+
                 <div className="flex flex-col lg:flex-row gap-8 mb-12">
                   <div className="flex-1 flex flex-col gap-6">
-                    <StatCard icon={<Fire weight="regular" size={24} className="text-[#F97316]" />} value={String(myStreak?.streak_count ?? 0)} label="day streak" />
-                    <ProgressCard value={myWeeklyVerses} total={100} label="Verses this week" />
+                    <StatCard icon={<Fire weight="regular" size={24} className="text-[#F97316]" />} value={myStreakCardValue} label={myStreakCardLabel} />
+                    <ProgressCard value={myVersesVal} total={myVersesGoal} label="Verses this week" />
                   </div>
                   <div className="flex-1 flex flex-col gap-6">
-                    <StatCard icon={<Fire weight="regular" size={24} className="text-[#F97316]" />} value="—" label="pal streak" delay={0.1} />
+                    <StatCard
+                      icon={<Fire weight="regular" size={24} className="text-[#F97316]" />}
+                      value={partnerStreakCardValue}
+                      label={partnerStreakCardLabel}
+                      delay={0.1}
+                    />
                     <ProgressCard
-                      value={partnerWeeklyVerses}
-                      total={100}
+                      value={partnerVersesVal}
+                      total={partnerVersesGoal}
                       label="Verses this week"
                       delay={0.1}
                       color="bg-[var(--jade)]"
-                      unknown={hasPartner ? !partnerWeeklyKnown : false}
+                      unknown={hasPartner ? !partnerVersesKnown : false}
                     />
-                    {hasPartner && !partnerWeeklyKnown ? (
+                    {hasPartner && palProgressFailed && !partnerWeeklyKnown ? (
                       <p className="text-[10px] text-[var(--text-3)] font-sans px-2 leading-relaxed">
-                        Pal verse totals appear when Quran Foundation exposes cross-user activity for your scopes.
+                        Pal verse totals from Quran Foundation require cross-user activity scopes. Shared Pal reading (above) works from this app&apos;s database when configured.
+                      </p>
+                    ) : null}
+                    {hasPartner && palLoaded && !partnerPalSnap ? (
+                      <p className="text-[10px] text-[var(--text-3)] font-sans px-2 leading-relaxed">
+                        {partnerDisplayName} hasn&apos;t saved their Pal reading stats yet — encourage them to tap Save on their Pal page.
                       </p>
                     ) : null}
                   </div>

@@ -64,6 +64,16 @@ export interface CollectionItem {
   earned_at?: string;
   saved_at: string;
 }
+/** Stored in Postgres for Pal page — visible to linked pals only. */
+export interface PalReadingSnapshot {
+  userId: string;
+  targetSurahId: number;
+  versesReadWeek: number;
+  weeklyGoal: number;
+  streakDays: number;
+  streakActive: boolean;
+  updatedAt: string;
+}
 export interface Post {
   id: string;
   type: "reflection" | "encouragement";

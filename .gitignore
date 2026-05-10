@@ -7,6 +7,7 @@ out/
 
 db/migrations/001_create_pal_links.sql
 001_create_pal_links.sql
+002_pal_reading_progress.sql
 
 # Build
 build/
