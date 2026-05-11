@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Amiri, DM_Sans, JetBrains_Mono, Outfit } from "next/font/google";
 import ThemeProvider from "@/components/theme/ThemeProvider";
 import "./globals.css";
+import { Analytics } from "@vercel/analytics/next";
 
 const dmSans = DM_Sans({ subsets: ["latin"], variable: "--font-dm-sans" });
 const outfit = Outfit({ subsets: ["latin"], variable: "--font-outfit" });
@@ -24,6 +25,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body suppressHydrationWarning className={`${dmSans.variable} ${outfit.variable} ${amiri.variable} ${jetbrainsMono.variable}`}>
         <script dangerouslySetInnerHTML={{ __html: themeBootstrapScript }} />
         <ThemeProvider>{children}</ThemeProvider>
+        <Analytics />
       </body>
     </html>
   );
