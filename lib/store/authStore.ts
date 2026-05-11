@@ -49,6 +49,10 @@ function randomState(bytes = 16): string {
   return Array.from(arr, (b) => b.toString(16).padStart(2, "0")).join("");
 }
 
+function suffix(value: string, count = 8): string {
+  return value ? value.slice(-count) : "(missing)";
+}
+
 export const useAuthStore = create<AuthState>((set) => ({
   ...initialSession(),
   login: async () => {
@@ -68,16 +72,18 @@ export const useAuthStore = create<AuthState>((set) => ({
     authUrl.searchParams.set("state", state);
     authUrl.searchParams.set("code_challenge", challenge);
     authUrl.searchParams.set("code_challenge_method", "S256");
-    if (process.env.NODE_ENV !== "production") {
-      // Safe debug log for local diagnosis (no verifier/code/token logged).
-      console.info("[auth] redirecting to oauth", {
-        oauthBase,
-        authorizePath,
-        redirectUri: process.env.NEXT_PUBLIC_OAUTH_REDIRECT_URI ?? "",
-        clientIdSuffix: (process.env.NEXT_PUBLIC_OAUTH_CLIENT_ID ?? "").slice(-8),
-        fullAuthorizeUrl: authUrl.toString()
-      });
-    }
+    // Safe debug log for auth troubleshooting (no verifier, code, or tokens logged).
+    console.info("[auth] redirecting to oauth", {
+      oauthBase,
+      authorizePath,
+      redirectUri: process.env.NEXT_PUBLIC_OAUTH_REDIRECT_URI ?? "",
+      clientIdSuffix: suffix(process.env.NEXT_PUBLIC_OAUTH_CLIENT_ID ?? ""),
+      scopeList: scope.split(/\s+/).filter(Boolean),
+      hasVerifier: !!verifier,
+      codeChallengeMethod: "S256",
+      stateSuffix: suffix(state),
+      currentOrigin: typeof window !== "undefined" ? window.location.origin : "(server)"
+    });
     window.location.href = authUrl.toString();
   },
   logout: () => {

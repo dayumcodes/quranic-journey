@@ -24,6 +24,10 @@ interface UserInfoResponse {
   email?: string;
 }
 
+function suffix(value?: string | null, count = 8): string {
+  return value ? value.slice(-count) : "(missing)";
+}
+
 function decodeJwtPayload(token?: string): Record<string, unknown> | null {
   if (!token) return null;
   const parts = token.split(".");
@@ -43,13 +47,30 @@ export async function POST(req: Request) {
   try {
     cfg = getQfServerConfig();
   } catch (err) {
+    console.error("[qf/exchange] config missing", {
+      message: err instanceof Error ? err.message : "QF config missing"
+    });
     return Response.json({ message: err instanceof Error ? err.message : "QF config missing" }, { status: 503 });
   }
 
   const body = (await req.json().catch(() => ({}))) as ExchangeBody;
   if (!body.code || !body.redirect_uri || !body.code_verifier) {
+    console.warn("[qf/exchange] invalid request body", {
+      hasCode: !!body.code,
+      hasRedirectUri: !!body.redirect_uri,
+      hasCodeVerifier: !!body.code_verifier
+    });
     return Response.json({ message: "Missing code, redirect_uri, or code_verifier" }, { status: 400 });
   }
+
+  console.info("[qf/exchange] starting token exchange", {
+    env: cfg.env,
+    authBaseUrl: cfg.authBaseUrl,
+    clientIdSuffix: suffix(cfg.clientId),
+    redirectUri: body.redirect_uri,
+    hasCodeVerifier: !!body.code_verifier,
+    codeLength: body.code.length
+  });
 
   const tokenParams = new URLSearchParams({
     grant_type: "authorization_code",
@@ -70,6 +91,14 @@ export async function POST(req: Request) {
   });
 
   const tokenData = (await tokenRes.json().catch(() => ({}))) as OAuthTokenResponse;
+  console.info("[qf/exchange] token endpoint response", {
+    status: tokenRes.status,
+    ok: tokenRes.ok,
+    error: tokenData.error,
+    error_description: tokenData.error_description,
+    hasAccessToken: !!tokenData.access_token,
+    hasIdToken: !!tokenData.id_token
+  });
   if (!tokenRes.ok || !tokenData.access_token) {
     return Response.json(
       {
@@ -90,10 +119,18 @@ export async function POST(req: Request) {
         headers: { Authorization: `Bearer ${tokenData.access_token}` },
         cache: "no-store"
       });
+      console.info("[qf/exchange] userinfo probe", {
+        endpoint,
+        status: infoRes.status,
+        ok: infoRes.ok
+      });
       if (!infoRes.ok) continue;
       user = (await infoRes.json()) as UserInfoResponse;
       break;
     } catch {
+      console.warn("[qf/exchange] userinfo probe failed", {
+        endpoint
+      });
       continue;
     }
   }
@@ -119,6 +156,15 @@ export async function POST(req: Request) {
     if (!user) user = { sub: subFromJwt.trim() };
     else if (!user.sub?.trim()) user = { ...user, sub: subFromJwt.trim() };
   }
+
+  console.info("[qf/exchange] resolved identity payload", {
+    hasUser: !!user,
+    hasUserSub: !!user?.sub,
+    hasUserEmail: !!user?.email,
+    idTokenHasSub: typeof idPayload?.sub === "string",
+    accessTokenHasSub: typeof atPayload?.sub === "string",
+    finalSubSuffix: suffix(user?.sub)
+  });
 
   return Response.json({
     access_token: tokenData.access_token,
