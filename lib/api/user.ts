@@ -100,7 +100,7 @@ function parseRangeVerseCount(range?: string | null): number {
 }
 
 function normalizeGoalPlan(raw: { data?: QfGoalPlan } | QfGoalPlan): Goal[] {
-  const plan = "data" in raw && raw.data ? raw.data : raw;
+  const plan: QfGoalPlan | undefined = (raw as { data?: QfGoalPlan }).data ?? (raw as QfGoalPlan);
   if (!plan?.hasGoal && !plan?.goalId) return [];
   const targetRange = plan.dailyTargetRanges?.[0] ?? plan.ranges?.[0] ?? plan.remainingDailyTargetRanges?.[0] ?? null;
   return [
