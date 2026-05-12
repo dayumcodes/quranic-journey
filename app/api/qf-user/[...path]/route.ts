@@ -43,7 +43,8 @@ async function proxy(req: NextRequest, method: "GET" | "POST", context: { params
       Accept: "application/json",
       "Content-Type": "application/json",
       "x-auth-token": token,
-      "x-client-id": config.clientId
+      "x-client-id": config.clientId,
+      ...(req.headers.get("x-timezone") ? { "x-timezone": req.headers.get("x-timezone")! } : {})
     },
     body: method === "POST" ? await req.text() : undefined,
     cache: "no-store"
