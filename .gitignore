@@ -11,6 +11,8 @@ db/migrations/001_create_pal_links.sql
 003_pal_messages.sql
 004_pal_shared_goals.sql 
 005_pal_progress_total_verses.sql
+006_user_profiles.sql
+007_pal_progress_activity_date.sql
 
 # Build
 build/

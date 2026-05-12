@@ -38,6 +38,7 @@ interface AuthState {
   login: () => Promise<void>;
   logout: () => void;
   setTokens: (access: string, user: User) => void;
+  updateUser: (patch: Partial<User>) => void;
 }
 
 const SCOPE =
@@ -100,5 +101,12 @@ export const useAuthStore = create<AuthState>((set) => ({
     sessionStorage.setItem("access_token", access);
     sessionStorage.setItem(USER_STORAGE_KEY, JSON.stringify(user));
     set({ accessToken: access, user, isAuthenticated: true });
+  },
+  updateUser: (patch) => {
+    const current = loadStoredUser();
+    if (!current) return;
+    const next = { ...current, ...patch };
+    sessionStorage.setItem(USER_STORAGE_KEY, JSON.stringify(next));
+    set({ user: next });
   }
 }));

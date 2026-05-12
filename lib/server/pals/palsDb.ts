@@ -22,6 +22,12 @@ function orderedPair(userA: string, userB: string): { low: string; high: string 
   return userA < userB ? { low: userA, high: userB } : { low: userB, high: userA };
 }
 
+function isoDateDaysAgo(isoDate: string, days: number): string {
+  const d = new Date(`${isoDate}T00:00:00.000Z`);
+  d.setUTCDate(d.getUTCDate() - days);
+  return d.toISOString().slice(0, 10);
+}
+
 export async function listPalLinks(userId: string): Promise<PalLinkRow[]> {
   const sql = `
     SELECT
@@ -64,6 +70,56 @@ export async function upsertPalLink(params: {
       updated_at = NOW()
   `;
   await getPool().query(sql, [low, high, lowName?.trim() ?? "", highName?.trim() ?? ""]);
+}
+
+export type UserProfileRow = {
+  userId: string;
+  displayName: string;
+  updatedAt: string;
+};
+
+function mapUserProfileRow(r: QueryResultRow): UserProfileRow {
+  return {
+    userId: String(r.user_id),
+    displayName: String(r.display_name),
+    updatedAt: new Date(r.updated_at as string).toISOString()
+  };
+}
+
+export async function getUserProfile(userId: string): Promise<UserProfileRow | null> {
+  const res = await getPool().query(
+    `SELECT user_id, display_name, updated_at
+     FROM user_profiles
+     WHERE user_id = $1
+     LIMIT 1`,
+    [userId]
+  );
+  const row = res.rows[0];
+  return row ? mapUserProfileRow(row) : null;
+}
+
+export async function upsertUserProfile(userId: string, displayName: string): Promise<UserProfileRow> {
+  const res = await getPool().query(
+    `INSERT INTO user_profiles (user_id, display_name, created_at, updated_at)
+     VALUES ($1, $2, NOW(), NOW())
+     ON CONFLICT (user_id)
+     DO UPDATE SET
+       display_name = EXCLUDED.display_name,
+       updated_at = NOW()
+     RETURNING user_id, display_name, updated_at`,
+    [userId, displayName.trim()]
+  );
+  const row = res.rows[0];
+  if (!row) throw new Error("user_profiles upsert failed");
+  return mapUserProfileRow(row);
+}
+
+export async function renameUserInPalLinks(userId: string, displayName: string): Promise<void> {
+  const trimmed = displayName.trim();
+  await Promise.all([
+    getPool().query("UPDATE pal_links SET low_display_name = $2, updated_at = NOW() WHERE user_low = $1", [userId, trimmed]),
+    getPool().query("UPDATE pal_links SET high_display_name = $2, updated_at = NOW() WHERE user_high = $1", [userId, trimmed])
+  ]);
 }
 
 export async function deletePalLink(meId: string, partnerId: string): Promise<void> {
@@ -225,10 +281,13 @@ export type PalReadingProgressRow = {
   weeklyGoal: number;
   streakDays: number;
   streakActive: boolean;
+  lastVerseActivityDate?: string;
   updatedAt: string;
 };
 
-function mapReadingRow(r: QueryResultRow): PalReadingProgressRow {
+function mapReadingRow(r: QueryResultRow, todayIsoDate?: string): PalReadingProgressRow {
+  const lastVerseActivityDate = typeof r.last_verse_activity_date === "string" && r.last_verse_activity_date ? String(r.last_verse_activity_date) : undefined;
+  const streakActive = !!lastVerseActivityDate && !!todayIsoDate && lastVerseActivityDate === todayIsoDate;
   return {
     userId: String(r.user_id),
     targetSurahId: Number(r.target_surah_id),
@@ -236,19 +295,20 @@ function mapReadingRow(r: QueryResultRow): PalReadingProgressRow {
     totalVersesRead: Number(r.total_verses_read),
     weeklyGoal: Number(r.weekly_goal),
     streakDays: Number(r.streak_days),
-    streakActive: Boolean(r.streak_active),
+    streakActive,
+    lastVerseActivityDate,
     updatedAt: new Date(r.updated_at as string).toISOString()
   };
 }
 
-export async function getReadingProgress(userId: string): Promise<PalReadingProgressRow | null> {
+export async function getReadingProgress(userId: string, todayIsoDate?: string): Promise<PalReadingProgressRow | null> {
   const res = await getPool().query(
-    `SELECT user_id, target_surah_id, verses_read_week, total_verses_read, weekly_goal, streak_days, streak_active, updated_at
+    `SELECT user_id, target_surah_id, verses_read_week, total_verses_read, weekly_goal, streak_days, streak_active, last_verse_activity_date::text AS last_verse_activity_date, updated_at
      FROM pal_reading_progress WHERE user_id = $1`,
     [userId]
   );
   const r = res.rows[0];
-  return r ? mapReadingRow(r) : null;
+  return r ? mapReadingRow(r, todayIsoDate) : null;
 }
 
 export type ReadingProgressPatch = Partial<{
@@ -256,22 +316,35 @@ export type ReadingProgressPatch = Partial<{
   versesReadWeek: number;
   totalVersesRead: number;
   weeklyGoal: number;
-  streakDays: number;
-  streakActive: boolean;
 }>;
 
-export async function upsertReadingProgress(userId: string, patch: ReadingProgressPatch): Promise<PalReadingProgressRow> {
-  const existing = await getReadingProgress(userId);
+export async function upsertReadingProgress(userId: string, patch: ReadingProgressPatch, todayIsoDate: string): Promise<PalReadingProgressRow> {
+  const existing = await getReadingProgress(userId, todayIsoDate);
   const targetSurahId = patch.targetSurahId ?? existing?.targetSurahId ?? 1;
   const versesReadWeek = patch.versesReadWeek ?? existing?.versesReadWeek ?? 0;
   const totalVersesRead = patch.totalVersesRead ?? existing?.totalVersesRead ?? 0;
   const weeklyGoal = patch.weeklyGoal ?? existing?.weeklyGoal ?? 100;
-  const streakDays = patch.streakDays ?? existing?.streakDays ?? 0;
-  const streakActive = patch.streakActive ?? existing?.streakActive ?? true;
+  const lastVerseActivityDate = existing?.lastVerseActivityDate;
+  const versesChanged =
+    (typeof patch.versesReadWeek === "number" && patch.versesReadWeek !== (existing?.versesReadWeek ?? 0)) ||
+    (typeof patch.totalVersesRead === "number" && patch.totalVersesRead !== (existing?.totalVersesRead ?? 0));
+  let streakDays = existing?.streakDays ?? 0;
+  let nextActivityDate = lastVerseActivityDate;
+
+  if (versesChanged) {
+    if (lastVerseActivityDate === todayIsoDate) {
+      streakDays = Math.max(1, existing?.streakDays ?? 0);
+    } else if (lastVerseActivityDate === isoDateDaysAgo(todayIsoDate, 1)) {
+      streakDays = Math.max(1, existing?.streakDays ?? 0) + 1;
+    } else {
+      streakDays = 1;
+    }
+    nextActivityDate = todayIsoDate;
+  }
 
   await getPool().query(
-    `INSERT INTO pal_reading_progress (user_id, target_surah_id, verses_read_week, total_verses_read, weekly_goal, streak_days, streak_active, updated_at)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, NOW())
+    `INSERT INTO pal_reading_progress (user_id, target_surah_id, verses_read_week, total_verses_read, weekly_goal, streak_days, streak_active, last_verse_activity_date, updated_at)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, NULLIF($8, '')::date, NOW())
      ON CONFLICT (user_id) DO UPDATE SET
        target_surah_id = EXCLUDED.target_surah_id,
        verses_read_week = EXCLUDED.verses_read_week,
@@ -279,10 +352,11 @@ export async function upsertReadingProgress(userId: string, patch: ReadingProgre
        weekly_goal = EXCLUDED.weekly_goal,
        streak_days = EXCLUDED.streak_days,
        streak_active = EXCLUDED.streak_active,
+       last_verse_activity_date = EXCLUDED.last_verse_activity_date,
        updated_at = NOW()`,
-    [userId, targetSurahId, versesReadWeek, totalVersesRead, weeklyGoal, streakDays, streakActive]
+    [userId, targetSurahId, versesReadWeek, totalVersesRead, weeklyGoal, streakDays, nextActivityDate === todayIsoDate, nextActivityDate ?? ""]
   );
-  const row = await getReadingProgress(userId);
+  const row = await getReadingProgress(userId, todayIsoDate);
   if (!row) throw new Error("pal_reading_progress upsert failed");
   return row;
 }

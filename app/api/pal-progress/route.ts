@@ -15,6 +15,25 @@ function clampInt(n: unknown, min: number, max: number, fallback: number): numbe
   return Math.min(max, Math.max(min, Math.floor(x)));
 }
 
+function currentIsoDateForTimeZone(timeZone?: string | null): string {
+  try {
+    const formatter = new Intl.DateTimeFormat("en-CA", {
+      timeZone: timeZone?.trim() || "UTC",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit"
+    });
+    const parts = formatter.formatToParts(new Date());
+    const year = parts.find((part) => part.type === "year")?.value;
+    const month = parts.find((part) => part.type === "month")?.value;
+    const day = parts.find((part) => part.type === "day")?.value;
+    if (year && month && day) return `${year}-${month}-${day}`;
+  } catch {
+    /* fall back to UTC below */
+  }
+  return new Date().toISOString().slice(0, 10);
+}
+
 function parsePatch(body: unknown): ReadingProgressPatch | null {
   if (!body || typeof body !== "object") return null;
   const o = body as Record<string, unknown>;
@@ -23,8 +42,6 @@ function parsePatch(body: unknown): ReadingProgressPatch | null {
   if ("versesReadWeek" in o) patch.versesReadWeek = clampInt(o.versesReadWeek, 0, 9999, 0);
   if ("totalVersesRead" in o) patch.totalVersesRead = clampInt(o.totalVersesRead, 0, 99999, 0);
   if ("weeklyGoal" in o) patch.weeklyGoal = clampInt(o.weeklyGoal, 1, 500, 100);
-  if ("streakDays" in o) patch.streakDays = clampInt(o.streakDays, 0, 10000, 0);
-  if ("streakActive" in o) patch.streakActive = Boolean(o.streakActive);
   return Object.keys(patch).length ? patch : null;
 }
 
@@ -34,11 +51,12 @@ export async function GET(req: NextRequest) {
 
   try {
     const partnerId = req.nextUrl.searchParams.get("partnerId")?.trim() ?? "";
-    const self = await getReadingProgress(auth.userId);
+    const todayIsoDate = currentIsoDateForTimeZone(req.headers.get("x-timezone"));
+    const self = await getReadingProgress(auth.userId, todayIsoDate);
     let partner = null;
     if (partnerId && partnerId !== auth.userId) {
       const linked = await palLinkExists(auth.userId, partnerId);
-      if (linked) partner = await getReadingProgress(partnerId);
+      if (linked) partner = await getReadingProgress(partnerId, todayIsoDate);
     }
     return Response.json({ self, partner });
   } catch (err) {
@@ -64,7 +82,8 @@ export async function PUT(req: NextRequest) {
   if (!patch) return Response.json({ message: "No valid fields to update." }, { status: 400 });
 
   try {
-    const self = await upsertReadingProgress(auth.userId, patch);
+    const todayIsoDate = currentIsoDateForTimeZone(req.headers.get("x-timezone"));
+    const self = await upsertReadingProgress(auth.userId, patch, todayIsoDate);
     return Response.json({ self });
   } catch (err) {
     return Response.json(

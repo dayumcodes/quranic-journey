@@ -1,12 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { Check, Copy } from "@phosphor-icons/react";
 import GlobalNav from "@/components/nav/GlobalNav";
 import { pageVariants } from "@/lib/constants/motion";
 import { useAuthStore } from "@/lib/store/authStore";
+import { updateMyProfile } from "@/lib/api/profile";
+import { RequestError } from "@/lib/api/client";
 import { copyTextToClipboard } from "@/lib/utils/copyToClipboard";
 
 function CopyIdRow({ label, value }: { label: string; value: string }) {
@@ -36,7 +38,22 @@ function CopyIdRow({ label, value }: { label: string; value: string }) {
 }
 
 export default function ProfilePage() {
-  const { user, isAuthenticated, login, logout } = useAuthStore();
+  const { user, isAuthenticated, login, logout, updateUser } = useAuthStore();
+  const [displayName, setDisplayName] = useState("");
+  const [saveBusy, setSaveBusy] = useState(false);
+  const [saveMessage, setSaveMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    setDisplayName(user?.name ?? "");
+  }, [user?.name]);
+
+  const nextInitials = useMemo(() => {
+    const words = displayName.trim().split(/\s+/).filter(Boolean);
+    if (!words.length) return user?.avatar_initials ?? "U";
+    const first = words[0]?.[0] ?? "";
+    const second = words.length > 1 ? words[1]?.[0] ?? "" : "";
+    return `${first}${second}`.toUpperCase() || "U";
+  }, [displayName, user?.avatar_initials]);
 
   return (
     <>
@@ -73,6 +90,55 @@ export default function ProfilePage() {
                 </p>
               ) : null}
               <dl className="space-y-4 text-sm">
+                <div>
+                  <dt className="text-[var(--text-3)] font-medium uppercase tracking-wider text-[11px]">Display name</dt>
+                  <dd className="mt-2">
+                    <div className="flex flex-col gap-3">
+                      <input
+                        type="text"
+                        value={displayName}
+                        onChange={(e) => {
+                          setDisplayName(e.target.value);
+                          setSaveMessage(null);
+                        }}
+                        placeholder="How your name should appear"
+                        className="w-full rounded-xl border border-[var(--panel-border)] bg-[var(--parchment)] px-4 py-3 text-sm text-[var(--ink)] outline-none focus:border-[var(--gold)]"
+                      />
+                      <div className="flex flex-wrap items-center gap-3">
+                        <button
+                          type="button"
+                          disabled={saveBusy || displayName.trim().length < 2 || displayName.trim() === (user.name ?? "").trim()}
+                          onClick={() => {
+                            const trimmed = displayName.trim();
+                            if (trimmed.length < 2) {
+                              setSaveMessage("Name must be at least 2 characters.");
+                              return;
+                            }
+                            setSaveBusy(true);
+                            setSaveMessage(null);
+                            void updateMyProfile(trimmed)
+                              .then(() => {
+                                updateUser({
+                                  name: trimmed,
+                                  avatar_initials: nextInitials
+                                });
+                                setSaveMessage("Name updated.");
+                              })
+                              .catch((err) => {
+                                if (err instanceof RequestError && err.message) setSaveMessage(err.message);
+                                else setSaveMessage("Could not update name.");
+                              })
+                              .finally(() => setSaveBusy(false));
+                          }}
+                          className="rounded-full bg-[var(--ink)] text-[var(--parchment)] px-5 py-2.5 text-sm font-medium disabled:opacity-40"
+                        >
+                          {saveBusy ? "Saving..." : "Save name"}
+                        </button>
+                        {saveMessage ? <span className="text-sm text-[var(--text-2)]">{saveMessage}</span> : null}
+                      </div>
+                    </div>
+                  </dd>
+                </div>
                 <div>
                   <dt className="text-[var(--text-3)] font-medium uppercase tracking-wider text-[11px]">Account ID</dt>
                   <CopyIdRow label="Account ID" value={user.id} />

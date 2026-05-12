@@ -9,6 +9,7 @@ export default function SharedGoalWidget({
   dueLabel = "Due soon",
   mePercent = 0,
   partnerPercent = 0,
+  myName = "You",
   partnerName = "Partner",
   meDetail,
   partnerDetail,
@@ -18,6 +19,7 @@ export default function SharedGoalWidget({
   dueLabel?: string;
   mePercent?: number;
   partnerPercent?: number;
+  myName?: string;
   partnerName?: string;
   meDetail?: string;
   partnerDetail?: string;
@@ -51,7 +53,7 @@ export default function SharedGoalWidget({
       </div>
       <div className="relative z-10 w-full lg:w-1/2">
         <div className="flex justify-between mb-3 font-mono text-[11px] text-[var(--text-2)]">
-          <span>You: {mePercent}%</span>
+          <span>{myName}: {mePercent}%</span>
           <span>
             {partnerName}: {partnerPercent}%
           </span>

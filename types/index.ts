@@ -92,6 +92,11 @@ export interface User {
   /** Quran Foundation OIDC subject when available */
   sub?: string;
 }
+export interface UserProfile {
+  userId: string;
+  displayName: string;
+  updatedAt: string;
+}
 export interface PartnerProfile {
   user: User;
   streak: StreakData;

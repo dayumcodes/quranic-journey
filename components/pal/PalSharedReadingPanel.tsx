@@ -10,8 +10,6 @@ type Draft = {
   versesReadWeek: number;
   totalVersesRead: number;
   weeklyGoal: number;
-  streakDays: number;
-  streakActive: boolean;
 };
 
 function snapshotToDraft(s: PalReadingSnapshot | null): Draft {
@@ -19,9 +17,7 @@ function snapshotToDraft(s: PalReadingSnapshot | null): Draft {
     targetSurahId: s?.targetSurahId ?? 1,
     versesReadWeek: s?.versesReadWeek ?? 0,
     totalVersesRead: s?.totalVersesRead ?? 0,
-    weeklyGoal: s?.weeklyGoal ?? 100,
-    streakDays: s?.streakDays ?? 0,
-    streakActive: s?.streakActive ?? true
+    weeklyGoal: s?.weeklyGoal ?? 100
   };
 }
 
@@ -120,9 +116,7 @@ export default function PalSharedReadingPanel({
       targetSurahId: draft.targetSurahId,
       versesReadWeek: draft.versesReadWeek,
       totalVersesRead: draft.totalVersesRead,
-      weeklyGoal: draft.weeklyGoal,
-      streakDays: draft.streakDays,
-      streakActive: draft.streakActive
+      weeklyGoal: draft.weeklyGoal
     });
   };
 
@@ -139,7 +133,7 @@ export default function PalSharedReadingPanel({
         {loadFailed ? (
           <p className="text-sm text-amber-700 dark:text-amber-400 mb-4">
             Could not load shared reading data. Confirm <code className="text-[11px]">DATABASE_URL</code> is set and migration{" "}
-            <code className="text-[11px]">002_pal_reading_progress.sql</code> and <code className="text-[11px]">005_pal_progress_total_verses.sql</code> ran.
+            <code className="text-[11px]">002_pal_reading_progress.sql</code>, <code className="text-[11px]">005_pal_progress_total_verses.sql</code>, and <code className="text-[11px]">007_pal_progress_activity_date.sql</code> ran.
           </p>
         ) : null}
 
@@ -200,42 +194,19 @@ export default function PalSharedReadingPanel({
             </label>
           </div>
 
-          <label className="block text-[11px] font-medium text-[var(--text-2)]">
-            Streak length (days)
-            <input
-              type="number"
-              min={0}
-              disabled={!canSubmit || saving}
-              value={draft.streakDays}
-              onChange={(e) => setDraft((d) => ({ ...d, streakDays: Math.max(0, Number(e.target.value) || 0) }))}
-              className="mt-1 w-full rounded-xl border border-[var(--panel-border)] bg-[var(--panel)] px-3 py-2.5 text-sm text-[var(--ink)] outline-none focus:border-[var(--gold)] disabled:opacity-50"
-            />
-          </label>
-
-          <div className="flex flex-wrap items-center gap-3 pt-1">
-            <span className="text-[11px] font-medium text-[var(--text-2)]">Streak status</span>
-            <div className="inline-flex rounded-full border border-[var(--panel-border)] p-0.5 bg-[var(--panel)]">
-              <button
-                type="button"
-                disabled={!canSubmit || saving}
-                onClick={() => setDraft((d) => ({ ...d, streakActive: true }))}
-                className={`px-4 py-1.5 rounded-full text-xs font-medium transition-colors ${
-                  draft.streakActive ? "bg-[var(--gold)] text-[var(--void)]" : "text-[var(--text-2)] hover:text-[var(--ink)]"
-                }`}
-              >
-                Active
-              </button>
-              <button
-                type="button"
-                disabled={!canSubmit || saving}
-                onClick={() => setDraft((d) => ({ ...d, streakActive: false }))}
-                className={`px-4 py-1.5 rounded-full text-xs font-medium transition-colors ${
-                  !draft.streakActive ? "bg-[var(--mist)] text-[var(--ink)]" : "text-[var(--text-2)] hover:text-[var(--ink)]"
-                }`}
-              >
-                On hold
-              </button>
+          <div className="rounded-xl border border-[var(--panel-border)] bg-[var(--panel)] px-4 py-3">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <span className="text-[11px] font-medium text-[var(--text-2)]">Streak status</span>
+              <span className={`inline-flex rounded-full px-3 py-1 text-xs font-medium ${selfSnapshot?.streakActive ? "bg-[var(--gold)] text-[var(--void)]" : "bg-[var(--mist)] text-[var(--ink)]"}`}>
+                {selfSnapshot?.streakActive ? "Active" : "Broken"}
+              </span>
             </div>
+            <p className="mt-2 text-sm text-[var(--ink)]">
+              {selfSnapshot?.streakDays ?? 0} day{(selfSnapshot?.streakDays ?? 0) === 1 ? "" : "s"}
+            </p>
+            <p className="mt-1 text-[11px] text-[var(--text-3)]">
+              Streak is updated automatically when you change your verses read for the day. If you do not update it today, the streak breaks.
+            </p>
           </div>
 
           <button

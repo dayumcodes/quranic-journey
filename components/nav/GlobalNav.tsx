@@ -5,6 +5,7 @@ import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
 import { List, Moon, Sun, User, X } from "@phosphor-icons/react";
 import { SPRINGS } from "@/lib/constants/motion";
+import { getMyProfile } from "@/lib/api/profile";
 import { useAuthStore } from "@/lib/store/authStore";
 import { useThemeStore } from "@/lib/store/themeStore";
 import { usePalEncouragementToastStore } from "@/lib/store/palEncouragementToastStore";
@@ -16,7 +17,7 @@ interface Props {
 const MAIN_TABS = ["journey", "reflect", "pal"] as const;
 
 export default function GlobalNav({ currentPage }: Props) {
-  const { isAuthenticated, user, login, logout } = useAuthStore();
+  const { isAuthenticated, user, login, logout, updateUser } = useAuthStore();
   const theme = useThemeStore((s) => s.theme);
   const toggleTheme = useThemeStore((s) => s.toggleTheme);
   const [scrolled, setScrolled] = useState(false);
@@ -58,6 +59,26 @@ export default function GlobalNav({ currentPage }: Props) {
   useEffect(() => {
     if (currentPage !== "pal") setEncouragementPeek(null);
   }, [currentPage, setEncouragementPeek]);
+
+  useEffect(() => {
+    if (!isAuthenticated || !user?.id) return;
+    let cancelled = false;
+    void getMyProfile()
+      .then(({ profile }) => {
+        if (!profile?.displayName || cancelled) return;
+        if (profile.displayName.trim() === (user.name ?? "").trim()) return;
+        const words = profile.displayName.trim().split(/\s+/).filter(Boolean);
+        const avatarInitials = `${words[0]?.[0] ?? ""}${words[1]?.[0] ?? ""}`.toUpperCase() || user.avatar_initials || "U";
+        updateUser({
+          name: profile.displayName.trim(),
+          avatar_initials: avatarInitials
+        });
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, [isAuthenticated, user?.id, user?.name, user?.avatar_initials, updateUser]);
 
   const inactiveTabTone =
     currentPage === "profile"

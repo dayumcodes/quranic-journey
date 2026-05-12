@@ -190,6 +190,20 @@ function PalPageInner() {
   }, [syncPalsFromServer]);
 
   useEffect(() => {
+    if (!isAuthenticated || !user?.id) return;
+    const refresh = () => {
+      void syncPalsFromServer();
+    };
+    const intervalId = window.setInterval(refresh, 30000);
+    const onFocus = () => refresh();
+    window.addEventListener("focus", onFocus);
+    return () => {
+      window.clearInterval(intervalId);
+      window.removeEventListener("focus", onFocus);
+    };
+  }, [isAuthenticated, user?.id, syncPalsFromServer]);
+
+  useEffect(() => {
     if (!user?.id) return;
     const next = syncThreadsFromGoals(user.id, goals);
     const withLegacy = next.length ? next : migrateLegacyPartnerIntoThreads(user.id);
@@ -511,7 +525,7 @@ function PalPageInner() {
     }
     return {
       avatarLetter: (user?.avatar_initials || initialsFrom(user?.name ?? "You")).slice(0, 3),
-      displayName: "You",
+      displayName: user?.name?.trim() || "You",
       presenceLabel: "Active now",
       presenceVariant: "online" as const,
       readingLine,
@@ -840,6 +854,8 @@ function PalPageInner() {
                   posts={posts}
                   currentUserId={user?.id}
                   partnerLinked={hasPartner}
+                  myName={user?.name?.trim() || "You"}
+                  partnerName={partnerDisplayName}
                   myInitials={initialsFrom(user?.name ?? "You")}
                   partnerInitials={initialsFrom(partnerDisplayName)}
                   composerDisabled={false}
@@ -898,6 +914,7 @@ function PalPageInner() {
                   }
                   mePercent={myPercent}
                   partnerPercent={partnerPercent}
+                  myName={user?.name?.trim() || "You"}
                   partnerName={partnerDisplayName}
                   meDetail={goalTargetVerses > 0 ? `${Math.min(myTotalVersesRead, goalTargetVerses)}/${goalTargetVerses} verses` : undefined}
                   partnerDetail={

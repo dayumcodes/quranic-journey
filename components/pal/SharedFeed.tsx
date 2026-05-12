@@ -7,6 +7,7 @@ import type { Post } from "@/types";
 
 function FeedItem({
   isMine,
+  senderName,
   text,
   time,
   verse,
@@ -14,6 +15,7 @@ function FeedItem({
   partnerInitials
 }: {
   isMine: boolean;
+  senderName: string;
   text: string;
   time: string;
   verse?: string;
@@ -34,6 +36,7 @@ function FeedItem({
         {bubble}
       </div>
       <div className="flex flex-col gap-1 max-w-[80%]">
+        <span className={`font-sans text-[11px] font-medium text-[var(--text-3)] ${isMine ? "text-right" : "text-left"}`}>{senderName}</span>
         {verse && (
           <div
             className={`self-start inline-flex items-center gap-1.5 px-3 py-1 bg-[var(--gold)]/10 border border-[var(--gold)]/20 rounded-full text-xs font-medium mb-1 ${isMine ? "self-end text-[var(--ink)]" : "text-[var(--ink)]"}`}
@@ -56,6 +59,8 @@ export default function SharedFeed({
   posts,
   currentUserId,
   partnerLinked,
+  myName = "You",
+  partnerName = "Partner",
   myInitials = "Me",
   partnerInitials = "P",
   emptyHint,
@@ -66,6 +71,8 @@ export default function SharedFeed({
   posts: Post[];
   currentUserId?: string;
   partnerLinked: boolean;
+  myName?: string;
+  partnerName?: string;
   myInitials?: string;
   partnerInitials?: string;
   emptyHint?: string;
@@ -92,6 +99,7 @@ export default function SharedFeed({
             <FeedItem
               key={p.id}
               isMine={p.author_id === currentUserId}
+              senderName={p.author_id === currentUserId ? myName : partnerName}
               text={p.body}
               time={new Date(p.created_at).toLocaleString()}
               verse={p.verse_reference}
