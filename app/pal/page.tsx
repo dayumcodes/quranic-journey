@@ -727,6 +727,10 @@ function PalPageInner() {
                     if (!user?.id || !partnerId) return;
                     setNudgeSent(true);
                     setPostsError(null);
+                    console.info("[pal] sending encouragement", {
+                      bodyLength: "Encouragement: keep going — your consistency inspires me.".length,
+                      hasPartner: !!partnerId
+                    });
                     void createPost({
                       type: "encouragement",
                       author_id: user.id,
@@ -735,6 +739,9 @@ function PalPageInner() {
                     })
                       .then(() => loadPosts())
                       .catch((err) => {
+                        console.error("[pal] encouragement publish failed", {
+                          message: err instanceof Error ? err.message : String(err)
+                        });
                         setNudgeSent(false);
                         setPostsError(postPublishErrorMessage(err));
                       });
@@ -759,6 +766,10 @@ function PalPageInner() {
                   composerDisabled={false}
                   onSend={(body) => {
                     if (!user?.id || !partnerId) return;
+                    console.info("[pal] sending reflection", {
+                      bodyLength: body.trim().length,
+                      hasPartner: !!partnerId
+                    });
                     void createPost({
                       type: "reflection",
                       author_id: user.id,
@@ -770,7 +781,12 @@ function PalPageInner() {
                         setPosts((prev) => [post, ...prev]);
                         void postActivitySession({ type: "reading", duration_seconds: 30 });
                       })
-                      .catch((err) => setPostsError(postPublishErrorMessage(err)));
+                      .catch((err) => {
+                        console.error("[pal] reflection publish failed", {
+                          message: err instanceof Error ? err.message : String(err)
+                        });
+                        setPostsError(postPublishErrorMessage(err));
+                      });
                   }}
                 />
 

@@ -23,11 +23,18 @@ export const createPost = async (payload: Partial<Post>): Promise<Post> => {
   }
   const authoredBody = payload.type === "encouragement" && !/^encouragement:/i.test(rawBody) ? `Encouragement: ${rawBody}` : rawBody;
   const references = parseVerseReference(payload.verse_reference);
+  console.info("[posts] createPost payload", {
+    type: payload.type ?? "reflection",
+    bodyLength: authoredBody.length,
+    hasReferences: !!references?.length,
+    hasRecipient: !!payload.recipient_id
+  });
   const raw = await apiFetch<{ data?: unknown }>(`${USER_BASE}/posts`, {
     method: "POST",
     body: JSON.stringify({
       post: {
         body: authoredBody,
+        draft: false,
         ...(references ? { references } : {})
       }
     })
