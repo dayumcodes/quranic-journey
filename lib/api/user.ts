@@ -81,6 +81,10 @@ function toIsoDate(value: string): string {
   return d.toISOString().slice(0, 10);
 }
 
+function suffix(value?: string | null, count = 8): string {
+  return value ? value.slice(-count) : "(missing)";
+}
+
 function parseRangeChapterId(range?: string | null): number {
   if (!range) return 2;
   const [chapter] = range.split(":");
@@ -262,7 +266,16 @@ export const getPosts = async (id1: string, id2: string): Promise<Post[]> => {
   params.set("filter[authors]", `${id1},${id2}`);
   params.set("filter[postTypeIds]", "1");
   const raw = await apiFetch<QfPaged<QfPostRow>>(`${USER_BASE}/posts/feed?${params.toString()}`);
-  return unwrapList(raw)
+  const posts = unwrapList(raw)
     .map((row) => normalizeQfPost(row, id1, id2))
     .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+  console.info("[posts] feed loaded", {
+    currentUserIdSuffix: suffix(id1),
+    partnerIdSuffix: suffix(id2),
+    total: posts.length,
+    mine: posts.filter((p) => p.author_id === id1).length,
+    theirs: posts.filter((p) => p.author_id === id2).length,
+    authorSuffixes: [...new Set(posts.map((p) => suffix(p.author_id)))]
+  });
+  return posts;
 };

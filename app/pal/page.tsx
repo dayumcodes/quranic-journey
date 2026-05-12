@@ -276,24 +276,55 @@ function PalPageInner() {
     };
   }, [isAuthenticated, user?.id, partnerId]);
 
-  const loadPosts = useCallback(() => {
+  const loadPosts = useCallback(async (options?: { silent?: boolean }) => {
     if (!isAuthenticated || !user?.id || !partnerId) {
       setPosts([]);
-      setPostsError(null);
+      if (!options?.silent) setPostsError(null);
       return;
     }
-    setPostsError(null);
-    void getPosts(user.id, partnerId)
-      .then(setPosts)
-      .catch(() => {
+    if (!options?.silent) setPostsError(null);
+    try {
+      const nextPosts = await getPosts(user.id, partnerId);
+      setPosts(nextPosts);
+    } catch (err) {
+      console.warn("[pal] loadPosts failed", {
+        silent: !!options?.silent,
+        status: err instanceof RequestError ? err.status : undefined,
+        message: err instanceof Error ? err.message : String(err)
+      });
+      if (!options?.silent) {
         setPosts([]);
         setPostsError("Could not load shared posts. Confirm posts scope is approved for both accounts.");
-      });
+      }
+    }
   }, [isAuthenticated, user?.id, partnerId]);
 
   useEffect(() => {
-    loadPosts();
+    void loadPosts();
   }, [loadPosts]);
+
+  useEffect(() => {
+    if (!isAuthenticated || !user?.id || !partnerId) return;
+
+    // Refresh shared reflections so the linked pal sees new posts without a manual reload.
+    const refresh = () => {
+      void loadPosts({ silent: true });
+    };
+
+    const intervalId = window.setInterval(refresh, 15000);
+    const onFocus = () => refresh();
+    const onVisibilityChange = () => {
+      if (document.visibilityState === "visible") refresh();
+    };
+
+    window.addEventListener("focus", onFocus);
+    document.addEventListener("visibilitychange", onVisibilityChange);
+    return () => {
+      window.clearInterval(intervalId);
+      window.removeEventListener("focus", onFocus);
+      document.removeEventListener("visibilitychange", onVisibilityChange);
+    };
+  }, [isAuthenticated, user?.id, partnerId, loadPosts]);
 
   /** Encouragement toast: latest incoming nudge across all pal threads */
   useEffect(() => {
@@ -737,7 +768,7 @@ function PalPageInner() {
                       recipient_id: partnerId,
                       body: `Encouragement: keep going — your consistency inspires me.`
                     })
-                      .then(() => loadPosts())
+                      .then(() => loadPosts({ silent: true }))
                       .catch((err) => {
                         console.error("[pal] encouragement publish failed", {
                           message: err instanceof Error ? err.message : String(err)
@@ -778,7 +809,8 @@ function PalPageInner() {
                     })
                       .then((post) => {
                         setPostsError(null);
-                        setPosts((prev) => [post, ...prev]);
+                        setPosts((prev) => [post, ...prev.filter((item) => item.id !== post.id)]);
+                        void loadPosts({ silent: true });
                         void postActivitySession({ type: "reading", duration_seconds: 30 });
                       })
                       .catch((err) => {
