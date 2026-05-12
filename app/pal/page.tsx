@@ -423,6 +423,16 @@ function PalPageInner() {
     return g ? `Your focus (all chats): Surah ${g.target_surah_id}` : undefined;
   }, [goals]);
 
+  const postPublishErrorMessage = useCallback((err: unknown) => {
+    if (err instanceof RequestError) {
+      if (err.status === 422) return err.message || "Posts must be at least 6 characters long.";
+      if (err.status === 401 || err.status === 403) {
+        return "Could not publish. Confirm your Quran Foundation post scopes are enabled for this account.";
+      }
+    }
+    return "Could not publish. Check the post content and try again.";
+  }, []);
+
   const meSide = useMemo(() => {
     const gFocus = goals[0];
     let readingLine: string | undefined;
@@ -716,6 +726,7 @@ function PalPageInner() {
                   onSend={() => {
                     if (!user?.id || !partnerId) return;
                     setNudgeSent(true);
+                    setPostsError(null);
                     void createPost({
                       type: "encouragement",
                       author_id: user.id,
@@ -723,7 +734,10 @@ function PalPageInner() {
                       body: `Encouragement: keep going — your consistency inspires me.`
                     })
                       .then(() => loadPosts())
-                      .catch(() => undefined);
+                      .catch((err) => {
+                        setNudgeSent(false);
+                        setPostsError(postPublishErrorMessage(err));
+                      });
                   }}
                   partnerName={partnerDisplayName}
                   partnerAheadDays={
@@ -756,9 +770,7 @@ function PalPageInner() {
                         setPosts((prev) => [post, ...prev]);
                         void postActivitySession({ type: "reading", duration_seconds: 30 });
                       })
-                      .catch(() =>
-                        setPostsError("Could not publish. Confirm write:posts scope is enabled for your OAuth client.")
-                      );
+                      .catch((err) => setPostsError(postPublishErrorMessage(err)));
                   }}
                 />
 

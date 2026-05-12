@@ -74,6 +74,8 @@ export default function SharedFeed({
   composerHint?: string;
 }) {
   const [feedInput, setFeedInput] = useState("");
+  const trimmedInput = feedInput.trim();
+  const tooShortToSend = trimmedInput.length > 0 && trimmedInput.length < 6;
   const defaultEmpty =
     emptyHint ??
     (partnerLinked ? "No posts yet. Share the first reflection." : "Link a partner above to load your shared reflections.");
@@ -101,6 +103,7 @@ export default function SharedFeed({
       </div>
       <div className="sticky bottom-3 sm:bottom-6 bg-[var(--parchment)]/90 backdrop-blur-md border-t border-[rgba(13,15,18,0.07)] dark:border-white/[0.07] pt-3 sm:pt-4 pb-2 -mx-1 px-1 sm:mx-0 sm:px-0">
         {composerHint ? <p className="text-[11px] text-[var(--text-3)] mb-2">{composerHint}</p> : null}
+        {tooShortToSend ? <p className="text-[11px] text-amber-700 mb-2">Write at least 6 characters before publishing.</p> : null}
         <div className="relative">
           <input
             type="text"
@@ -116,9 +119,9 @@ export default function SharedFeed({
             </button>
             <button
               type="button"
-              disabled={composerDisabled || !partnerLinked || !feedInput.trim()}
+              disabled={composerDisabled || !partnerLinked || tooShortToSend || !trimmedInput}
               onClick={() => {
-                const text = feedInput.trim();
+                const text = trimmedInput;
                 if (!text || !partnerLinked) return;
                 onSend?.(text);
                 setFeedInput("");

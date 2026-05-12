@@ -1,4 +1,4 @@
-import { apiFetch } from "@/lib/api/client";
+import { RequestError, apiFetch } from "@/lib/api/client";
 import { getUserApiBase } from "@/lib/api/userApiBase";
 import type { Post } from "@/types";
 import { normalizeQfPost } from "@/lib/api/user";
@@ -17,14 +17,17 @@ function parseVerseReference(ref?: string): { chapterId: number; from: number; t
 }
 
 export const createPost = async (payload: Partial<Post>): Promise<Post> => {
-  const authoredBody = payload.type === "encouragement" && payload.body && !/^encouragement:/i.test(payload.body)
-    ? `Encouragement: ${payload.body}`
-    : payload.body ?? "";
+  const rawBody = (payload.body ?? "").trim();
+  if (rawBody.length < 6) {
+    throw new RequestError(422, "Posts must be at least 6 characters long.");
+  }
+  const authoredBody = payload.type === "encouragement" && !/^encouragement:/i.test(rawBody) ? `Encouragement: ${rawBody}` : rawBody;
+  const references = parseVerseReference(payload.verse_reference);
   const raw = await apiFetch<{ data?: unknown }>(`${USER_BASE}/posts`, {
     method: "POST",
     body: JSON.stringify({
       body: authoredBody,
-      references: parseVerseReference(payload.verse_reference)
+      ...(references ? { references } : {})
     })
   });
   const normalized = normalizeQfPost((raw?.data ?? raw) as never, payload.author_id, payload.recipient_id);
