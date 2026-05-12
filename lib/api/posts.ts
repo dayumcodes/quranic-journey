@@ -26,8 +26,10 @@ export const createPost = async (payload: Partial<Post>): Promise<Post> => {
   const raw = await apiFetch<{ data?: unknown }>(`${USER_BASE}/posts`, {
     method: "POST",
     body: JSON.stringify({
-      body: authoredBody,
-      ...(references ? { references } : {})
+      post: {
+        body: authoredBody,
+        ...(references ? { references } : {})
+      }
     })
   });
   const normalized = normalizeQfPost((raw?.data ?? raw) as never, payload.author_id, payload.recipient_id);

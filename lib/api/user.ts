@@ -238,7 +238,7 @@ export const getActivity = async (from: string, to: string, userIds?: string): P
     throw new Error("Cross-user activity-day queries are not available on the documented QF pre-live endpoints.");
   }
   const raw = await apiFetch<{ data?: QfActivityDay[] }>(
-    `${USER_BASE}/activity-days?from=${encodeURIComponent(toIsoDate(from))}&to=${encodeURIComponent(toIsoDate(to))}&type=QURAN`,
+    `${USER_BASE}/activity-days?from=${encodeURIComponent(toIsoDate(from))}&to=${encodeURIComponent(toIsoDate(to))}&type=QURAN&first=20`,
     { headers: qfHeaders() }
   );
   const rows = unwrapList(raw);
@@ -259,8 +259,8 @@ export const getPosts = async (id1: string, id2: string): Promise<Post[]> => {
   params.set("page", "1");
   params.set("limit", "20");
   params.set("sortBy", "latest");
-  params.set("filter[authors][0]", id1);
-  params.set("filter[authors][1]", id2);
+  params.set("filter[authors]", `${id1},${id2}`);
+  params.set("filter[postTypeIds]", "1");
   const raw = await apiFetch<QfPaged<QfPostRow>>(`${USER_BASE}/posts/feed?${params.toString()}`);
   return unwrapList(raw)
     .map((row) => normalizeQfPost(row, id1, id2))

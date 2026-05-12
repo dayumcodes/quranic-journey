@@ -65,6 +65,21 @@ async function proxy(req: NextRequest, method: "GET" | "POST", context: { params
     cache: "no-store"
   });
 
+  if (!upstreamRes.ok) {
+    const errorSnippet = await upstreamRes
+      .clone()
+      .text()
+      .then((text) => text.slice(0, 600))
+      .catch(() => "");
+    console.warn("[qf-user/proxy] upstream error body", {
+      method,
+      upstreamPrefix,
+      pathSuffix,
+      status: upstreamRes.status,
+      bodySnippet: errorSnippet
+    });
+  }
+
   console.info("[qf-user/proxy] upstream response", {
     method,
     upstreamPrefix,
