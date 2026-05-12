@@ -8,6 +8,7 @@ import type { PalProgressPatch } from "@/lib/api/palProgress";
 type Draft = {
   targetSurahId: number;
   versesReadWeek: number;
+  totalVersesRead: number;
   weeklyGoal: number;
   streakDays: number;
   streakActive: boolean;
@@ -17,6 +18,7 @@ function snapshotToDraft(s: PalReadingSnapshot | null): Draft {
   return {
     targetSurahId: s?.targetSurahId ?? 1,
     versesReadWeek: s?.versesReadWeek ?? 0,
+    totalVersesRead: s?.totalVersesRead ?? 0,
     weeklyGoal: s?.weeklyGoal ?? 100,
     streakDays: s?.streakDays ?? 0,
     streakActive: s?.streakActive ?? true
@@ -58,6 +60,10 @@ function PartnerReadingSummary({
           <dd className="font-mono text-[var(--ink)]">
             {snapshot.versesReadWeek}/{snapshot.weeklyGoal}
           </dd>
+        </div>
+        <div className="flex justify-between gap-3">
+          <dt className="text-[var(--text-3)]">Total verses read</dt>
+          <dd className="font-mono text-[var(--ink)]">{snapshot.totalVersesRead}</dd>
         </div>
         <div className="flex justify-between gap-3">
           <dt className="text-[var(--text-3)]">Streak</dt>
@@ -113,6 +119,7 @@ export default function PalSharedReadingPanel({
     await onSave({
       targetSurahId: draft.targetSurahId,
       versesReadWeek: draft.versesReadWeek,
+      totalVersesRead: draft.totalVersesRead,
       weeklyGoal: draft.weeklyGoal,
       streakDays: draft.streakDays,
       streakActive: draft.streakActive
@@ -132,7 +139,7 @@ export default function PalSharedReadingPanel({
         {loadFailed ? (
           <p className="text-sm text-amber-700 dark:text-amber-400 mb-4">
             Could not load shared reading data. Confirm <code className="text-[11px]">DATABASE_URL</code> is set and migration{" "}
-            <code className="text-[11px]">002_pal_reading_progress.sql</code> ran.
+            <code className="text-[11px]">002_pal_reading_progress.sql</code> and <code className="text-[11px]">005_pal_progress_total_verses.sql</code> ran.
           </p>
         ) : null}
 
@@ -165,6 +172,20 @@ export default function PalSharedReadingPanel({
                 className="mt-1 w-full rounded-xl border border-[var(--panel-border)] bg-[var(--panel)] px-3 py-2.5 text-sm text-[var(--ink)] outline-none focus:border-[var(--gold)] disabled:opacity-50"
               />
             </label>
+            <label className="block text-[11px] font-medium text-[var(--text-2)]">
+              Total verses read
+              <input
+                type="number"
+                min={0}
+                disabled={!canSubmit || saving}
+                value={draft.totalVersesRead}
+                onChange={(e) => setDraft((d) => ({ ...d, totalVersesRead: Math.max(0, Number(e.target.value) || 0) }))}
+                className="mt-1 w-full rounded-xl border border-[var(--panel-border)] bg-[var(--panel)] px-3 py-2.5 text-sm text-[var(--ink)] outline-none focus:border-[var(--gold)] disabled:opacity-50"
+              />
+            </label>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <label className="block text-[11px] font-medium text-[var(--text-2)]">
               Weekly goal
               <input

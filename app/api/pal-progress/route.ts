@@ -21,6 +21,7 @@ function parsePatch(body: unknown): ReadingProgressPatch | null {
   const patch: ReadingProgressPatch = {};
   if ("targetSurahId" in o) patch.targetSurahId = clampInt(o.targetSurahId, 1, 114, 1);
   if ("versesReadWeek" in o) patch.versesReadWeek = clampInt(o.versesReadWeek, 0, 9999, 0);
+  if ("totalVersesRead" in o) patch.totalVersesRead = clampInt(o.totalVersesRead, 0, 99999, 0);
   if ("weeklyGoal" in o) patch.weeklyGoal = clampInt(o.weeklyGoal, 1, 500, 100);
   if ("streakDays" in o) patch.streakDays = clampInt(o.streakDays, 0, 10000, 0);
   if ("streakActive" in o) patch.streakActive = Boolean(o.streakActive);

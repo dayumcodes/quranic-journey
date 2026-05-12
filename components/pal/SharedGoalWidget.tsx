@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { PencilSimple } from "@phosphor-icons/react";
 
 /** Goal card uses theme panel surfaces (matches Profile in dark mode). */
 export default function SharedGoalWidget({
@@ -8,13 +9,19 @@ export default function SharedGoalWidget({
   dueLabel = "Due soon",
   mePercent = 0,
   partnerPercent = 0,
-  partnerName = "Partner"
+  partnerName = "Partner",
+  meDetail,
+  partnerDetail,
+  onEdit
 }: {
   title?: string;
   dueLabel?: string;
   mePercent?: number;
   partnerPercent?: number;
   partnerName?: string;
+  meDetail?: string;
+  partnerDetail?: string;
+  onEdit?: () => void;
 }) {
   return (
     <div className="mt-16 sm:mt-24 lg:mt-32 rounded-2xl sm:rounded-[2rem] p-6 sm:p-10 lg:p-12 relative overflow-hidden flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6 sm:gap-10 shadow-card-resting bg-[var(--panel-muted)] backdrop-blur-sm border border-[var(--panel-border)] text-[var(--ink)]">
@@ -26,7 +33,20 @@ export default function SharedGoalWidget({
         }}
       />
       <div className="relative z-10 w-full lg:w-1/2 lg:pr-12">
-        <h3 className="font-display font-semibold text-2xl mb-2">{title}</h3>
+        <div className="flex items-start justify-between gap-4 mb-2">
+          <h3 className="font-display font-semibold text-2xl">{title}</h3>
+          {onEdit ? (
+            <button
+              type="button"
+              onClick={onEdit}
+              aria-label="Edit shared goal"
+              title="Edit shared goal"
+              className="shrink-0 inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--panel-border)] bg-[var(--panel)]/80 text-[var(--text-2)] hover:text-[var(--ink)] hover:border-[var(--gold)]/40 transition-colors"
+            >
+              <PencilSimple size={18} weight="regular" />
+            </button>
+          ) : null}
+        </div>
         <p className="font-sans text-sm text-[var(--text-3)]">{dueLabel}</p>
       </div>
       <div className="relative z-10 w-full lg:w-1/2">
@@ -50,6 +70,12 @@ export default function SharedGoalWidget({
             className="h-full bg-[var(--jade)]"
           />
         </div>
+        {(meDetail || partnerDetail) ? (
+          <div className="mt-3 flex justify-between gap-4 font-mono text-[11px] text-[var(--text-3)]">
+            <span>{meDetail ?? ""}</span>
+            <span className="text-right">{partnerDetail ?? ""}</span>
+          </div>
+        ) : null}
       </div>
     </div>
   );

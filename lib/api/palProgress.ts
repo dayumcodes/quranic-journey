@@ -7,6 +7,7 @@ const opts = { logoutOnUnauthorized: false as const };
 export type PalProgressPatch = Partial<{
   targetSurahId: number;
   versesReadWeek: number;
+  totalVersesRead: number;
   weeklyGoal: number;
   streakDays: number;
   streakActive: boolean;

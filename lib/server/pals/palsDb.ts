@@ -221,6 +221,7 @@ export type PalReadingProgressRow = {
   userId: string;
   targetSurahId: number;
   versesReadWeek: number;
+  totalVersesRead: number;
   weeklyGoal: number;
   streakDays: number;
   streakActive: boolean;
@@ -232,6 +233,7 @@ function mapReadingRow(r: QueryResultRow): PalReadingProgressRow {
     userId: String(r.user_id),
     targetSurahId: Number(r.target_surah_id),
     versesReadWeek: Number(r.verses_read_week),
+    totalVersesRead: Number(r.total_verses_read),
     weeklyGoal: Number(r.weekly_goal),
     streakDays: Number(r.streak_days),
     streakActive: Boolean(r.streak_active),
@@ -241,7 +243,7 @@ function mapReadingRow(r: QueryResultRow): PalReadingProgressRow {
 
 export async function getReadingProgress(userId: string): Promise<PalReadingProgressRow | null> {
   const res = await getPool().query(
-    `SELECT user_id, target_surah_id, verses_read_week, weekly_goal, streak_days, streak_active, updated_at
+    `SELECT user_id, target_surah_id, verses_read_week, total_verses_read, weekly_goal, streak_days, streak_active, updated_at
      FROM pal_reading_progress WHERE user_id = $1`,
     [userId]
   );
@@ -252,6 +254,7 @@ export async function getReadingProgress(userId: string): Promise<PalReadingProg
 export type ReadingProgressPatch = Partial<{
   targetSurahId: number;
   versesReadWeek: number;
+  totalVersesRead: number;
   weeklyGoal: number;
   streakDays: number;
   streakActive: boolean;
@@ -261,21 +264,23 @@ export async function upsertReadingProgress(userId: string, patch: ReadingProgre
   const existing = await getReadingProgress(userId);
   const targetSurahId = patch.targetSurahId ?? existing?.targetSurahId ?? 1;
   const versesReadWeek = patch.versesReadWeek ?? existing?.versesReadWeek ?? 0;
+  const totalVersesRead = patch.totalVersesRead ?? existing?.totalVersesRead ?? 0;
   const weeklyGoal = patch.weeklyGoal ?? existing?.weeklyGoal ?? 100;
   const streakDays = patch.streakDays ?? existing?.streakDays ?? 0;
   const streakActive = patch.streakActive ?? existing?.streakActive ?? true;
 
   await getPool().query(
-    `INSERT INTO pal_reading_progress (user_id, target_surah_id, verses_read_week, weekly_goal, streak_days, streak_active, updated_at)
-     VALUES ($1, $2, $3, $4, $5, $6, NOW())
+    `INSERT INTO pal_reading_progress (user_id, target_surah_id, verses_read_week, total_verses_read, weekly_goal, streak_days, streak_active, updated_at)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, NOW())
      ON CONFLICT (user_id) DO UPDATE SET
        target_surah_id = EXCLUDED.target_surah_id,
        verses_read_week = EXCLUDED.verses_read_week,
+       total_verses_read = EXCLUDED.total_verses_read,
        weekly_goal = EXCLUDED.weekly_goal,
        streak_days = EXCLUDED.streak_days,
        streak_active = EXCLUDED.streak_active,
        updated_at = NOW()`,
-    [userId, targetSurahId, versesReadWeek, weeklyGoal, streakDays, streakActive]
+    [userId, targetSurahId, versesReadWeek, totalVersesRead, weeklyGoal, streakDays, streakActive]
   );
   const row = await getReadingProgress(userId);
   if (!row) throw new Error("pal_reading_progress upsert failed");

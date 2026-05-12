@@ -69,6 +69,7 @@ export interface PalReadingSnapshot {
   userId: string;
   targetSurahId: number;
   versesReadWeek: number;
+  totalVersesRead: number;
   weeklyGoal: number;
   streakDays: number;
   streakActive: boolean;

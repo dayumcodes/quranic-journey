@@ -23,7 +23,7 @@ export default function PalChatSidebar({
   myReadingLine?: string;
 }) {
   return (
-    <aside className="order-2 md:order-1 w-full md:w-[300px] lg:w-[320px] shrink-0 flex flex-col rounded-2xl border border-[var(--panel-border)] bg-[var(--panel-muted)] backdrop-blur-sm overflow-hidden shadow-card-resting min-h-[min(320px,42vh)] md:min-h-[420px] max-h-[min(420px,55vh)] md:max-h-[calc(100vh-8rem)] md:sticky md:top-28 text-[var(--ink)]">
+    <aside className="order-1 md:order-1 w-full md:w-[300px] lg:w-[320px] shrink-0 flex flex-col rounded-2xl border border-[var(--panel-border)] bg-[var(--panel-muted)] backdrop-blur-sm overflow-hidden shadow-card-resting min-h-[min(320px,42vh)] md:min-h-[420px] max-h-[min(420px,55vh)] md:max-h-[calc(100vh-8rem)] md:sticky md:top-28 text-[var(--ink)]">
       <div className="p-4 border-b border-[var(--panel-border)] flex items-start gap-3 justify-between">
         <div className="min-w-0 flex-1">
           <h2 className="font-display font-semibold text-lg">Pals</h2>

@@ -85,6 +85,7 @@ function PalPageInner() {
   const [postsError, setPostsError] = useState<string | null>(null);
   const [goalError, setGoalError] = useState<string | null>(null);
   const [goalBusy, setGoalBusy] = useState(false);
+  const [goalEditorOpen, setGoalEditorOpen] = useState(false);
   const [chapters, setChapters] = useState<Chapter[]>([]);
   const [palProgressData, setPalProgressData] = useState<{
     self: PalReadingSnapshot | null;
@@ -245,6 +246,7 @@ function PalPageInner() {
     setNudgeSent(false);
     setPostsError(null);
     setGoalError(null);
+    setGoalEditorOpen(false);
   }, [partnerId]);
 
   useEffect(() => {
@@ -382,18 +384,6 @@ function PalPageInner() {
     };
   }, [user?.id, threads, setEncouragementPeek]);
 
-  const myPercent = useMemo(() => {
-    const p = activeGoal?.progress?.user_percentage;
-    if (typeof p !== "number" || Number.isNaN(p)) return 0;
-    return Math.max(0, Math.min(100, Math.round(p)));
-  }, [activeGoal]);
-
-  const partnerPercent = useMemo(() => {
-    const p = activeGoal?.progress?.partner_percentage;
-    if (typeof p !== "number" || Number.isNaN(p)) return 0;
-    return Math.max(0, Math.min(100, Math.round(p)));
-  }, [activeGoal]);
-
   const partnerLastSeen = useMemo(() => {
     if (!partnerId || !posts.length) return null;
     const theirs = posts.filter((p) => p.author_id === partnerId);
@@ -418,6 +408,27 @@ function PalPageInner() {
   const palLoaded = palProgressData !== null && !palProgressFailed;
   const selfPalSnap = palProgressData?.self ?? null;
   const partnerPalSnap = palProgressData?.partner ?? null;
+
+  const goalTargetVerses = useMemo(() => {
+    if (!activeGoal) return 0;
+    return chapters.find((chapter) => chapter.id === activeGoal.target_surah_id)?.verses_count ?? 0;
+  }, [activeGoal, chapters]);
+
+  const myTotalVersesRead = selfPalSnap?.totalVersesRead ?? 0;
+  const partnerTotalVersesRead = partnerPalSnap?.totalVersesRead ?? 0;
+
+  const myPercent = useMemo(() => {
+    if (goalTargetVerses <= 0) return 0;
+    return Math.max(0, Math.min(100, Math.round((Math.min(myTotalVersesRead, goalTargetVerses) / goalTargetVerses) * 100)));
+  }, [goalTargetVerses, myTotalVersesRead]);
+
+  const partnerPercent = useMemo(() => {
+    if (goalTargetVerses <= 0) return 0;
+    return Math.max(
+      0,
+      Math.min(100, Math.round((Math.min(partnerTotalVersesRead, goalTargetVerses) / goalTargetVerses) * 100))
+    );
+  }, [goalTargetVerses, partnerTotalVersesRead]);
 
   const comparisonBadge = useMemo(() => {
     if (!partnerId) return undefined;
@@ -462,6 +473,9 @@ function PalPageInner() {
   const partnerVersesKnown = palLoaded && partnerPalSnap != null ? true : partnerWeeklyKnown;
   const partnerVersesVal = palLoaded && partnerPalSnap ? partnerPalSnap.versesReadWeek : partnerWeeklyVerses;
   const partnerVersesGoal = palLoaded && partnerPalSnap ? partnerPalSnap.weeklyGoal : 100;
+
+  const myTotalVersesGoal = goalTargetVerses > 0 ? goalTargetVerses : Math.max(1, myTotalVersesRead || 1);
+  const partnerTotalVersesGoal = goalTargetVerses > 0 ? goalTargetVerses : Math.max(1, partnerTotalVersesRead || 1);
 
   const nudgeDynamicMessage = useMemo(() => {
     if (!hasPartner || !comparisonBadge) return undefined;
@@ -609,7 +623,7 @@ function PalPageInner() {
     clearQuery();
   };
 
-  const handleGoalCreate = (targetSurahId: number, versesPerDay: number, daysPerWeek: number) => {
+  const handleGoalCreate = (targetSurahId: number, versesPerDay: number, daysPerWeek: number, targetDate?: string) => {
     if (!user?.id || !partnerId) return;
     setGoalBusy(true);
     setGoalError(null);
@@ -621,9 +635,14 @@ function PalPageInner() {
       targetSurahId: normalizedTargetSurahId,
       versesPerDay: normalizedVersesPerDay,
       daysPerWeek: normalizedDaysPerWeek,
-      targetDate: estimateSharedGoalDate(normalizedTargetSurahId, normalizedVersesPerDay, normalizedDaysPerWeek, chapters)
+      targetDate:
+        targetDate?.trim() ||
+        estimateSharedGoalDate(normalizedTargetSurahId, normalizedVersesPerDay, normalizedDaysPerWeek, chapters)
     })
-      .then(() => refreshGoals())
+      .then(() => {
+        setGoalEditorOpen(false);
+        refreshGoals();
+      })
       .catch((err) => {
         if (err instanceof RequestError && err.message) setGoalError(err.message);
         else setGoalError("Could not create shared goal. Check your pal link and database setup.");
@@ -677,14 +696,14 @@ function PalPageInner() {
               title="Open pals"
               aria-label="Open pals"
               onClick={() => setPalSidebarOpen(true)}
-              className="order-2 md:order-1 shrink-0 w-full md:w-14 md:h-14 md:min-h-0 rounded-2xl md:rounded-full border border-[var(--panel-border)] bg-[var(--panel)] backdrop-blur-sm shadow-card-resting flex flex-row md:flex-col items-center justify-center gap-2 py-3 md:py-0 min-h-[3rem] hover:bg-black/[0.03] dark:hover:bg-white/[0.06] hover:border-[var(--gold)]/35 transition-colors md:sticky md:top-28"
+              className="order-1 md:order-1 shrink-0 w-full md:w-14 md:h-14 md:min-h-0 rounded-2xl md:rounded-full border border-[var(--panel-border)] bg-[var(--panel)] backdrop-blur-sm shadow-card-resting flex flex-row md:flex-col items-center justify-center gap-2 py-3 md:py-0 min-h-[3rem] hover:bg-black/[0.03] dark:hover:bg-white/[0.06] hover:border-[var(--gold)]/35 transition-colors md:sticky md:top-28"
             >
               <Plus weight="bold" size={22} className="text-[var(--gold)] shrink-0" />
               <span className="text-sm font-medium text-[var(--text-2)] md:hidden">Open pals</span>
             </button>
           )}
 
-          <div className="order-1 md:order-2 flex-1 min-w-0 w-full">
+          <div className="order-2 md:order-2 flex-1 min-w-0 w-full">
             {pendingInvitePartnerId ? (
               <div className="rounded-2xl border border-emerald-200 bg-emerald-50/90 dark:bg-emerald-100/95 p-6 mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between text-emerald-950">
                 <div>
@@ -747,6 +766,7 @@ function PalPageInner() {
                   <div className="flex-1 flex flex-col gap-6">
                     <StatCard icon={<Fire weight="regular" size={24} className="text-[#F97316]" />} value={myStreakCardValue} label={myStreakCardLabel} />
                     <ProgressCard value={myVersesVal} total={myVersesGoal} label="Verses this week" />
+                    <ProgressCard value={myTotalVersesRead} total={myTotalVersesGoal} label="Total verses read" />
                   </div>
                   <div className="flex-1 flex flex-col gap-6">
                     <StatCard
@@ -762,6 +782,14 @@ function PalPageInner() {
                       delay={0.1}
                       color="bg-[var(--jade)]"
                       unknown={hasPartner ? !partnerVersesKnown : false}
+                    />
+                    <ProgressCard
+                      value={partnerTotalVersesRead}
+                      total={partnerTotalVersesGoal}
+                      label="Total verses read"
+                      delay={0.1}
+                      color="bg-[var(--jade)]"
+                      unknown={hasPartner ? !partnerPalSnap : false}
                     />
                     {hasPartner && palProgressFailed && !partnerWeeklyKnown ? (
                       <p className="text-[10px] text-[var(--text-3)] font-sans px-2 leading-relaxed">
@@ -837,8 +865,26 @@ function PalPageInner() {
                   }}
                 />
 
-                {!sharedGoalWithPartner && hasPartner ? (
-                  <PalSharedGoalStarter partnerLabel={partnerDisplayName} onCreate={handleGoalCreate} busy={goalBusy} />
+                {hasPartner && (!sharedGoalWithPartner || goalEditorOpen) ? (
+                  <PalSharedGoalStarter
+                    partnerLabel={partnerDisplayName}
+                    onCreate={handleGoalCreate}
+                    busy={goalBusy}
+                    initialGoal={
+                      sharedGoalWithPartner
+                        ? {
+                            targetSurahId: sharedGoalWithPartner.target_surah_id,
+                            versesPerDay: sharedGoalWithPartner.verses_per_day,
+                            daysPerWeek: sharedGoalWithPartner.days_per_week,
+                            targetDate: sharedGoalWithPartner.target_date ?? ""
+                          }
+                        : undefined
+                    }
+                    triggerLabel={sharedGoalWithPartner ? `Update the shared reading goal with ${partnerDisplayName}` : undefined}
+                    submitLabel={sharedGoalWithPartner ? "Update goal" : undefined}
+                    open={sharedGoalWithPartner ? goalEditorOpen : undefined}
+                    onOpenChange={sharedGoalWithPartner ? setGoalEditorOpen : undefined}
+                  />
                 ) : null}
 
                 <SharedGoalWidget
@@ -853,6 +899,13 @@ function PalPageInner() {
                   mePercent={myPercent}
                   partnerPercent={partnerPercent}
                   partnerName={partnerDisplayName}
+                  meDetail={goalTargetVerses > 0 ? `${Math.min(myTotalVersesRead, goalTargetVerses)}/${goalTargetVerses} verses` : undefined}
+                  partnerDetail={
+                    goalTargetVerses > 0 && partnerPalSnap
+                      ? `${Math.min(partnerTotalVersesRead, goalTargetVerses)}/${goalTargetVerses} verses`
+                      : undefined
+                  }
+                  onEdit={sharedGoalWithPartner ? () => setGoalEditorOpen(true) : undefined}
                 />
               </>
             ) : (
