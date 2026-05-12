@@ -78,7 +78,7 @@ export default function SharedFeed({
   const tooShortToSend = trimmedInput.length > 0 && trimmedInput.length < 6;
   const defaultEmpty =
     emptyHint ??
-    (partnerLinked ? "No posts yet. Share the first reflection." : "Link a partner above to load your shared reflections.");
+    (partnerLinked ? "No messages yet. Share the first reflection." : "Link a partner above to load your shared reflections.");
 
   return (
     <div className="max-w-[680px] mx-auto">

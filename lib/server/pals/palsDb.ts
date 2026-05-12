@@ -77,6 +77,62 @@ export async function palLinkExists(userA: string, userB: string): Promise<boole
   return (res.rowCount ?? 0) > 0;
 }
 
+export type PalMessageRow = {
+  id: string;
+  authorId: string;
+  recipientId: string;
+  type: "reflection" | "encouragement";
+  body: string;
+  verseReference?: string;
+  createdAt: string;
+};
+
+function mapMessageRow(r: QueryResultRow): PalMessageRow {
+  return {
+    id: String(r.id),
+    authorId: String(r.author_id),
+    recipientId: String(r.recipient_id),
+    type: (r.type === "encouragement" ? "encouragement" : "reflection") as PalMessageRow["type"],
+    body: String(r.body || ""),
+    verseReference: typeof r.verse_reference === "string" && r.verse_reference.trim() ? String(r.verse_reference) : undefined,
+    createdAt: new Date(r.created_at as string).toISOString()
+  };
+}
+
+export async function listPalMessages(userId: string, partnerId: string, limit = 50): Promise<PalMessageRow[]> {
+  const { low, high } = orderedPair(userId, partnerId);
+  const safeLimit = Math.min(200, Math.max(1, Math.floor(limit)));
+  const res = await getPool().query(
+    `SELECT id, author_id, recipient_id, type, body, verse_reference, created_at
+     FROM pal_messages
+     WHERE user_low = $1 AND user_high = $2
+     ORDER BY created_at ASC
+     LIMIT $3`,
+    [low, high, safeLimit]
+  );
+  return res.rows.map(mapMessageRow);
+}
+
+export async function createPalMessage(params: {
+  authorId: string;
+  recipientId: string;
+  type: "reflection" | "encouragement";
+  body: string;
+  verseReference?: string;
+}): Promise<PalMessageRow> {
+  const { authorId, recipientId, type, body, verseReference } = params;
+  const { low, high } = orderedPair(authorId, recipientId);
+  const res = await getPool().query(
+    `INSERT INTO pal_messages (user_low, user_high, author_id, recipient_id, type, body, verse_reference, created_at)
+     VALUES ($1, $2, $3, $4, $5, $6, NULLIF($7, ''), NOW())
+     RETURNING id, author_id, recipient_id, type, body, verse_reference, created_at`,
+    [low, high, authorId, recipientId, type, body, verseReference?.trim() ?? ""]
+  );
+  const row = res.rows[0];
+  if (!row) throw new Error("pal_messages insert failed");
+  return mapMessageRow(row);
+}
+
 export type PalReadingProgressRow = {
   userId: string;
   targetSurahId: number;

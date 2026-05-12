@@ -1,6 +1,6 @@
 # Pal sync — next steps
 
-Cross-device Pal lists use your **Postgres** `pal_links` table and [`/api/pals`](app/api/pals/route.ts) routes. Quran Foundation API approval is still required for **goals, streaks, activity, posts**; the DB only stores **who is linked to whom**.
+Cross-device Pal lists, shared chat, and reading snapshots use your **Postgres** tables and first-party routes. Quran Foundation API approval is still required for **goals, streaks, activity, collections**, while the app database stores **who is linked to whom**, **shared messages**, and **shared reading snapshots**.
 
 ## 1. Create a Postgres database
 
@@ -34,7 +34,7 @@ From the repo root (`al-rihla/`), with `DATABASE_URL` set:
 npm run db:migrate:pals
 ```
 
-This applies [`db/migrations/001_create_pal_links.sql`](db/migrations/001_create_pal_links.sql).
+This applies every SQL file under [`db/migrations`](db/migrations), including the pal links, reading progress, and pal messages tables.
 
 You can run this locally against your hosted DB, or from CI once per environment.
 
@@ -54,4 +54,4 @@ If `GET /api/pals` returns **500** with “Missing DATABASE_URL”, the env var 
 
 ## 6. Quran Foundation form (still separate)
 
-After QF approves scopes for **Posts**, **Goals**, **Streaks**, **Users**, etc., align `NEXT_PUBLIC_OAUTH_SCOPE` (and OAuth app settings) so the token can call `/api/qf-user/...`. That does **not** replace Pal DB sync—it only fixes QF-backed data and profile APIs.
+After QF approves scopes for **Goals**, **Streaks**, **Users**, etc., align `NEXT_PUBLIC_OAUTH_SCOPE` (and OAuth app settings) so the token can call `/api/qf-user/...`. That does **not** replace Pal DB sync—it only fixes QF-backed data and profile APIs.

@@ -18,13 +18,13 @@ import PalSharedReadingPanel from "@/components/pal/PalSharedReadingPanel";
 import { pageVariants } from "@/lib/constants/motion";
 import { RequestError } from "@/lib/api/client";
 import { acceptPal, getPals, removePal as removePalApi } from "@/lib/api/pals";
-import { createPost } from "@/lib/api/posts";
+import { createPalMessage, getPalMessages } from "@/lib/api/palMessages";
 import { usePalInvitePrompt } from "@/lib/hooks/usePalInvitePrompt";
 import { useAuthStore } from "@/lib/store/authStore";
 import { usePalEncouragementToastStore } from "@/lib/store/palEncouragementToastStore";
 import { getPalProgress, putPalProgress } from "@/lib/api/palProgress";
 import { getChapters } from "@/lib/api/quran";
-import { fetchPartnerDisplayName, getActivity, getGoals, getPosts, getStreaks, postActivitySession, postGoal } from "@/lib/api/user";
+import { fetchPartnerDisplayName, getActivity, getGoals, getStreaks, postActivitySession, postGoal } from "@/lib/api/user";
 import { isLikelyPartnerUserId } from "@/lib/utils/palPartnerStorage";
 import {
   establishMutualPalLink,
@@ -112,9 +112,9 @@ function PalPageInner() {
           displayName: p.displayName?.trim() || "Partner",
           updatedAt: typeof p.updatedAt === "number" ? p.updatedAt : Date.now()
         }));
-      if (!normalized.length) return;
       savePalThreads(user.id, normalized);
       setThreads(normalized);
+      if (!normalized.length) setShowAddPalPanel(true);
     } catch (e) {
       const status = e instanceof RequestError ? e.status : undefined;
       console.warn("[pal] syncPalsFromServer failed (session not cleared — pals uses logoutOnUnauthorized: false)", {
@@ -284,7 +284,7 @@ function PalPageInner() {
     }
     if (!options?.silent) setPostsError(null);
     try {
-      const nextPosts = await getPosts(user.id, partnerId);
+      const nextPosts = await getPalMessages(partnerId);
       setPosts(nextPosts);
     } catch (err) {
       console.warn("[pal] loadPosts failed", {
@@ -294,7 +294,8 @@ function PalPageInner() {
       });
       if (!options?.silent) {
         setPosts([]);
-        setPostsError("Could not load shared posts. Confirm posts scope is approved for both accounts.");
+        if (err instanceof RequestError && err.message) setPostsError(err.message);
+        else setPostsError("Could not load shared messages. Confirm your pal link and database setup.");
       }
     }
   }, [isAuthenticated, user?.id, partnerId]);
@@ -335,7 +336,7 @@ function PalPageInner() {
         const merged: Post[] = [];
         for (const th of threads) {
           try {
-            const chunk = await getPosts(user.id, th.partnerId);
+            const chunk = await getPalMessages(th.partnerId);
             merged.push(...chunk);
           } catch {
             /* ignore */
@@ -456,12 +457,13 @@ function PalPageInner() {
 
   const postPublishErrorMessage = useCallback((err: unknown) => {
     if (err instanceof RequestError) {
-      if (err.status === 422) return err.message || "Posts must be at least 6 characters long.";
-      if (err.status === 401 || err.status === 403) {
-        return "Could not publish. Confirm your Quran Foundation post scopes are enabled for this account.";
-      }
+      if (err.status === 422) return err.message || "Messages must be at least 6 characters long.";
+      if (err.status === 401) return "Please sign in again to continue messaging your pal.";
+      if (err.status === 403) return err.message || "Link this pal again before sending shared messages.";
+      if (err.status === 503) return err.message || "Pal messages are not ready on this deployment yet.";
+      if (err.message) return err.message;
     }
-    return "Could not publish. Check the post content and try again.";
+    return "Could not publish. Check the message content and try again.";
   }, []);
 
   const meSide = useMemo(() => {
@@ -758,21 +760,14 @@ function PalPageInner() {
                     if (!user?.id || !partnerId) return;
                     setNudgeSent(true);
                     setPostsError(null);
-                    console.info("[pal] sending encouragement", {
-                      bodyLength: "Encouragement: keep going — your consistency inspires me.".length,
-                      hasPartner: !!partnerId
-                    });
-                    void createPost({
+                    void createPalMessage({
                       type: "encouragement",
                       author_id: user.id,
                       recipient_id: partnerId,
-                      body: `Encouragement: keep going — your consistency inspires me.`
+                      body: "Keep going - your consistency inspires me."
                     })
                       .then(() => loadPosts({ silent: true }))
                       .catch((err) => {
-                        console.error("[pal] encouragement publish failed", {
-                          message: err instanceof Error ? err.message : String(err)
-                        });
                         setNudgeSent(false);
                         setPostsError(postPublishErrorMessage(err));
                       });
@@ -797,11 +792,7 @@ function PalPageInner() {
                   composerDisabled={false}
                   onSend={(body) => {
                     if (!user?.id || !partnerId) return;
-                    console.info("[pal] sending reflection", {
-                      bodyLength: body.trim().length,
-                      hasPartner: !!partnerId
-                    });
-                    void createPost({
+                    void createPalMessage({
                       type: "reflection",
                       author_id: user.id,
                       recipient_id: partnerId,
@@ -809,16 +800,15 @@ function PalPageInner() {
                     })
                       .then((post) => {
                         setPostsError(null);
-                        setPosts((prev) => [post, ...prev.filter((item) => item.id !== post.id)]);
+                        setPosts((prev) =>
+                          [...prev.filter((item) => item.id !== post.id), post].sort(
+                            (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+                          )
+                        );
                         void loadPosts({ silent: true });
                         void postActivitySession({ type: "reading", duration_seconds: 30 });
                       })
-                      .catch((err) => {
-                        console.error("[pal] reflection publish failed", {
-                          message: err instanceof Error ? err.message : String(err)
-                        });
-                        setPostsError(postPublishErrorMessage(err));
-                      });
+                      .catch((err) => setPostsError(postPublishErrorMessage(err)));
                   }}
                 />
 

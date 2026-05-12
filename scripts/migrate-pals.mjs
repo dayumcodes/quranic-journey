@@ -11,13 +11,19 @@ async function main() {
     throw new Error("Missing DATABASE_URL");
   }
   const here = path.dirname(fileURLToPath(import.meta.url));
-  const migrationPath = path.resolve(here, "../db/migrations/001_create_pal_links.sql");
-  const sql = await fs.readFile(migrationPath, "utf8");
+  const migrationsDir = path.resolve(here, "../db/migrations");
+  const migrationFiles = (await fs.readdir(migrationsDir))
+    .filter((name) => name.endsWith(".sql"))
+    .sort((a, b) => a.localeCompare(b, "en"));
   const client = new Client({ connectionString: conn });
   await client.connect();
   try {
-    await client.query(sql);
-    console.log("Applied pals migration:", migrationPath);
+    for (const file of migrationFiles) {
+      const migrationPath = path.join(migrationsDir, file);
+      const sql = await fs.readFile(migrationPath, "utf8");
+      await client.query(sql);
+      console.log("Applied pals migration:", migrationPath);
+    }
   } finally {
     await client.end();
   }

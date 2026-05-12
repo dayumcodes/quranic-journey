@@ -38,13 +38,13 @@ export default function PalPartnerOnboarding({
   const submitPartner = () => {
     setError(null);
     if (!isLikelyPartnerUserId(pasteId)) {
-      setError("Enter a valid partner user ID (UUID). It cannot be your own.");
+      setError("Enter a valid partner account ID. It cannot be your own.");
       return;
     }
     setSaveBusy(true);
     void Promise.resolve(onSavePartnerId(pasteId.trim(), nickname.trim() || undefined))
       .then((ok) => {
-        if (!ok) setError("Enter a valid partner user ID (UUID). It cannot be your own.");
+        if (!ok) setError("Enter a valid partner account ID. It cannot be your own.");
       })
       .catch(() => setError("Could not save partner. Try again."))
       .finally(() => setSaveBusy(false));
@@ -64,7 +64,7 @@ export default function PalPartnerOnboarding({
         ) : null}
       </div>
       <p className="font-sans text-sm text-[var(--text-2)] mb-6 leading-relaxed">
-        Pal compares progress and merges reflections between two Quran Foundation accounts. Share your invite link so your partner can connect, or paste their account ID once they send it to you.
+        Pal compares progress and keeps shared messages between two Quran Foundation accounts. Share your invite link so your partner can connect, or paste their account ID once they send it to you.
       </p>
 
       <div className="flex flex-wrap gap-2 mb-6">
@@ -77,7 +77,7 @@ export default function PalPartnerOnboarding({
           {inviteCopied ? "Copied!" : "Copy invite link"}
         </button>
         <span className="inline-flex items-center gap-1.5 text-xs text-[var(--text-3)] self-center px-2">
-          <LinkSimple weight="regular" size={14} /> Both of you stay signed in for posts and goals to sync.
+          <LinkSimple weight="regular" size={14} /> Both of you stay signed in for messages and goals to sync.
         </span>
       </div>
 
@@ -87,7 +87,7 @@ export default function PalPartnerOnboarding({
           type="text"
           value={pasteId}
           onChange={(e) => setPasteId(e.target.value)}
-          placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+          placeholder="Paste your partner's account ID"
           className="w-full rounded-xl border border-[var(--panel-border)] bg-[var(--panel)] px-4 py-3 text-sm font-mono text-[var(--ink)] placeholder:text-[var(--text-3)] outline-none focus:border-[var(--gold)]"
         />
         <label className="block text-[12px] font-medium text-[var(--text-2)]">Nickname (optional)</label>

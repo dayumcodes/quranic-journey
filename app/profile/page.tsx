@@ -65,7 +65,7 @@ export default function ProfilePage() {
 
               {process.env.NODE_ENV !== "production" ? (
                 <p className="text-[12px] text-[var(--text-3)] leading-relaxed mb-6 bg-amber-50/90 dark:bg-amber-950/35 border border-amber-100 dark:border-amber-800/50 rounded-xl px-4 py-3">
-                  For Pal links and API features (posts, goals, collections), Quran Foundation must return a unique <strong className="font-medium text-[var(--ink)]">sub</strong> and approved OAuth scopes. If two logins show the same id, open the{" "}
+                  For Pal links, chat, and other Quran Foundation-backed features, the login must return a unique <strong className="font-medium text-[var(--ink)]">sub</strong>. Goals, streaks, and collections still depend on approved Quran Foundation scopes. If two logins show the same id, open the{" "}
                   <a className="underline text-[var(--ink)]" href="https://docs.google.com/forms/d/1iYYHrU3AOM9OIaDi_nWdtBpHUSaliQgdwzzwcK_wGTw/viewform" target="_blank" rel="noopener noreferrer">
                     Quran.Foundation API access form
                   </a>{" "}
