@@ -1,6 +1,6 @@
 # Pal sync — next steps
 
-Cross-device Pal lists, shared chat, and reading snapshots use your **Postgres** tables and first-party routes. Quran Foundation API approval is still required for **goals, streaks, activity, collections**, while the app database stores **who is linked to whom**, **shared messages**, and **shared reading snapshots**.
+Cross-device Pal lists, shared chat, shared goals, and reading snapshots use your **Postgres** tables and first-party routes. Quran Foundation API approval is still required for **goals, streaks, activity, collections**, while the app database stores **who is linked to whom**, **shared messages**, **shared goals**, and **shared reading snapshots**.
 
 ## 1. Create a Postgres database
 

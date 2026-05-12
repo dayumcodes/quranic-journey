@@ -9,7 +9,7 @@ db/migrations/001_create_pal_links.sql
 001_create_pal_links.sql
 002_pal_reading_progress.sql
 003_pal_messages.sql
-
+004_pal_shared_goals.sql 
 # Build
 build/
 dist/

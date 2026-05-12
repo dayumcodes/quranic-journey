@@ -133,6 +133,90 @@ export async function createPalMessage(params: {
   return mapMessageRow(row);
 }
 
+export type PalSharedGoalRow = {
+  id: string;
+  partnerId: string;
+  targetSurahId: number;
+  versesPerDay: number;
+  daysPerWeek: number;
+  targetDate?: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+function mapSharedGoalRow(r: QueryResultRow): PalSharedGoalRow {
+  return {
+    id: `shared-goal:${String(r.user_low)}:${String(r.user_high)}`,
+    partnerId: String(r.partner_id),
+    targetSurahId: Number(r.target_surah_id),
+    versesPerDay: Number(r.verses_per_day),
+    daysPerWeek: Number(r.days_per_week),
+    targetDate: typeof r.target_date === "string" && r.target_date ? r.target_date : undefined,
+    createdAt: new Date(r.created_at as string).toISOString(),
+    updatedAt: new Date(r.updated_at as string).toISOString()
+  };
+}
+
+export async function listPalSharedGoals(userId: string): Promise<PalSharedGoalRow[]> {
+  const res = await getPool().query(
+    `SELECT
+       user_low,
+       user_high,
+       CASE WHEN user_low = $1 THEN user_high ELSE user_low END AS partner_id,
+       target_surah_id,
+       verses_per_day,
+       days_per_week,
+       target_date::text AS target_date,
+       created_at,
+       updated_at
+     FROM pal_shared_goals
+     WHERE user_low = $1 OR user_high = $1
+     ORDER BY updated_at DESC`,
+    [userId]
+  );
+  return res.rows.map(mapSharedGoalRow);
+}
+
+export async function upsertPalSharedGoal(params: {
+  userId: string;
+  partnerId: string;
+  targetSurahId: number;
+  versesPerDay: number;
+  daysPerWeek: number;
+  targetDate?: string;
+}): Promise<PalSharedGoalRow> {
+  const { userId, partnerId, targetSurahId, versesPerDay, daysPerWeek, targetDate } = params;
+  const { low, high } = orderedPair(userId, partnerId);
+  const res = await getPool().query(
+    `INSERT INTO pal_shared_goals (
+       user_low, user_high, created_by, target_surah_id, verses_per_day, days_per_week, target_date, created_at, updated_at
+     )
+     VALUES ($1, $2, $3, $4, $5, $6, NULLIF($7, '')::date, NOW(), NOW())
+     ON CONFLICT (user_low, user_high)
+     DO UPDATE SET
+       created_by = EXCLUDED.created_by,
+       target_surah_id = EXCLUDED.target_surah_id,
+       verses_per_day = EXCLUDED.verses_per_day,
+       days_per_week = EXCLUDED.days_per_week,
+       target_date = EXCLUDED.target_date,
+       updated_at = NOW()
+     RETURNING
+       user_low,
+       user_high,
+       CASE WHEN user_low = $3 THEN user_high ELSE user_low END AS partner_id,
+       target_surah_id,
+       verses_per_day,
+       days_per_week,
+       target_date::text AS target_date,
+       created_at,
+       updated_at`,
+    [low, high, userId, targetSurahId, versesPerDay, daysPerWeek, targetDate?.trim() ?? ""]
+  );
+  const row = res.rows[0];
+  if (!row) throw new Error("pal_shared_goals upsert failed");
+  return mapSharedGoalRow(row);
+}
+
 export type PalReadingProgressRow = {
   userId: string;
   targetSurahId: number;

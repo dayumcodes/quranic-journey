@@ -29,7 +29,7 @@ export default function PalSharedGoalStarter({
       ) : (
         <div className="rounded-2xl border border-[var(--panel-border)] bg-[var(--panel-muted)] backdrop-blur-sm p-6 text-left space-y-4 text-[var(--ink)]">
           <h4 className="font-display font-semibold text-lg">Shared goal</h4>
-          <p className="text-xs text-[var(--text-3)]">Creates a Quran Foundation shared goal pointing at both accounts. Tune numbers to match how you practice.</p>
+          <p className="text-xs text-[var(--text-3)]">Creates a shared goal for both linked pals in this app. Tune the numbers to match how you practice.</p>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <label className="text-[11px] text-[var(--text-2)] flex flex-col gap-1">
               Target surah (id)

@@ -19,12 +19,13 @@ import { pageVariants } from "@/lib/constants/motion";
 import { RequestError } from "@/lib/api/client";
 import { acceptPal, getPals, removePal as removePalApi } from "@/lib/api/pals";
 import { createPalMessage, getPalMessages } from "@/lib/api/palMessages";
+import { createPalSharedGoal, getPalSharedGoals } from "@/lib/api/palSharedGoals";
 import { usePalInvitePrompt } from "@/lib/hooks/usePalInvitePrompt";
 import { useAuthStore } from "@/lib/store/authStore";
 import { usePalEncouragementToastStore } from "@/lib/store/palEncouragementToastStore";
 import { getPalProgress, putPalProgress } from "@/lib/api/palProgress";
 import { getChapters } from "@/lib/api/quran";
-import { fetchPartnerDisplayName, getActivity, getGoals, getStreaks, postActivitySession, postGoal } from "@/lib/api/user";
+import { fetchPartnerDisplayName, getActivity, getGoals, getStreaks, postActivitySession } from "@/lib/api/user";
 import { isLikelyPartnerUserId } from "@/lib/utils/palPartnerStorage";
 import {
   establishMutualPalLink,
@@ -45,6 +46,18 @@ function initialsFrom(userName: string, fallback = "?"): string {
   const parts = u.split(/\s+/).filter(Boolean);
   if (parts.length >= 2) return `${parts[0][0] ?? ""}${parts[1][0] ?? ""}`.toUpperCase();
   return u.slice(0, 2).toUpperCase();
+}
+
+function estimateSharedGoalDate(targetSurahId: number, versesPerDay: number, daysPerWeek: number, chapters: Chapter[]): string | undefined {
+  const versesInSurah = chapters.find((chapter) => chapter.id === targetSurahId)?.verses_count;
+  if (!versesInSurah || versesInSurah <= 0) return undefined;
+
+  const readingDays = Math.max(1, Math.ceil(versesInSurah / Math.max(1, versesPerDay)));
+  const calendarDays = Math.max(readingDays, Math.ceil((readingDays / Math.max(1, daysPerWeek)) * 7));
+  const due = new Date();
+  due.setHours(0, 0, 0, 0);
+  due.setDate(due.getDate() + Math.max(0, calendarDays - 1));
+  return due.toISOString().slice(0, 10);
 }
 
 function PalPageInner() {
@@ -70,6 +83,7 @@ function PalPageInner() {
   const [palSidebarOpen, setPalSidebarOpen] = useState(true);
   const [inviteNick, setInviteNick] = useState("");
   const [postsError, setPostsError] = useState<string | null>(null);
+  const [goalError, setGoalError] = useState<string | null>(null);
   const [goalBusy, setGoalBusy] = useState(false);
   const [chapters, setChapters] = useState<Chapter[]>([]);
   const [palProgressData, setPalProgressData] = useState<{
@@ -95,9 +109,12 @@ function PalPageInner() {
 
   const refreshGoals = useCallback(() => {
     if (!isAuthenticated || !user?.id) return;
-    void getGoals()
-      .then((g) => setGoals(Array.isArray(g) ? g : []))
-      .catch(() => setGoals([]));
+    void Promise.all([
+      getGoals().catch(() => [] as Goal[]),
+      getPalSharedGoals().catch(() => [] as Goal[])
+    ]).then(([personalGoals, sharedGoals]) => {
+      setGoals([...(Array.isArray(sharedGoals) ? sharedGoals : []), ...(Array.isArray(personalGoals) ? personalGoals : [])]);
+    });
   }, [isAuthenticated, user?.id]);
 
   const syncPalsFromServer = useCallback(async () => {
@@ -227,6 +244,7 @@ function PalPageInner() {
   useEffect(() => {
     setNudgeSent(false);
     setPostsError(null);
+    setGoalError(null);
   }, [partnerId]);
 
   useEffect(() => {
@@ -594,16 +612,22 @@ function PalPageInner() {
   const handleGoalCreate = (targetSurahId: number, versesPerDay: number, daysPerWeek: number) => {
     if (!user?.id || !partnerId) return;
     setGoalBusy(true);
-    void postGoal({
-      type: "shared",
-      partner_id: partnerId,
-      target_surah_id: Math.min(114, Math.max(1, Math.floor(targetSurahId))),
-      verses_per_day: Math.max(1, Math.floor(versesPerDay)),
-      days_per_week: Math.min(7, Math.max(1, Math.floor(daysPerWeek))),
-      progress: { user_percentage: 0 }
+    setGoalError(null);
+    const normalizedTargetSurahId = Math.min(114, Math.max(1, Math.floor(targetSurahId)));
+    const normalizedVersesPerDay = Math.max(1, Math.floor(versesPerDay));
+    const normalizedDaysPerWeek = Math.min(7, Math.max(1, Math.floor(daysPerWeek)));
+    void createPalSharedGoal({
+      partnerId,
+      targetSurahId: normalizedTargetSurahId,
+      versesPerDay: normalizedVersesPerDay,
+      daysPerWeek: normalizedDaysPerWeek,
+      targetDate: estimateSharedGoalDate(normalizedTargetSurahId, normalizedVersesPerDay, normalizedDaysPerWeek, chapters)
     })
       .then(() => refreshGoals())
-      .catch(() => undefined)
+      .catch((err) => {
+        if (err instanceof RequestError && err.message) setGoalError(err.message);
+        else setGoalError("Could not create shared goal. Check your pal link and database setup.");
+      })
       .finally(() => setGoalBusy(false));
   };
 
@@ -753,6 +777,7 @@ function PalPageInner() {
                 </div>
 
                 {postsError ? <p className="text-sm text-amber-700 mb-4 max-w-xl">{postsError}</p> : null}
+                {goalError ? <p className="text-sm text-amber-700 mb-4 max-w-xl">{goalError}</p> : null}
 
                 <NudgeCard
                   nudgeSent={nudgeSent}
@@ -818,7 +843,13 @@ function PalPageInner() {
 
                 <SharedGoalWidget
                   title={activeGoal ? `Finish Surah ${activeGoal.target_surah_id}${sharedGoalWithPartner ? " together" : ""}` : "Set your shared goal"}
-                  dueLabel={activeGoal?.target_date ? `Due: ${new Date(activeGoal.target_date).toLocaleDateString()}` : "due date from Quran Foundation"}
+                  dueLabel={
+                    activeGoal?.target_date
+                      ? `Due: ${new Date(activeGoal.target_date).toLocaleDateString()}`
+                      : sharedGoalWithPartner
+                        ? "Shared goal saved for both pals"
+                        : "due date from Quran Foundation"
+                  }
                   mePercent={myPercent}
                   partnerPercent={partnerPercent}
                   partnerName={partnerDisplayName}
