@@ -91,22 +91,26 @@ export default function SharedFeed({
     <div className="max-w-[680px] mx-auto">
       <h3 className="font-display font-semibold text-2xl text-[var(--ink)] mb-1">Shared Reflections</h3>
       <p className="font-sans text-[var(--text-3)] text-sm mb-12">Your thoughts and your partner&apos;s reflections, together</p>
-      <div className="flex flex-col gap-6 mb-12">
+      <div className="mb-12">
         {posts.length === 0 ? (
           <div className="text-sm text-[var(--text-3)]">{defaultEmpty}</div>
         ) : (
-          posts.map((p) => (
-            <FeedItem
-              key={p.id}
-              isMine={p.author_id === currentUserId}
-              senderName={p.author_id === currentUserId ? myName : partnerName}
-              text={p.body}
-              time={new Date(p.created_at).toLocaleString()}
-              verse={p.verse_reference}
-              myInitials={myInitials.slice(0, 2)}
-              partnerInitials={partnerInitials.slice(0, 2)}
-            />
-          ))
+          <div className="max-h-[34rem] overflow-y-auto pr-1 sm:pr-2">
+            <div className="flex flex-col gap-6">
+              {posts.map((p) => (
+                <FeedItem
+                  key={p.id}
+                  isMine={p.author_id === currentUserId}
+                  senderName={p.author_id === currentUserId ? myName : partnerName}
+                  text={p.body}
+                  time={new Date(p.created_at).toLocaleString()}
+                  verse={p.verse_reference}
+                  myInitials={myInitials.slice(0, 2)}
+                  partnerInitials={partnerInitials.slice(0, 2)}
+                />
+              ))}
+            </div>
+          </div>
         )}
       </div>
       <div className="sticky bottom-3 sm:bottom-6 bg-[var(--parchment)]/90 backdrop-blur-md border-t border-[rgba(13,15,18,0.07)] dark:border-white/[0.07] pt-3 sm:pt-4 pb-2 -mx-1 px-1 sm:mx-0 sm:px-0">
