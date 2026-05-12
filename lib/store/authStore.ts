@@ -42,6 +42,7 @@ interface AuthState {
 
 const SCOPE =
   "openid profile email read:collections write:collections read:goals write:goals read:activity write:activity read:posts write:posts read:streaks";
+const DEFAULT_OAUTH_PROMPT = "login";
 
 function randomState(bytes = 16): string {
   const arr = new Uint8Array(bytes);
@@ -65,6 +66,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     const state = randomState(16);
     sessionStorage.setItem("oauth_state", state);
     const scope = process.env.NEXT_PUBLIC_OAUTH_SCOPE ?? SCOPE;
+    const prompt = (process.env.NEXT_PUBLIC_OAUTH_PROMPT ?? DEFAULT_OAUTH_PROMPT).trim();
     authUrl.searchParams.set("client_id", process.env.NEXT_PUBLIC_OAUTH_CLIENT_ID ?? "");
     authUrl.searchParams.set("redirect_uri", process.env.NEXT_PUBLIC_OAUTH_REDIRECT_URI ?? "");
     authUrl.searchParams.set("response_type", "code");
@@ -72,6 +74,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     authUrl.searchParams.set("state", state);
     authUrl.searchParams.set("code_challenge", challenge);
     authUrl.searchParams.set("code_challenge_method", "S256");
+    if (prompt) authUrl.searchParams.set("prompt", prompt);
     // Safe debug log for auth troubleshooting (no verifier, code, or tokens logged).
     console.info("[auth] redirecting to oauth", {
       oauthBase,
@@ -79,6 +82,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       redirectUri: process.env.NEXT_PUBLIC_OAUTH_REDIRECT_URI ?? "",
       clientIdSuffix: suffix(process.env.NEXT_PUBLIC_OAUTH_CLIENT_ID ?? ""),
       scopeList: scope.split(/\s+/).filter(Boolean),
+      prompt: prompt || "(none)",
       hasVerifier: !!verifier,
       codeChallengeMethod: "S256",
       stateSuffix: suffix(state),

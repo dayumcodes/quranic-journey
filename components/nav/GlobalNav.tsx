@@ -176,7 +176,7 @@ export default function GlobalNav({ currentPage }: Props) {
                 )}
               </motion.button>
               {isAuthenticated && menuOpen ? (
-                <div className="absolute right-0 z-[70] mt-3 min-w-[180px] rounded-xl border border-[var(--panel-border)] bg-[var(--panel)] p-2 text-[var(--ink)] shadow-xl backdrop-blur-md dark:border-white/10 dark:bg-black/85 dark:text-white">
+                <div className="absolute right-0 top-full z-[70] mt-2 w-48 max-w-[calc(100vw-1rem)] overflow-hidden rounded-xl border border-[var(--panel-border)] bg-[var(--panel)] p-2 text-[var(--ink)] shadow-xl backdrop-blur-md dark:border-white/10 dark:bg-black/85 dark:text-white">
                   <div className="truncate px-3 py-2 text-xs text-[var(--text-2)] dark:text-white/70">Signed in as {user?.name ?? "User"}</div>
                   <Link
                     href="/profile"
