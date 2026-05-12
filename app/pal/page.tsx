@@ -17,12 +17,13 @@ import PalChatSidebar from "@/components/pal/PalChatSidebar";
 import PalSharedReadingPanel from "@/components/pal/PalSharedReadingPanel";
 import { pageVariants } from "@/lib/constants/motion";
 import { RequestError } from "@/lib/api/client";
+import { markPalMessagesRead } from "@/lib/api/palNotifications";
 import { acceptPal, getPals, removePal as removePalApi } from "@/lib/api/pals";
 import { createPalMessage, getPalMessages } from "@/lib/api/palMessages";
 import { createPalSharedGoal, getPalSharedGoals } from "@/lib/api/palSharedGoals";
 import { usePalInvitePrompt } from "@/lib/hooks/usePalInvitePrompt";
 import { useAuthStore } from "@/lib/store/authStore";
-import { usePalEncouragementToastStore } from "@/lib/store/palEncouragementToastStore";
+import { usePalNotificationStore } from "@/lib/store/palNotificationStore";
 import { getPalProgress, putPalProgress } from "@/lib/api/palProgress";
 import { getChapters } from "@/lib/api/quran";
 import { fetchPartnerDisplayName, getActivity, getGoals, getStreaks, postActivitySession } from "@/lib/api/user";
@@ -65,10 +66,13 @@ function PalPageInner() {
   const searchParams = useSearchParams();
   const inviteRaw = searchParams.get("partner")?.trim() ?? "";
   const invitePartnerIdFromUrl = isLikelyPartnerUserId(inviteRaw) ? inviteRaw : null;
+  const threadRaw = searchParams.get("thread")?.trim() ?? "";
+  const threadPartnerIdFromUrl = isLikelyPartnerUserId(threadRaw) ? threadRaw : null;
 
   const { isAuthenticated, user, login } = useAuthStore();
-  const setEncouragementPeek = usePalEncouragementToastStore((s) => s.setEncouragementPeek);
-  const lastToastPostId = useRef<string | null>(null);
+  const unreadThreads = usePalNotificationStore((s) => s.summary.threads);
+  const setPalNotificationSummary = usePalNotificationStore((s) => s.setSummary);
+  const lastReadSyncKey = useRef<string>("");
 
   const [nudgeSent, setNudgeSent] = useState(false);
   const [myStreak, setMyStreak] = useState<StreakData | null>(null);
@@ -101,6 +105,10 @@ function PalPageInner() {
   const hasPartner = !!partnerId;
   const activeThread = useMemo(() => threads.find((t) => t.partnerId === partnerId) ?? null, [threads, partnerId]);
   const partnerDisplayName = activeThread?.displayName ?? "Partner";
+  const unreadByPartner = useMemo(
+    () => Object.fromEntries(unreadThreads.map((thread) => [thread.partnerId, thread.unreadCount])),
+    [unreadThreads]
+  );
 
   const sharedGoalWithPartner = useMemo(
     () => goals.find((g) => g.type === "shared" && g.partner_id === partnerId),
@@ -213,6 +221,13 @@ function PalPageInner() {
 
   useEffect(() => {
     if (!user?.id) return;
+    if (threadPartnerIdFromUrl && threads.some((t) => t.partnerId === threadPartnerIdFromUrl)) {
+      setSelectedPartnerId(threadPartnerIdFromUrl);
+      saveActiveThreadId(user.id, threadPartnerIdFromUrl);
+      const nextUrl = invitePartnerIdFromUrl ? `/pal?partner=${encodeURIComponent(invitePartnerIdFromUrl)}` : "/pal";
+      router.replace(nextUrl);
+      return;
+    }
     const saved = loadActiveThreadId(user.id);
     if (saved && threads.some((t) => t.partnerId === saved)) {
       setSelectedPartnerId(saved);
@@ -223,7 +238,7 @@ function PalPageInner() {
       setSelectedPartnerId(first);
       saveActiveThreadId(user.id, first);
     } else setSelectedPartnerId(null);
-  }, [user?.id, threads]);
+  }, [invitePartnerIdFromUrl, router, threadPartnerIdFromUrl, threads, user?.id]);
 
   const genericPalIdsKey = useMemo(() => {
     const ids = threads
@@ -310,29 +325,51 @@ function PalPageInner() {
     };
   }, [isAuthenticated, user?.id, partnerId]);
 
-  const loadPosts = useCallback(async (options?: { silent?: boolean }) => {
-    if (!isAuthenticated || !user?.id || !partnerId) {
-      setPosts([]);
-      if (!options?.silent) setPostsError(null);
-      return;
-    }
-    if (!options?.silent) setPostsError(null);
-    try {
-      const nextPosts = await getPalMessages(partnerId);
-      setPosts(nextPosts);
-    } catch (err) {
-      console.warn("[pal] loadPosts failed", {
-        silent: !!options?.silent,
-        status: err instanceof RequestError ? err.status : undefined,
-        message: err instanceof Error ? err.message : String(err)
-      });
-      if (!options?.silent) {
-        setPosts([]);
-        if (err instanceof RequestError && err.message) setPostsError(err.message);
-        else setPostsError("Could not load shared messages. Confirm your pal link and database setup.");
+  const maybeMarkThreadRead = useCallback(
+    async (pid: string, nextPosts: Post[]) => {
+      if (!isAuthenticated || !user?.id || !pid || nextPosts.length === 0) return;
+      if (typeof document !== "undefined" && document.visibilityState !== "visible") return;
+      const latestId = nextPosts[nextPosts.length - 1]?.id ?? "empty";
+      const nextKey = `${pid}:${latestId}`;
+      if (lastReadSyncKey.current === nextKey) return;
+      lastReadSyncKey.current = nextKey;
+      try {
+        const summary = await markPalMessagesRead(pid);
+        setPalNotificationSummary(summary);
+      } catch {
+        /* ignore transient mark-read failures */
       }
-    }
-  }, [isAuthenticated, user?.id, partnerId]);
+    },
+    [isAuthenticated, user?.id, setPalNotificationSummary]
+  );
+
+  const loadPosts = useCallback(
+    async (options?: { silent?: boolean }) => {
+      if (!isAuthenticated || !user?.id || !partnerId) {
+        setPosts([]);
+        if (!options?.silent) setPostsError(null);
+        return;
+      }
+      if (!options?.silent) setPostsError(null);
+      try {
+        const nextPosts = await getPalMessages(partnerId);
+        setPosts(nextPosts);
+        void maybeMarkThreadRead(partnerId, nextPosts);
+      } catch (err) {
+        console.warn("[pal] loadPosts failed", {
+          silent: !!options?.silent,
+          status: err instanceof RequestError ? err.status : undefined,
+          message: err instanceof Error ? err.message : String(err)
+        });
+        if (!options?.silent) {
+          setPosts([]);
+          if (err instanceof RequestError && err.message) setPostsError(err.message);
+          else setPostsError("Could not load shared messages. Confirm your pal link and database setup.");
+        }
+      }
+    },
+    [isAuthenticated, maybeMarkThreadRead, partnerId, user?.id]
+  );
 
   useEffect(() => {
     void loadPosts();
@@ -360,43 +397,6 @@ function PalPageInner() {
       document.removeEventListener("visibilitychange", onVisibilityChange);
     };
   }, [isAuthenticated, user?.id, partnerId, loadPosts]);
-
-  /** Encouragement toast: latest incoming nudge across all pal threads */
-  useEffect(() => {
-    if (!user?.id || threads.length === 0) return;
-    let cancelled = false;
-    const t = window.setTimeout(() => {
-      void (async () => {
-        const merged: Post[] = [];
-        for (const th of threads) {
-          try {
-            const chunk = await getPalMessages(th.partnerId);
-            merged.push(...chunk);
-          } catch {
-            /* ignore */
-          }
-        }
-        if (cancelled) return;
-        merged.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-        const incoming = merged.find(
-          (p) => p.type === "encouragement" && p.recipient_id === user.id && p.author_id !== user.id
-        );
-        if (!incoming || lastToastPostId.current === incoming.id) return;
-        lastToastPostId.current = incoming.id;
-        const name =
-          threads.find((x) => x.partnerId === incoming.author_id)?.displayName || `Pal ${incoming.author_id.slice(0, 8)}`;
-        setEncouragementPeek({
-          senderName: name,
-          senderInitials: initialsFrom(name),
-          sourceKey: incoming.id
-        });
-      })();
-    }, 500);
-    return () => {
-      cancelled = true;
-      window.clearTimeout(t);
-    };
-  }, [user?.id, threads, setEncouragementPeek]);
 
   const partnerLastSeen = useMemo(() => {
     if (!partnerId || !posts.length) return null;
@@ -698,6 +698,7 @@ function PalPageInner() {
             <PalChatSidebar
               threads={threads}
               activePartnerId={selectedPartnerId}
+              unreadByPartner={unreadByPartner}
               onSelect={(pid) => selectThread(pid)}
               onAddClick={() => setShowAddPalPanel(true)}
               onRemovePal={removePal}

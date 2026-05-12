@@ -84,6 +84,29 @@ export interface Post {
   verse_reference?: string;
   created_at: string;
 }
+export interface PalUnreadThread {
+  partnerId: string;
+  displayName: string;
+  unreadCount: number;
+  latestMessageId?: string;
+  latestMessagePreview?: string;
+  latestMessageType?: Post["type"];
+  latestMessageAt?: string;
+}
+export interface PalNotificationPeek {
+  sourceKey: string;
+  partnerId: string;
+  senderName: string;
+  senderInitials: string;
+  preview?: string;
+  messageType: Post["type"];
+  createdAt: string;
+}
+export interface PalNotificationSummary {
+  totalUnread: number;
+  threads: PalUnreadThread[];
+  latestUnread: PalNotificationPeek | null;
+}
 export interface User {
   id: string;
   name: string;

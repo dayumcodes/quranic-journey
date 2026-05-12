@@ -4,11 +4,18 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
 import { List, Moon, Sun, User, X } from "@phosphor-icons/react";
+import { deletePushSubscription, getPushSubscriptionConfig, savePushSubscription } from "@/lib/api/palNotifications";
 import { SPRINGS } from "@/lib/constants/motion";
 import { getMyProfile } from "@/lib/api/profile";
+import {
+  ensureNotificationPermission,
+  getNotificationPermissionState,
+  subscribeToPushNotifications,
+  unsubscribeFromPushNotifications
+} from "@/lib/push/browser";
 import { useAuthStore } from "@/lib/store/authStore";
+import { usePalNotificationStore } from "@/lib/store/palNotificationStore";
 import { useThemeStore } from "@/lib/store/themeStore";
-import { usePalEncouragementToastStore } from "@/lib/store/palEncouragementToastStore";
 
 interface Props {
   currentPage: "home" | "journey" | "reflect" | "pal" | "profile";
@@ -21,10 +28,17 @@ export default function GlobalNav({ currentPage }: Props) {
   const theme = useThemeStore((s) => s.theme);
   const toggleTheme = useThemeStore((s) => s.toggleTheme);
   const [scrolled, setScrolled] = useState(false);
-  const encouragementPeek = usePalEncouragementToastStore((s) => s.peek);
-  const setEncouragementPeek = usePalEncouragementToastStore((s) => s.setEncouragementPeek);
+  const notificationPeek = usePalNotificationStore((s) => s.peek);
+  const setNotificationPeek = usePalNotificationStore((s) => s.setPeek);
+  const unreadTotal = usePalNotificationStore((s) => s.summary.totalUnread);
+  const pushSupported = usePalNotificationStore((s) => s.pushSupported);
+  const pushConfigured = usePalNotificationStore((s) => s.pushConfigured);
+  const pushEnabled = usePalNotificationStore((s) => s.pushEnabled);
+  const permission = usePalNotificationStore((s) => s.permission);
+  const setPushState = usePalNotificationStore((s) => s.setPushState);
   const [menuOpen, setMenuOpen] = useState(false);
   const [mobileLinksOpen, setMobileLinksOpen] = useState(false);
+  const [notificationBusy, setNotificationBusy] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 60);
@@ -51,14 +65,10 @@ export default function GlobalNav({ currentPage }: Props) {
   }, [mobileLinksOpen]);
 
   useEffect(() => {
-    if (currentPage !== "pal" || !encouragementPeek) return;
-    const t = window.setTimeout(() => setEncouragementPeek(null), 6200);
+    if (!notificationPeek) return;
+    const t = window.setTimeout(() => setNotificationPeek(null), 6200);
     return () => window.clearTimeout(t);
-  }, [currentPage, encouragementPeek, setEncouragementPeek]);
-
-  useEffect(() => {
-    if (currentPage !== "pal") setEncouragementPeek(null);
-  }, [currentPage, setEncouragementPeek]);
+  }, [notificationPeek, setNotificationPeek]);
 
   useEffect(() => {
     if (!isAuthenticated || !user?.id) return;
@@ -86,6 +96,69 @@ export default function GlobalNav({ currentPage }: Props) {
       : "text-[var(--text-2)] hover:text-[var(--ink)] dark:text-[var(--text-3)] dark:hover:text-[var(--ink)]";
   const navBg = "bg-[#F4EFE6]/80 dark:bg-[#080A0E]/80";
   const navBorder = "border-[rgba(13,15,18,0.06)] dark:border-[rgba(255,255,255,0.06)]";
+  const palUnreadLabel = unreadTotal > 99 ? "99+" : String(unreadTotal);
+  const notificationStatusText = !pushSupported
+      ? "This browser does not support push notifications."
+      : !pushConfigured
+        ? "Push notifications are not configured on this deployment yet."
+        : permission === "denied"
+          ? "Notifications are blocked in your browser settings."
+          : pushEnabled
+            ? "Notifications are on for this browser."
+            : "Turn notifications on for message alerts when Al-Rihla is closed.";
+
+  async function handleNotificationToggle() {
+    if (!isAuthenticated || notificationBusy) return;
+    setNotificationBusy(true);
+    try {
+      if (pushEnabled) {
+        const endpoint = await unsubscribeFromPushNotifications();
+        if (endpoint) {
+          await deletePushSubscription(endpoint).catch(() => undefined);
+        }
+        setPushState({
+          pushEnabled: false,
+          permission: getNotificationPermissionState()
+        });
+        return;
+      }
+
+      const permissionResult = await ensureNotificationPermission();
+      if (permissionResult !== "granted") {
+        setPushState({
+          pushEnabled: false,
+          permission: permissionResult
+        });
+        return;
+      }
+
+      const config = await getPushSubscriptionConfig();
+      if (!config.configured || !config.publicKey) {
+        setPushState({
+          pushSupported: true,
+          pushConfigured: false,
+          pushEnabled: false,
+          permission: "granted"
+        });
+        return;
+      }
+
+      const subscription = await subscribeToPushNotifications(config.publicKey);
+      await savePushSubscription(subscription);
+      setPushState({
+        pushSupported: true,
+        pushConfigured: true,
+        pushEnabled: true,
+        permission: "granted"
+      });
+    } catch (err) {
+      console.warn("[nav] notification toggle failed", {
+        message: err instanceof Error ? err.message : String(err)
+      });
+    } finally {
+      setNotificationBusy(false);
+    }
+  }
 
   return (
     <div className="fixed top-0 left-0 right-0 z-50 pt-[env(safe-area-inset-top,0px)]">
@@ -123,6 +196,7 @@ export default function GlobalNav({ currentPage }: Props) {
             >
               {MAIN_TABS.map((tab) => {
                 const isActive = currentPage === tab;
+                const showUnread = tab === "pal" && unreadTotal > 0;
                 return (
                   <Link
                     key={tab}
@@ -136,14 +210,21 @@ export default function GlobalNav({ currentPage }: Props) {
                         className="absolute inset-0 bg-[var(--gold)] rounded-full -z-10 shadow-[0_2px_8px_rgba(184,148,63,0.3)]"
                       />
                     )}
-                    <span className="capitalize relative z-20">{tab}</span>
+                    <span className="relative z-20 inline-flex items-center gap-2 capitalize">
+                      {tab}
+                      {showUnread ? (
+                        <span className="inline-flex min-w-5 items-center justify-center rounded-full bg-[var(--jade)] px-1.5 py-0.5 text-[10px] font-semibold leading-none text-white">
+                          {palUnreadLabel}
+                        </span>
+                      ) : null}
+                    </span>
                   </Link>
                 );
               })}
               <AnimatePresence>
-                {currentPage === "pal" && encouragementPeek ? (
+                {notificationPeek ? (
                   <motion.div
-                    key={encouragementPeek.sourceKey}
+                    key={notificationPeek.sourceKey}
                     initial={{ opacity: 0, y: -8, scale: 0.95 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: -6, scale: 0.95 }}
@@ -151,11 +232,19 @@ export default function GlobalNav({ currentPage }: Props) {
                     className="pointer-events-none absolute top-full left-1/2 z-50 mt-3 flex w-max max-w-[min(92vw,480px)] -translate-x-1/2 items-center gap-2 rounded-full border border-[rgba(13,15,18,0.12)] bg-white px-3 py-2 text-[var(--ink)] shadow-lg backdrop-blur-xl dark:border-white/10 dark:bg-white/10 dark:text-white sm:gap-3 sm:px-4"
                   >
                     <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-[var(--jade)] bg-[var(--jade)]/20 text-[10px] font-semibold text-[var(--jade)]">
-                      {encouragementPeek.senderInitials.slice(0, 2)}
+                      {notificationPeek.senderInitials.slice(0, 2)}
                     </div>
-                    <span className="line-clamp-2 font-sans text-xs font-medium sm:truncate sm:text-sm sm:whitespace-nowrap">
-                      {encouragementPeek.senderName} sent you encouragement
-                    </span>
+                    <div className="min-w-0">
+                      <div className="font-sans text-xs font-medium sm:text-sm">
+                        {notificationPeek.senderName} sent you{" "}
+                        {notificationPeek.messageType === "encouragement" ? "encouragement" : "a new message"}
+                      </div>
+                      {notificationPeek.preview ? (
+                        <div className="line-clamp-1 max-w-[min(58vw,280px)] text-[11px] text-[var(--text-2)] dark:text-white/70">
+                          {notificationPeek.preview}
+                        </div>
+                      ) : null}
+                    </div>
                   </motion.div>
                 ) : null}
               </AnimatePresence>
@@ -199,6 +288,17 @@ export default function GlobalNav({ currentPage }: Props) {
               {isAuthenticated && menuOpen ? (
                 <div className="absolute right-0 top-full z-[70] mt-2 w-48 max-w-[calc(100vw-1rem)] overflow-hidden rounded-xl border border-[var(--panel-border)] bg-[var(--panel)] p-2 text-[var(--ink)] shadow-xl backdrop-blur-md dark:border-white/10 dark:bg-black/85 dark:text-white">
                   <div className="truncate px-3 py-2 text-xs text-[var(--text-2)] dark:text-white/70">Signed in as {user?.name ?? "User"}</div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      void handleNotificationToggle();
+                    }}
+                    disabled={notificationBusy || permission === "denied" || (!pushSupported && !pushEnabled) || (!pushConfigured && !pushEnabled)}
+                    className="w-full rounded-lg px-3 py-2 text-left text-sm hover:bg-black/[0.06] disabled:cursor-not-allowed disabled:opacity-60 dark:hover:bg-white/10"
+                  >
+                    {notificationBusy ? "Updating notifications..." : pushEnabled ? "Turn off notifications" : "Turn on notifications"}
+                  </button>
+                  <div className="px-3 pb-2 pt-1 text-[11px] leading-relaxed text-[var(--text-3)] dark:text-white/65">{notificationStatusText}</div>
                   <Link
                     href="/profile"
                     onClick={() => setMenuOpen(false)}
@@ -265,6 +365,7 @@ export default function GlobalNav({ currentPage }: Props) {
                 <div className="mx-auto flex max-w-lg flex-col gap-1 pb-[env(safe-area-inset-bottom,0px)]">
                   {MAIN_TABS.map((tab) => {
                     const isActive = currentPage === tab;
+                    const showUnread = tab === "pal" && unreadTotal > 0;
                     return (
                       <Link
                         key={tab}
@@ -276,7 +377,14 @@ export default function GlobalNav({ currentPage }: Props) {
                             : "text-[var(--text-2)] hover:bg-black/[0.05] dark:hover:bg-white/[0.06]"
                         }`}
                       >
-                        {tab}
+                        <span className="inline-flex items-center gap-2">
+                          {tab}
+                          {showUnread ? (
+                            <span className="inline-flex min-w-5 items-center justify-center rounded-full bg-[var(--jade)] px-1.5 py-0.5 text-[10px] font-semibold leading-none text-white">
+                              {palUnreadLabel}
+                            </span>
+                          ) : null}
+                        </span>
                       </Link>
                     );
                   })}
@@ -287,11 +395,11 @@ export default function GlobalNav({ currentPage }: Props) {
         </AnimatePresence>
       </div>
 
-      {/* Pal encouragement — mobile only (desktop toast lives under pill above) */}
+      {/* Pal notification — mobile only (desktop toast lives under nav tabs) */}
       <AnimatePresence>
-        {currentPage === "pal" && encouragementPeek ? (
+        {notificationPeek ? (
           <motion.div
-            key={`mobile-${encouragementPeek.sourceKey}`}
+            key={`mobile-${notificationPeek.sourceKey}`}
             initial={{ opacity: 0, y: -8, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -6, scale: 0.95 }}
@@ -300,11 +408,17 @@ export default function GlobalNav({ currentPage }: Props) {
             style={{ top: "max(3.75rem, calc(env(safe-area-inset-top, 0px) + 3.25rem))" }}
           >
             <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-[var(--jade)] bg-[var(--jade)]/20 text-[10px] font-semibold text-[var(--jade)]">
-              {encouragementPeek.senderInitials.slice(0, 2)}
+              {notificationPeek.senderInitials.slice(0, 2)}
             </div>
-            <span className="line-clamp-2 font-sans text-xs font-medium sm:text-sm">
-              {encouragementPeek.senderName} sent you encouragement
-            </span>
+            <div className="min-w-0">
+              <div className="font-sans text-xs font-medium sm:text-sm">
+                {notificationPeek.senderName} sent you{" "}
+                {notificationPeek.messageType === "encouragement" ? "encouragement" : "a new message"}
+              </div>
+              {notificationPeek.preview ? (
+                <div className="line-clamp-1 text-[11px] text-[var(--text-2)] dark:text-white/70">{notificationPeek.preview}</div>
+              ) : null}
+            </div>
           </motion.div>
         ) : null}
       </AnimatePresence>

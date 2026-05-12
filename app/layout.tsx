@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Amiri, DM_Sans, JetBrains_Mono, Outfit } from "next/font/google";
+import PalNotificationController from "@/components/notifications/PalNotificationController";
 import ThemeProvider from "@/components/theme/ThemeProvider";
 import "./globals.css";
 import { Analytics } from "@vercel/analytics/next";
@@ -12,8 +13,20 @@ const jetbrainsMono = JetBrains_Mono({ subsets: ["latin"], variable: "--font-jet
 export const metadata: Metadata = {
   title: "Al-Rihla",
   description: "Quranic journey experience",
+  manifest: "/manifest.webmanifest",
+  themeColor: "#F4EFE6",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Al-Rihla"
+  },
   icons: {
-    icon: [{ url: "/favicon.svg", type: "image/svg+xml" }]
+    icon: [
+      { url: "/favicon.svg", type: "image/svg+xml" },
+      { url: "/icon-192.png", type: "image/png", sizes: "192x192" },
+      { url: "/logo.png", type: "image/png", sizes: "512x512" }
+    ],
+    apple: [{ url: "/icon-192.png", sizes: "192x192", type: "image/png" }]
   }
 };
 
@@ -24,7 +37,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" suppressHydrationWarning>
       <body suppressHydrationWarning className={`${dmSans.variable} ${outfit.variable} ${amiri.variable} ${jetbrainsMono.variable}`}>
         <script dangerouslySetInnerHTML={{ __html: themeBootstrapScript }} />
-        <ThemeProvider>{children}</ThemeProvider>
+        <ThemeProvider>
+          {children}
+          <PalNotificationController />
+        </ThemeProvider>
         <Analytics />
       </body>
     </html>

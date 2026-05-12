@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@phosphor-icons/react": "^2.1.7",
+    "@types/web-push": "^3.6.4",
     "@vercel/analytics": "^2.0.1",
     "framer-motion": "^11.11.17",
     "howler": "^2.2.4",
@@ -19,6 +20,7 @@
     "pg": "^8.20.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "web-push": "^3.6.7",
     "zustand": "^5.0.0"
   },
   "devDependencies": {

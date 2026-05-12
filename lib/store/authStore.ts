@@ -6,12 +6,23 @@ import type { User } from "@/types";
 
 const USER_STORAGE_KEY = "al_rihla_user";
 
+function normalizeUserIdentity(user: User): User {
+  const sub = user.sub?.trim();
+  if (!sub || user.id === sub) return user;
+  return { ...user, id: sub };
+}
+
 function loadStoredUser(): User | null {
   if (typeof window === "undefined") return null;
   try {
     const raw = sessionStorage.getItem(USER_STORAGE_KEY);
     if (!raw) return null;
-    return JSON.parse(raw) as User;
+    const parsed = JSON.parse(raw) as User;
+    const normalized = normalizeUserIdentity(parsed);
+    if (normalized.id !== parsed.id) {
+      sessionStorage.setItem(USER_STORAGE_KEY, JSON.stringify(normalized));
+    }
+    return normalized;
   } catch {
     return null;
   }
@@ -98,9 +109,10 @@ export const useAuthStore = create<AuthState>((set) => ({
     set({ user: null, accessToken: null, isAuthenticated: false });
   },
   setTokens: (access, user) => {
+    const normalizedUser = normalizeUserIdentity(user);
     sessionStorage.setItem("access_token", access);
-    sessionStorage.setItem(USER_STORAGE_KEY, JSON.stringify(user));
-    set({ accessToken: access, user, isAuthenticated: true });
+    sessionStorage.setItem(USER_STORAGE_KEY, JSON.stringify(normalizedUser));
+    set({ accessToken: access, user: normalizedUser, isAuthenticated: true });
   },
   updateUser: (patch) => {
     const current = loadStoredUser();

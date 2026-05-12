@@ -1,6 +1,7 @@
 import type { NextRequest } from "next/server";
 import { resolveAuthenticatedUser } from "@/lib/server/pals/auth";
 import { createPalMessage, listPalMessages, palLinkExists } from "@/lib/server/pals/palsDb";
+import { notifyPalMessageRecipient } from "@/lib/server/push/palMessageNotifications";
 import { isLikelyPartnerUserId } from "@/lib/utils/palPartnerStorage";
 
 export const dynamic = "force-dynamic";
@@ -82,6 +83,16 @@ export async function POST(req: NextRequest) {
       body: normalizedBody,
       verseReference: body.verseReference?.trim()
     });
+
+    try {
+      await notifyPalMessageRecipient(message);
+    } catch (notificationErr) {
+      console.warn("[pal-messages] push notification failed", {
+        messageId: message.id,
+        recipientId: message.recipientId,
+        error: notificationErr instanceof Error ? notificationErr.message : String(notificationErr)
+      });
+    }
 
     return Response.json({ message }, { status: 201 });
   } catch (err) {

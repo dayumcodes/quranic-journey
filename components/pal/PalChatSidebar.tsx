@@ -7,6 +7,7 @@ import type { PalThread } from "@/lib/utils/palThreadsStorage";
 export default function PalChatSidebar({
   threads,
   activePartnerId,
+  unreadByPartner,
   onSelect,
   onAddClick,
   onRemovePal,
@@ -15,6 +16,7 @@ export default function PalChatSidebar({
 }: {
   threads: PalThread[];
   activePartnerId: string | null;
+  unreadByPartner?: Record<string, number>;
   onSelect: (partnerId: string) => void;
   onAddClick: () => void;
   onRemovePal?: (partnerId: string) => void;
@@ -48,6 +50,7 @@ export default function PalChatSidebar({
           threads.map((t) => {
             const active = t.partnerId === activePartnerId;
             const initial = t.displayName.trim().charAt(0) || t.partnerId.charAt(0);
+            const unreadCount = Math.max(0, unreadByPartner?.[t.partnerId] ?? 0);
             return (
               <motion.button
                 key={t.partnerId}
@@ -64,6 +67,11 @@ export default function PalChatSidebar({
                   <div className="font-sans font-medium truncate">{t.displayName}</div>
                   <div className="font-mono text-[10px] text-[var(--text-3)] truncate">{t.partnerId.slice(0, 10)}…</div>
                 </div>
+                {unreadCount > 0 ? (
+                  <div className="shrink-0 inline-flex min-w-6 items-center justify-center rounded-full bg-[var(--jade)] px-2 py-1 text-[10px] font-semibold leading-none text-white">
+                    {unreadCount > 99 ? "99+" : unreadCount}
+                  </div>
+                ) : null}
                 {onRemovePal ? (
                   <button
                     type="button"

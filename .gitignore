@@ -13,6 +13,8 @@ db/migrations/001_create_pal_links.sql
 005_pal_progress_total_verses.sql
 006_user_profiles.sql
 007_pal_progress_activity_date.sql
+008_push_subscriptions.sql 
+009_pal_message_reads.sql
 
 # Build
 build/

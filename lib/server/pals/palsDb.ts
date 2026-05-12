@@ -22,6 +22,20 @@ function orderedPair(userA: string, userB: string): { low: string; high: string 
   return userA < userB ? { low: userA, high: userB } : { low: userB, high: userA };
 }
 
+function initialsFromDisplayName(name: string): string {
+  const words = name.trim().split(/\s+/).filter(Boolean);
+  if (words.length === 0) return "P";
+  const first = words[0]?.[0] ?? "";
+  const second = words.length > 1 ? words[1]?.[0] ?? "" : "";
+  return `${first}${second}`.toUpperCase() || "P";
+}
+
+function messagePreview(body: string, limit = 88): string {
+  const trimmed = body.trim().replace(/\s+/g, " ");
+  if (trimmed.length <= limit) return trimmed;
+  return `${trimmed.slice(0, Math.max(0, limit - 1)).trimEnd()}...`;
+}
+
 function isoDateDaysAgo(isoDate: string, days: number): string {
   const d = new Date(`${isoDate}T00:00:00.000Z`);
   d.setUTCDate(d.getUTCDate() - days);
@@ -187,6 +201,186 @@ export async function createPalMessage(params: {
   const row = res.rows[0];
   if (!row) throw new Error("pal_messages insert failed");
   return mapMessageRow(row);
+}
+
+export type PalUnreadThreadRow = {
+  partnerId: string;
+  displayName: string;
+  unreadCount: number;
+  latestMessageId?: string;
+  latestMessagePreview?: string;
+  latestMessageType?: "reflection" | "encouragement";
+  latestMessageAt?: string;
+  senderInitials: string;
+};
+
+function mapUnreadThreadRow(r: QueryResultRow): PalUnreadThreadRow {
+  const displayName = String(r.display_name || "Partner");
+  return {
+    partnerId: String(r.partner_id),
+    displayName,
+    unreadCount: Number(r.unread_count || 0),
+    latestMessageId: typeof r.latest_message_id === "string" ? r.latest_message_id : String(r.latest_message_id ?? ""),
+    latestMessagePreview: typeof r.latest_message_body === "string" ? messagePreview(String(r.latest_message_body)) : undefined,
+    latestMessageType: (r.latest_message_type === "encouragement" ? "encouragement" : "reflection") as
+      | "reflection"
+      | "encouragement",
+    latestMessageAt: r.latest_message_at ? new Date(r.latest_message_at as string).toISOString() : undefined,
+    senderInitials: initialsFromDisplayName(displayName)
+  };
+}
+
+export async function listPalUnreadThreads(userId: string): Promise<PalUnreadThreadRow[]> {
+  const res = await getPool().query(
+    `WITH unread AS (
+       SELECT
+         m.author_id AS partner_id,
+         m.id AS latest_message_id,
+         m.type AS latest_message_type,
+         m.body AS latest_message_body,
+         m.created_at AS latest_message_at,
+         ROW_NUMBER() OVER (PARTITION BY m.author_id ORDER BY m.created_at DESC, m.id DESC) AS row_num,
+         COUNT(*) OVER (PARTITION BY m.author_id) AS unread_count
+       FROM pal_messages m
+       LEFT JOIN pal_message_reads r
+         ON r.user_low = m.user_low
+        AND r.user_high = m.user_high
+        AND r.user_id = $1
+       WHERE m.recipient_id = $1
+         AND m.author_id <> $1
+         AND m.created_at > COALESCE(r.last_read_at, TO_TIMESTAMP(0))
+     )
+     SELECT
+       u.partner_id,
+       COALESCE(
+         CASE
+           WHEN pl.user_low = $1 THEN pl.high_display_name
+           WHEN pl.user_high = $1 THEN pl.low_display_name
+           ELSE NULL
+         END,
+         'Partner'
+       ) AS display_name,
+       u.unread_count,
+       u.latest_message_id,
+       u.latest_message_type,
+       u.latest_message_body,
+       u.latest_message_at
+     FROM unread u
+     LEFT JOIN pal_links pl
+       ON (pl.user_low = $1 AND pl.user_high = u.partner_id)
+       OR (pl.user_high = $1 AND pl.user_low = u.partner_id)
+     WHERE u.row_num = 1
+     ORDER BY u.latest_message_at DESC, u.latest_message_id DESC`,
+    [userId]
+  );
+  return res.rows.map(mapUnreadThreadRow);
+}
+
+export async function markPalThreadRead(userId: string, partnerId: string): Promise<void> {
+  const { low, high } = orderedPair(userId, partnerId);
+  await getPool().query(
+    `WITH latest AS (
+       SELECT id, created_at
+       FROM pal_messages
+       WHERE user_low = $1 AND user_high = $2
+       ORDER BY created_at DESC, id DESC
+       LIMIT 1
+     )
+     INSERT INTO pal_message_reads (
+       user_low,
+       user_high,
+       user_id,
+       last_read_at,
+       last_read_message_id,
+       created_at,
+       updated_at
+     )
+     VALUES (
+       $1,
+       $2,
+       $3,
+       COALESCE((SELECT created_at FROM latest), NOW()),
+       (SELECT id FROM latest),
+       NOW(),
+       NOW()
+     )
+     ON CONFLICT (user_low, user_high, user_id)
+     DO UPDATE SET
+       last_read_at = GREATEST(pal_message_reads.last_read_at, EXCLUDED.last_read_at),
+       last_read_message_id = COALESCE(EXCLUDED.last_read_message_id, pal_message_reads.last_read_message_id),
+       updated_at = NOW()`,
+    [low, high, userId]
+  );
+}
+
+export type PushSubscriptionRow = {
+  userId: string;
+  endpoint: string;
+  p256dh: string;
+  auth: string;
+  userAgent?: string;
+  createdAt: string;
+  updatedAt: string;
+  lastSeenAt: string;
+};
+
+function mapPushSubscriptionRow(r: QueryResultRow): PushSubscriptionRow {
+  return {
+    userId: String(r.user_id),
+    endpoint: String(r.endpoint),
+    p256dh: String(r.p256dh),
+    auth: String(r.auth),
+    userAgent: typeof r.user_agent === "string" && r.user_agent.trim() ? String(r.user_agent) : undefined,
+    createdAt: new Date(r.created_at as string).toISOString(),
+    updatedAt: new Date(r.updated_at as string).toISOString(),
+    lastSeenAt: new Date(r.last_seen_at as string).toISOString()
+  };
+}
+
+export async function listPushSubscriptions(userId: string): Promise<PushSubscriptionRow[]> {
+  const res = await getPool().query(
+    `SELECT user_id, endpoint, p256dh, auth, user_agent, created_at, updated_at, last_seen_at
+     FROM push_subscriptions
+     WHERE user_id = $1
+     ORDER BY updated_at DESC`,
+    [userId]
+  );
+  return res.rows.map(mapPushSubscriptionRow);
+}
+
+export async function upsertPushSubscription(params: {
+  userId: string;
+  endpoint: string;
+  p256dh: string;
+  auth: string;
+  userAgent?: string;
+}): Promise<PushSubscriptionRow> {
+  const { userId, endpoint, p256dh, auth, userAgent } = params;
+  const res = await getPool().query(
+    `INSERT INTO push_subscriptions (endpoint, user_id, p256dh, auth, user_agent, created_at, updated_at, last_seen_at)
+     VALUES ($1, $2, $3, $4, NULLIF($5, ''), NOW(), NOW(), NOW())
+     ON CONFLICT (endpoint)
+     DO UPDATE SET
+       user_id = EXCLUDED.user_id,
+       p256dh = EXCLUDED.p256dh,
+       auth = EXCLUDED.auth,
+       user_agent = EXCLUDED.user_agent,
+       updated_at = NOW(),
+       last_seen_at = NOW()
+     RETURNING user_id, endpoint, p256dh, auth, user_agent, created_at, updated_at, last_seen_at`,
+    [endpoint, userId, p256dh, auth, userAgent?.trim() ?? ""]
+  );
+  const row = res.rows[0];
+  if (!row) throw new Error("push_subscriptions upsert failed");
+  return mapPushSubscriptionRow(row);
+}
+
+export async function deletePushSubscription(userId: string, endpoint: string): Promise<void> {
+  await getPool().query("DELETE FROM push_subscriptions WHERE user_id = $1 AND endpoint = $2", [userId, endpoint]);
+}
+
+export async function deletePushSubscriptionByEndpoint(endpoint: string): Promise<void> {
+  await getPool().query("DELETE FROM push_subscriptions WHERE endpoint = $1", [endpoint]);
 }
 
 export type PalSharedGoalRow = {

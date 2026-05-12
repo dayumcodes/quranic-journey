@@ -106,21 +106,20 @@ function AuthCallbackContent() {
       const displayName = info?.name || info?.preferred_username || [info?.given_name, info?.family_name].filter(Boolean).join(" ") || "You";
       const emailRaw = info?.email?.trim();
       const sub = info?.sub?.trim();
-      const id = (sub || emailRaw || "").trim();
       console.info("[auth/callback] resolved user identity", {
         hasUserPayload: !!info,
         hasSub: !!sub,
         hasEmail: !!emailRaw,
         displayName
       });
-      if (!id) {
+      if (!sub) {
         throw new Error(
-          "Quran Foundation login returned no user id (sub) or email. Confirm openid scope and userinfo access for your OAuth app."
+          "Quran Foundation login returned no subject (sub). Confirm openid scope and userinfo access for your OAuth app."
         );
       }
       setTokens(tokenData.access_token, {
-        id,
-        sub: sub || undefined,
+        id: sub,
+        sub,
         name: displayName,
         email: emailRaw || "(email not shared — add email scope on OAuth app if needed)",
         avatar_initials: initialsFromName(displayName)
