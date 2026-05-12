@@ -15,6 +15,12 @@ function getBearerToken(req: NextRequest): string | null {
   return token;
 }
 
+function getUpstreamPrefix(firstSegment: string | undefined): string {
+  // QF routes Quran Reflect post endpoints through the quran-reflect gateway path.
+  if (firstSegment === "posts") return "quran-reflect/v1";
+  return "auth/v1";
+}
+
 async function proxy(req: NextRequest, method: "GET" | "POST", context: { params: Promise<{ path: string[] }> }) {
   let config;
   try {
@@ -35,7 +41,16 @@ async function proxy(req: NextRequest, method: "GET" | "POST", context: { params
 
   const pathSuffix = path.join("/");
   const query = req.nextUrl.searchParams.toString();
-  const upstreamUrl = `${config.apiBaseUrl.replace(/\/+$/, "")}/auth/v1/${pathSuffix}${query ? `?${query}` : ""}`;
+  const upstreamPrefix = getUpstreamPrefix(path[0]);
+  const upstreamUrl = `${config.apiBaseUrl.replace(/\/+$/, "")}/${upstreamPrefix}/${pathSuffix}${query ? `?${query}` : ""}`;
+
+  console.info("[qf-user/proxy] forwarding request", {
+    method,
+    env: config.env,
+    upstreamPrefix,
+    pathSuffix,
+    hasQuery: !!query
+  });
 
   const upstreamRes = await fetch(upstreamUrl, {
     method,
@@ -48,6 +63,14 @@ async function proxy(req: NextRequest, method: "GET" | "POST", context: { params
     },
     body: method === "POST" ? await req.text() : undefined,
     cache: "no-store"
+  });
+
+  console.info("[qf-user/proxy] upstream response", {
+    method,
+    upstreamPrefix,
+    pathSuffix,
+    status: upstreamRes.status,
+    ok: upstreamRes.ok
   });
 
   const contentType = upstreamRes.headers.get("content-type") ?? "application/json";
