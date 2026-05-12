@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ArrowRight, BookOpen, MagnifyingGlass } from "@phosphor-icons/react";
+import { ArrowRight, BookOpen } from "@phosphor-icons/react";
 import { motion } from "framer-motion";
 import type { Post } from "@/types";
 
@@ -123,12 +123,9 @@ export default function SharedFeed({
             value={feedInput}
             onChange={(e) => setFeedInput(e.target.value)}
             placeholder={partnerLinked ? "Share a reflection…" : "Link a partner to post…"}
-            className="w-full bg-[var(--panel)] border border-[var(--panel-border)] rounded-2xl px-4 py-3.5 sm:px-5 sm:py-4 font-sans text-sm text-[var(--ink)] placeholder:text-[var(--text-3)] outline-none focus:border-[var(--gold)] focus:shadow-gold-glow transition-all pr-[5.5rem] sm:pr-24 disabled:opacity-50"
+            className="w-full bg-[var(--panel)] border border-[var(--panel-border)] rounded-2xl px-4 py-3.5 sm:px-5 sm:py-4 font-sans text-sm text-[var(--ink)] placeholder:text-[var(--text-3)] outline-none focus:border-[var(--gold)] focus:shadow-gold-glow transition-all pr-[4.5rem] sm:pr-20 disabled:opacity-50"
           />
-          <div className="absolute right-2 top-1/2 -translate-y-1/2 flex gap-2">
-            <button type="button" disabled className="p-2 text-[var(--text-3)]" aria-hidden>
-              <MagnifyingGlass weight="regular" size={18} />
-            </button>
+          <div className="absolute right-2 top-1/2 -translate-y-1/2 flex">
             <button
               type="button"
               disabled={composerDisabled || !partnerLinked || tooShortToSend || !trimmedInput}

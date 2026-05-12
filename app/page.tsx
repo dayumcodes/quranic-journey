@@ -152,12 +152,6 @@ export default function HomePage() {
                   <Link className="text-[var(--text-2)] hover:text-[var(--gold)] transition-colors text-sm" href="/reflect">Reflect</Link>
                   <Link className="text-[var(--text-2)] hover:text-[var(--gold)] transition-colors text-sm" href="/pal">Pal</Link>
                 </div>
-                <div className="flex flex-col gap-4">
-                  <h4 className="font-semibold text-[var(--ink)]">Account</h4>
-                  <Link className="text-[var(--text-2)] hover:text-[var(--gold)] transition-colors text-sm" href="/delete-account">Delete Account</Link>
-                  <Link className="text-[var(--text-2)] hover:text-[var(--gold)] transition-colors text-sm" href="/auth/callback">OAuth Callback</Link>
-                  <Link className="text-[var(--text-2)] hover:text-[var(--gold)] transition-colors text-sm" href="/logout">Logout</Link>
-                </div>
               </div>
             </div>
             <div className="w-full text-center overflow-hidden leading-none select-none pointer-events-none pb-0 mb-0 px-4 sm:px-0">
