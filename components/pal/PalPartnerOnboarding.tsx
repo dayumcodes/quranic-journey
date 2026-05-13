@@ -23,11 +23,8 @@ export default function PalPartnerOnboarding({
   const [inviteCopied, setInviteCopied] = useState(false);
   const [saveBusy, setSaveBusy] = useState(false);
 
-  const inviteLink =
-    typeof window !== "undefined" ? `${window.location.origin}/pal?partner=${encodeURIComponent(myUserId)}` : "";
-
   const copyInvite = async () => {
-    const ok = await copyTextToClipboard(inviteLink);
+    const ok = await copyTextToClipboard(myUserId.trim());
     if (ok) {
       setInviteCopied(true);
       onCopied?.();
@@ -64,7 +61,7 @@ export default function PalPartnerOnboarding({
         ) : null}
       </div>
       <p className="font-sans text-sm text-[var(--text-2)] mb-6 leading-relaxed">
-        Pal compares progress and keeps shared messages between two Quran Foundation accounts. Share your invite link so your partner can connect, or paste their account ID once they send it to you.
+        Pal compares progress and keeps shared messages between two Quran Foundation accounts. Share your account ID so your partner can connect, or paste their account ID once they send it to you.
       </p>
 
       <div className="flex flex-wrap gap-2 mb-6">
@@ -74,7 +71,7 @@ export default function PalPartnerOnboarding({
           className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[var(--ink)] text-[var(--parchment)] text-sm font-medium hover:opacity-90"
         >
           {inviteCopied ? <Check weight="bold" size={18} /> : <Copy weight="regular" size={18} />}
-          {inviteCopied ? "Copied!" : "Copy invite link"}
+          {inviteCopied ? "Copied!" : "Copy account ID"}
         </button>
         <span className="inline-flex items-center gap-1.5 text-xs text-[var(--text-3)] self-center px-2">
           <LinkSimple weight="regular" size={14} /> Both of you stay signed in for messages and goals to sync.
