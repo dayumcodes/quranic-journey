@@ -13,7 +13,8 @@ import {
 import { useAuthStore } from "@/lib/store/authStore";
 import { usePalNotificationStore } from "@/lib/store/palNotificationStore";
 
-const INSTALL_DISMISSED_KEY = "al_rihla_install_toast_dismissed";
+const INSTALL_OPEN_COUNT_KEY = "al_rihla_install_open_count";
+const INSTALL_NEXT_PROMPT_AT_KEY = "al_rihla_install_next_prompt_at";
 const NOTIFY_DISMISSED_KEY = "al_rihla_notify_toast_dismissed";
 
 type BeforeInstallPromptEvent = Event & {
@@ -46,6 +47,7 @@ export default function PalNotificationController() {
   const [notifyDismissed, setNotifyDismissed] = useState(false);
   const [installBusy, setInstallBusy] = useState(false);
   const [notifyBusy, setNotifyBusy] = useState(false);
+  const openCountRef = useRef(0);
 
   const syncPushState = useCallback(async () => {
     if (!isAuthenticated || !user?.id) return;
@@ -116,7 +118,14 @@ export default function PalNotificationController() {
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    setInstallDismissed(window.localStorage.getItem(INSTALL_DISMISSED_KEY) === "1");
+    const previousCount = Number(window.localStorage.getItem(INSTALL_OPEN_COUNT_KEY) || "0");
+    const nextCount = Number.isFinite(previousCount) ? previousCount + 1 : 1;
+    openCountRef.current = nextCount;
+    window.localStorage.setItem(INSTALL_OPEN_COUNT_KEY, String(nextCount));
+
+    const nextPromptAtRaw = Number(window.localStorage.getItem(INSTALL_NEXT_PROMPT_AT_KEY) || "0");
+    const nextPromptAt = Number.isFinite(nextPromptAtRaw) ? nextPromptAtRaw : 0;
+    setInstallDismissed(nextCount < nextPromptAt);
     setNotifyDismissed(window.localStorage.getItem(NOTIFY_DISMISSED_KEY) === "1");
   }, []);
 
@@ -129,7 +138,7 @@ export default function PalNotificationController() {
     const onAppInstalled = () => {
       setInstallEvent(null);
       setInstallDismissed(true);
-      window.localStorage.setItem(INSTALL_DISMISSED_KEY, "1");
+      window.localStorage.setItem(INSTALL_NEXT_PROMPT_AT_KEY, String(Number.MAX_SAFE_INTEGER));
     };
 
     window.addEventListener("beforeinstallprompt", onBeforeInstallPrompt);
@@ -218,7 +227,10 @@ export default function PalNotificationController() {
 
   const dismissInstallToast = useCallback(() => {
     setInstallDismissed(true);
-    if (typeof window !== "undefined") window.localStorage.setItem(INSTALL_DISMISSED_KEY, "1");
+    if (typeof window !== "undefined") {
+      const nextPromptAt = (openCountRef.current || 1) + 2;
+      window.localStorage.setItem(INSTALL_NEXT_PROMPT_AT_KEY, String(nextPromptAt));
+    }
   }, []);
 
   const dismissNotifyToast = useCallback(() => {
