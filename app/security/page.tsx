@@ -1,5 +1,7 @@
-// import GlobalNav from "@/components/nav/GlobalNav";
+import { redirect } from "next/navigation";
 
+// import GlobalNav from "@/components/nav/GlobalNav";
+//
 // export default function SecurityPage() {
 //   return (
 //     <>
@@ -19,3 +21,8 @@
 //     </>
 //   );
 // }
+
+/** Page disabled; stub keeps this file a valid module for production builds. */
+export default function SecurityPage() {
+  redirect("/");
+}
