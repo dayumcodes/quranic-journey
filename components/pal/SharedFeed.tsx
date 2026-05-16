@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { ArrowRight, BookOpen } from "@phosphor-icons/react";
 import { motion } from "framer-motion";
 import type { Post } from "@/types";
@@ -25,8 +25,8 @@ function FeedItem({
   const bubble = isMine ? myInitials : partnerInitials;
   return (
     <motion.div
-      initial={{ y: 16, opacity: 0 }}
-      whileInView={{ y: 0, opacity: 1 }}
+      initial={{ y: 8, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
       transition={{ type: "spring", stiffness: 100, damping: 20 }}
       className={`flex gap-3 items-end ${isMine ? "flex-row-reverse" : "flex-row"}`}
     >
@@ -82,6 +82,30 @@ export default function SharedFeed({
 }) {
   const [feedInput, setFeedInput] = useState("");
   const trimmedInput = feedInput.trim();
+  const listRef = useRef<HTMLDivElement>(null);
+  const stickToBottomRef = useRef(true);
+
+  const scrollToLatest = useCallback((behavior: ScrollBehavior = "auto") => {
+    const el = listRef.current;
+    if (!el) return;
+    el.scrollTo({ top: el.scrollHeight, behavior });
+  }, []);
+
+  const updateStickToBottom = useCallback(() => {
+    const el = listRef.current;
+    if (!el) return;
+    const distanceFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
+    stickToBottomRef.current = distanceFromBottom < 96;
+  }, []);
+
+  useEffect(() => {
+    if (!posts.length || !stickToBottomRef.current) return;
+    requestAnimationFrame(() => {
+      scrollToLatest("auto");
+      requestAnimationFrame(() => scrollToLatest("auto"));
+    });
+  }, [posts, scrollToLatest]);
+
   const defaultEmpty =
     emptyHint ??
     (partnerLinked ? "No messages yet. Share the first reflection." : "Link a partner above to load your shared reflections.");
@@ -94,7 +118,11 @@ export default function SharedFeed({
         {posts.length === 0 ? (
           <div className="text-sm text-[var(--text-3)]">{defaultEmpty}</div>
         ) : (
-          <div className="max-h-[34rem] overflow-y-auto pr-1 sm:pr-2">
+          <div
+            ref={listRef}
+            onScroll={updateStickToBottom}
+            className="max-h-[34rem] overflow-y-auto pr-1 sm:pr-2 scroll-smooth"
+          >
             <div className="flex flex-col gap-6">
               {posts.map((p) => (
                 <FeedItem
@@ -130,6 +158,7 @@ export default function SharedFeed({
               onClick={() => {
                 const text = trimmedInput;
                 if (!text || !partnerLinked) return;
+                stickToBottomRef.current = true;
                 onSend?.(text);
                 setFeedInput("");
               }}
