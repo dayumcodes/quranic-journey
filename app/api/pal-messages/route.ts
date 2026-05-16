@@ -15,7 +15,10 @@ type CreatePalMessageBody = {
 
 function dbMessage(err: unknown, fallback: string): string {
   const raw = err instanceof Error ? err.message : "";
-  if (/pal_messages/i.test(raw)) {
+  if (/violates check constraint|check constraint/i.test(raw) && /body|pal_messages_body/i.test(raw)) {
+    return "Message could not be saved (database length rule). Run `npm run db:migrate:pals` on this deployment.";
+  }
+  if (/pal_messages/i.test(raw) && /does not exist|relation.*not exist/i.test(raw)) {
     return "Pal messages database not ready. Run the latest pals migration for this deployment.";
   }
   return raw || fallback;

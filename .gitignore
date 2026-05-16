@@ -15,7 +15,7 @@ db/migrations/001_create_pal_links.sql
 007_pal_progress_activity_date.sql
 008_push_subscriptions.sql 
 009_pal_message_reads.sql
-
+010_pal_messages_body_min_1.sql 
 # Build
 build/
 dist/
