@@ -11,7 +11,7 @@ export default function ContactPage() {
             For support, compliance, or developer questions, contact the Al-Rihla team:
           </p>
           <p className="font-sans text-[var(--ink)] text-lg">
-            <a className="text-[var(--gold)] underline" href="mailto:support@al-rihla.app">support@al-rihla.app</a>
+            <a className="text-[var(--gold)] underline" href="mailto:mfuzail7820@gmail.com">mfuzail7820@gmail.com</a>
           </p>
         </div>
       </main>

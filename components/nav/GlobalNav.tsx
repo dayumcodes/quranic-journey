@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
 import { List, Moon, Sun, User, X } from "@phosphor-icons/react";
@@ -26,7 +26,9 @@ const MAIN_TABS = ["journey", "reflect", "pal"] as const;
 export default function GlobalNav({ currentPage }: Props) {
   const { isAuthenticated, user, login, logout, updateUser } = useAuthStore();
   const theme = useThemeStore((s) => s.theme);
-  const toggleTheme = useThemeStore((s) => s.toggleTheme);
+  const isThemeTransitioning = useThemeStore((s) => s.isThemeTransitioning);
+  const toggleThemeAt = useThemeStore((s) => s.toggleThemeAt);
+  const themeToggleRef = useRef<HTMLButtonElement>(null);
   const [scrolled, setScrolled] = useState(false);
   const notificationPeek = usePalNotificationStore((s) => s.peek);
   const setNotificationPeek = usePalNotificationStore((s) => s.setPeek);
@@ -253,15 +255,37 @@ export default function GlobalNav({ currentPage }: Props) {
 
           <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 md:flex-1 md:justify-end">
             <motion.button
+              ref={themeToggleRef}
               type="button"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => toggleTheme()}
+              whileHover={{ scale: isThemeTransitioning ? 1 : 1.05 }}
+              whileTap={{ scale: isThemeTransitioning ? 1 : 0.95 }}
+              disabled={isThemeTransitioning}
+              onClick={(e) => {
+                const rect = themeToggleRef.current?.getBoundingClientRect();
+                const x = rect ? rect.left + rect.width / 2 : e.clientX;
+                const y = rect ? rect.top + rect.height / 2 : e.clientY;
+                toggleThemeAt(x, y);
+              }}
               aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
               title={theme === "dark" ? "Light mode" : "Dark mode"}
-              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border-0 bg-[var(--parchment)] p-0 leading-none text-[var(--ink)] ring-1 ring-inset ring-[var(--gold)]/50 dark:bg-white/10 dark:text-[var(--ink)] dark:ring-white/20"
+              className="relative flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full border-0 bg-[var(--parchment)] p-0 leading-none text-[var(--ink)] ring-1 ring-inset ring-[var(--gold)]/50 disabled:opacity-90 dark:bg-white/10 dark:text-[var(--ink)] dark:ring-white/20"
             >
-              {theme === "dark" ? <Sun weight="regular" size={18} className="text-amber-200" /> : <Moon weight="regular" size={18} />}
+              <AnimatePresence mode="wait" initial={false}>
+                <motion.span
+                  key={theme}
+                  initial={{ opacity: 0, rotate: -90, scale: 0.5 }}
+                  animate={{ opacity: 1, rotate: 0, scale: 1 }}
+                  exit={{ opacity: 0, rotate: 90, scale: 0.5 }}
+                  transition={{ duration: 0.22, ease: "easeOut" }}
+                  className="flex items-center justify-center"
+                >
+                  {theme === "dark" ? (
+                    <Sun weight="regular" size={18} className="text-amber-200" />
+                  ) : (
+                    <Moon weight="regular" size={18} />
+                  )}
+                </motion.span>
+              </AnimatePresence>
             </motion.button>
             <div className="relative inline-flex h-9 shrink-0 items-center justify-center align-middle">
               <motion.button

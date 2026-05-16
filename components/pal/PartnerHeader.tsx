@@ -50,8 +50,8 @@ export default function PartnerHeader({
   };
 
   return (
-    <div className="flex flex-col md:flex-row md:items-stretch md:min-h-[min(30vh,420px)] mb-12 sm:mb-16 md:mb-20 gap-8 md:gap-0 relative">
-      <div className="w-full md:w-[55%] flex flex-col justify-center md:pr-8 lg:pr-12 min-w-0">
+    <div className="flex flex-col md:grid md:grid-cols-[1fr_auto_1fr] md:items-center md:min-h-[min(30vh,420px)] mb-12 sm:mb-16 md:mb-20 gap-8 md:gap-x-8 lg:gap-x-12">
+      <div className="w-full flex flex-col justify-center min-w-0 md:col-start-1">
         <div className="flex items-center gap-4 sm:gap-6 mb-3 sm:mb-4">
           <div className="w-14 h-14 sm:w-[72px] sm:h-[72px] shrink-0 rounded-full bg-[var(--jade)]/20 border-2 border-[var(--jade)]/40 flex items-center justify-center font-arabic text-xl sm:text-2xl text-[var(--jade)]">
             {me.avatarLetter}
@@ -76,16 +76,19 @@ export default function PartnerHeader({
 
       <div className="md:hidden h-px w-full bg-[var(--panel-border)] shrink-0" aria-hidden />
 
-      <div className="hidden md:block absolute left-[55%] top-0 bottom-0 w-px -translate-x-1/2 overflow-hidden pointer-events-none">
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[var(--gold)]/20 to-transparent" />
+      <div
+        aria-hidden
+        className="hidden md:flex relative flex-col items-center justify-center md:col-start-2 md:row-start-1 h-[4.5rem] sm:h-20 w-px shrink-0 overflow-hidden pointer-events-none self-center -translate-y-3"
+      >
+        <div className="absolute inset-0 w-px bg-gradient-to-b from-transparent via-[var(--gold)]/25 to-transparent" />
         <motion.div
           animate={{ y: ["-100%", "400%"] }}
           transition={{ repeat: Infinity, duration: 2.5, ease: "linear" }}
-          className="w-1 h-16 bg-gradient-to-b from-transparent via-[var(--gold)] to-transparent rounded-full -ml-[1.5px]"
+          className="relative w-1 h-16 bg-gradient-to-b from-transparent via-[var(--gold)] to-transparent rounded-full"
         />
       </div>
 
-      <div className="w-full md:w-[45%] flex flex-col justify-center items-stretch md:items-end text-left md:text-right md:pl-8 lg:pl-12 min-w-0">
+      <div className="w-full flex flex-col justify-center items-stretch md:items-end text-left md:text-right min-w-0 md:col-start-3">
         <div className="flex items-center gap-4 sm:gap-6 mb-3 sm:mb-4 w-full md:flex-row-reverse md:justify-start">
           <div
             className={`w-14 h-14 sm:w-[72px] sm:h-[72px] shrink-0 rounded-full flex items-center justify-center font-arabic text-xl sm:text-2xl ${

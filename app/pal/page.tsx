@@ -503,7 +503,7 @@ function PalPageInner() {
 
   const postPublishErrorMessage = useCallback((err: unknown) => {
     if (err instanceof RequestError) {
-      if (err.status === 422) return err.message || "Messages must be at least 6 characters long.";
+      if (err.status === 422) return err.message || "Message cannot be empty.";
       if (err.status === 401) return "Please sign in again to continue messaging your pal.";
       if (err.status === 403) return err.message || "Link this pal again before sending shared messages.";
       if (err.status === 503) return err.message || "Pal messages are not ready on this deployment yet.";

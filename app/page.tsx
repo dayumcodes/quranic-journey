@@ -82,7 +82,7 @@ export default function HomePage() {
           <div className="w-full max-w-[1320px] grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 md:gap-12">
             <LandingCard
               title="Journey"
-              desc="Gamified learning paths for kids with dynamic SVG maps and spring-physics interactions."
+              desc="Step-by-step guidance to master your recitation. Watch your progress unfold as you travel beautifully through the chapters of the Quran."
               bg="bg-[var(--panel)]"
               href="/journey"
               imageSrc="https://images.unsplash.com/photo-1471958680802-1345a694ba6d"
@@ -93,7 +93,7 @@ export default function HomePage() {
             />
             <LandingCard
               title="Reflect"
-              desc="Location-aware meditative space featuring generative canvas meshes and massive typography."
+              desc="Find your quiet center. Dive deep into the meanings of the verses and let the wisdom of the Quran illuminate your daily life."
               bg="bg-[var(--void)] text-white"
               href="/reflect"
               dark
@@ -104,7 +104,7 @@ export default function HomePage() {
             />
             <LandingCard
               title="Pal"
-              desc="Social accountability dashboard with asymmetric layouts and synchronized progress tracking."
+              desc="You never walk alone. Connect with a companion, share your spiritual milestones, and keep each other inspired every step of the way."
               bg="bg-[#EDE5D5] dark:bg-[#252218]"
               href="/pal"
               imageSrc="/landing/pal-courtyard.png"
@@ -125,26 +125,26 @@ export default function HomePage() {
                   </div>
                   <div className="flex flex-col gap-4">
                     <p className="text-[var(--text-2)] text-sm leading-relaxed max-w-xs">Deepen Quran engagement with guided journey, contextual reflection, and accountability with your learning partner.</p>
-                    <div className="flex gap-4 mt-2 text-[var(--text-3)]">
+                    {/* <div className="flex gap-4 mt-2 text-[var(--text-3)]">
                       <InstagramLogo weight="regular" size={20} />
                       <YoutubeLogo weight="regular" size={20} />
-                    </div>
+                    </div> */}
                     <p className="text-[var(--text-3)] text-xs mt-4">© 2026 Al-Rihla. All rights reserved.</p>
-                    <div className="mt-2 flex items-center gap-3 px-3 py-2 border border-[var(--panel-border)] rounded-lg w-fit bg-[var(--panel-muted)]">
-                      <div className="w-8 h-8 rounded-full bg-[var(--ink)] text-[var(--parchment)] text-[10px] flex items-center justify-center font-bold">AR</div>
-                      <div className="flex flex-col">
+                    {/* <div className="mt-2 flex items-center gap-3 px-3 py-2 border border-[var(--panel-border)] rounded-lg w-fit bg-[var(--panel-muted)]"> */}
+                      {/* <div className="w-8 h-8 rounded-full bg-[var(--ink)] text-[var(--parchment)] text-[10px] flex items-center justify-center font-bold">AR</div> */}
+                      {/* <div className="flex flex-col">
                         <span className="text-[var(--text-3)] text-[10px] font-semibold uppercase tracking-wider leading-tight">Security</span>
                         <span className="text-[var(--text-3)] text-[10px] font-semibold uppercase tracking-wider leading-tight">Partner</span>
-                      </div>
-                    </div>
+                      </div> */}
+                    {/* </div> */}
                   </div>
                 </div>
                 <div className="flex flex-col gap-4">
-                  <h4 className="font-semibold text-[var(--ink)]">Company</h4>
+                  <h4 className="font-semibold text-[var(--ink)]">Links</h4>
                   <Link className="text-[var(--text-2)] hover:text-[var(--gold)] transition-colors text-sm" href="/privacy">Privacy Policy</Link>
                   <Link className="text-[var(--text-2)] hover:text-[var(--gold)] transition-colors text-sm" href="/terms">Terms &amp; Conditions</Link>
                   <Link className="text-[var(--text-2)] hover:text-[var(--gold)] transition-colors text-sm" href="/contact">Contact Us</Link>
-                  <Link className="text-[var(--text-2)] hover:text-[var(--gold)] transition-colors text-sm" href="/security">Security</Link>
+                  {/* <Link className="text-[var(--text-2)] hover:text-[var(--gold)] transition-colors text-sm" href="/security">Security</Link> */}
                 </div>
                 <div className="flex flex-col gap-4">
                   <h4 className="font-semibold text-[var(--ink)]">Explore</h4>

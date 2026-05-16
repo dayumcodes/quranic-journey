@@ -66,8 +66,8 @@ export async function POST(req: NextRequest) {
 
   const rawBody = (body.body ?? "").trim();
   const normalizedBody = type === "encouragement" ? rawBody.replace(/^encouragement:\s*/i, "").trim() : rawBody;
-  if (normalizedBody.length < 6) {
-    return Response.json({ message: "Messages must be at least 6 characters long." }, { status: 422 });
+  if (normalizedBody.length < 1) {
+    return Response.json({ message: "Message cannot be empty." }, { status: 422 });
   }
 
   try {

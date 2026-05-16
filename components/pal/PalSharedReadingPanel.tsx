@@ -204,9 +204,9 @@ export default function PalSharedReadingPanel({
             <p className="mt-2 text-sm text-[var(--ink)]">
               {selfSnapshot?.streakDays ?? 0} day{(selfSnapshot?.streakDays ?? 0) === 1 ? "" : "s"}
             </p>
-            <p className="mt-1 text-[11px] text-[var(--text-3)]">
+            {/* <p className="mt-1 text-[11px] text-[var(--text-3)]">
               Streak is updated automatically when you change your verses read for the day. If you do not update it today, the streak breaks.
-            </p>
+            </p> */}
           </div>
 
           <button

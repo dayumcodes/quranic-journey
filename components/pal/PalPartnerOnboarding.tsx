@@ -74,7 +74,7 @@ export default function PalPartnerOnboarding({
           {inviteCopied ? "Copied!" : "Copy account ID"}
         </button>
         <span className="inline-flex items-center gap-1.5 text-xs text-[var(--text-3)] self-center px-2">
-          <LinkSimple weight="regular" size={14} /> Both of you stay signed in for messages and goals to sync.
+          {/* <LinkSimple weight="regular" size={14} /> Both of you stay signed in for messages and goals to sync. */}
         </span>
       </div>
 

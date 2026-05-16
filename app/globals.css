@@ -71,6 +71,37 @@ body {
   transition: background-color 0.2s ease, color 0.2s ease;
 }
 
+/* Theme toggle: circular reveal of real page content (View Transitions API). */
+html.theme-transitioning {
+  view-transition-name: root;
+}
+
+html.theme-transitioning::view-transition-group(root) {
+  animation-duration: 0s;
+}
+
+html.theme-transitioning::view-transition-old(root),
+html.theme-transitioning::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+  height: 100%;
+  width: 100%;
+  inset: 0;
+}
+
+html.theme-transitioning::view-transition-old(root) {
+  z-index: 0;
+}
+
+html.theme-transitioning::view-transition-new(root) {
+  z-index: 1;
+  clip-path: circle(0px at var(--theme-origin-x) var(--theme-origin-y));
+}
+
+html.theme-transitioning body {
+  transition: none !important;
+}
+
 .font-display { font-family: 'Outfit', sans-serif; }
 .font-sans { font-family: 'DM Sans', sans-serif; }
 .font-arabic { font-family: 'Amiri', serif; }

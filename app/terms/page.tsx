@@ -20,7 +20,7 @@ export default function TermsPage() {
             process and display that content for product functionality.
           </p>
           <p className="font-sans text-[var(--text-2)] leading-8">
-            Contact: <a className="text-[var(--gold)] underline" href="mailto:support@al-rihla.app">support@al-rihla.app</a>
+            Contact: <a className="text-[var(--gold)] underline" href="mailto:mfuzail7820@gmail.com">mfuzail7820@gmail.com</a>
           </p>
         </div>
       </main>

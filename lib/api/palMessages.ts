@@ -40,8 +40,8 @@ export async function getPalMessages(partnerId: string): Promise<Post[]> {
 export async function createPalMessage(payload: Partial<Post>): Promise<Post> {
   const recipientId = payload.recipient_id?.trim() ?? "";
   const rawBody = (payload.body ?? "").trim();
-  if (rawBody.length < 6) {
-    throw new RequestError(422, "Messages must be at least 6 characters long.");
+  if (rawBody.length < 1) {
+    throw new RequestError(422, "Message cannot be empty.");
   }
   if (!recipientId) {
     throw new RequestError(400, "Choose a linked pal before sending a message.");
