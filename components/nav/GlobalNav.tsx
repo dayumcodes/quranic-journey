@@ -107,7 +107,7 @@ export default function GlobalNav({ currentPage }: Props) {
           ? "Notifications are blocked in your browser settings."
           : pushEnabled
             ? "Notifications are on for this browser."
-            : "Turn notifications on for message alerts when Al-Rihla is closed.";
+            : "Turn notifications on.";
 
   async function handleNotificationToggle() {
     if (!isAuthenticated || notificationBusy) return;
