@@ -255,7 +255,7 @@ export default function VerseReflectionCard({ verseKey, meta }: Props) {
                 .catch(() => {
                   addLocalBookmark(verseKey);
                   setIsSaved(true);
-                  setSaveError("Saved on this device. Sync to Quran Foundation will work when collections scope is enabled.");
+                  setSaveError("Saved on this device.");
                 });
             }}
           />
